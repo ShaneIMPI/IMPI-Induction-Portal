@@ -1127,16 +1127,23 @@ function buildGroupForm() {
   const n = parseInt(document.getElementById('groupSize').value);
   if (!n) return;
   document.getElementById('btn0next').disabled = false;
+  const idOpts = `
+    <option value="">Type...</option>
+    <option value="SA ID">🇿🇦 SA ID</option>
+    <option value="Passport">🌍 Passport</option>
+    <option value="NIN">🇳🇬 NIN</option>
+    <option value="National ID">🇰🇪 National ID</option>
+    <option value="Employee No">🏢 Employee No</option>
+    <option value="Other">📋 Other</option>`;
   const wrap = document.getElementById('groupMembersForm');
-  wrap.innerHTML = Array.from({length:n}, (_,i) => `
+  wrap.innerHTML = Array.from({length: n}, (_, i) => `
     <div class="member-row">
-      <div class="member-num">Member ${i+1}</div>
-      <div class="two">
+      <div class="member-num">Team Member ${i + 1}</div>
+      <div class="member-grid">
         <div class="fg"><label>First Name *</label><input type="text" id="gm${i}_name" placeholder="First name"/></div>
         <div class="fg"><label>Surname *</label><input type="text" id="gm${i}_surname" placeholder="Surname"/></div>
-      </div>
-      <div class="two">
-        <div class="fg"><label>ID / Passport *</label><input type="text" id="gm${i}_id" placeholder="ID number"/></div>
+        <div class="fg"><label>ID Type *</label><select id="gm${i}_id_type">${idOpts}</select></div>
+        <div class="fg"><label>ID Number *</label><input type="text" id="gm${i}_id" placeholder="ID number"/></div>
         <div class="fg"><label>Trade *</label><input type="text" id="gm${i}_trade" placeholder="Trade / occupation"/></div>
       </div>
     </div>`).join('');
@@ -1144,12 +1151,26 @@ function buildGroupForm() {
 
 function getGroupMembers() {
   const n = parseInt(document.getElementById('groupSize').value) || 0;
-  return Array.from({length:n}, (_,i) => ({
-    name: document.getElementById(`gm${i}_name`)?.value.trim() || '',
+  return Array.from({length: n}, (_, i) => ({
+    name:    document.getElementById(`gm${i}_name`)?.value.trim() || '',
     surname: document.getElementById(`gm${i}_surname`)?.value.trim() || '',
-    id: document.getElementById(`gm${i}_id`)?.value.trim() || '',
-    trade: document.getElementById(`gm${i}_trade`)?.value.trim() || ''
+    id_type: document.getElementById(`gm${i}_id_type`)?.value || '',
+    id:      document.getElementById(`gm${i}_id`)?.value.trim() || '',
+    trade:   document.getElementById(`gm${i}_trade`)?.value.trim() || ''
   }));
+}
+
+function validateGroupMembers(members) {
+  const errors = [];
+  members.forEach((m, i) => {
+    const num = i + 1;
+    if (!m.name)    errors.push(`Team Member ${num} needs a First Name`);
+    if (!m.surname) errors.push(`Team Member ${num} needs a Surname`);
+    if (!m.id_type) errors.push(`Team Member ${num} needs an ID Type`);
+    if (!m.id)      errors.push(`Team Member ${num} needs an ID Number`);
+    if (!m.trade)   errors.push(`Team Member ${num} needs a Trade`);
+  });
+  return errors;
 }
 
 // ── QUIZ ──
