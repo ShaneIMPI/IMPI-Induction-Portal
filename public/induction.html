@@ -1,0 +1,1437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>IMPI Safety Services — Induction Portal</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&family=Inter:wght@400;500;600&display=swap');
+:root{--red:#d42b2b;--yellow:#f5c800;--dark:#0d0d0d;--fh:'Montserrat',sans-serif;--fb:'Inter',sans-serif;--green:#22c55e;--radius:8px;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:#f0f2f5;font-family:var(--fb);min-height:100vh;}
+
+/* NAV */
+.nav{position:sticky;top:0;z-index:100;background:#fff;border-bottom:2px solid var(--yellow);padding:0 20px;height:56px;display:flex;align-items:center;gap:12px;box-shadow:0 2px 12px rgba(0,0,0,0.08);}
+.nav a.logo{display:flex;align-items:center;gap:8px;text-decoration:none;cursor:pointer;}
+.nav a.logo img{height:36px;width:auto;object-fit:contain;max-width:120px;}
+.nav-sep{color:#ddd;font-size:20px;}
+.nav-type{font-family:var(--fh);font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(0,0,0,0.4);}
+.nav-right{margin-left:auto;display:flex;align-items:center;gap:8px;}
+.nav-back-btn{display:flex;align-items:center;gap:5px;font-family:var(--fh);font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:rgba(0,0,0,0.5);background:none;border:1.5px solid rgba(0,0,0,0.15);padding:6px 12px;border-radius:20px;cursor:pointer;text-decoration:none;transition:all .2s;}
+.nav-back-btn:hover{color:var(--red);border-color:var(--red);}
+
+/* LANGUAGE SWITCHER */
+.lang-btn{display:flex;align-items:center;gap:5px;font-family:var(--fh);font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:rgba(0,0,0,0.6);background:rgba(0,0,0,0.04);border:1.5px solid rgba(0,0,0,0.12);padding:6px 12px;border-radius:20px;cursor:pointer;transition:all .2s;position:relative;}
+.lang-btn:hover{background:rgba(0,0,0,0.08);}
+.lang-dropdown{position:absolute;top:calc(100% + 6px);right:0;background:#fff;border:1.5px solid rgba(0,0,0,0.12);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,0.15);min-width:200px;z-index:200;display:none;overflow:hidden;}
+.lang-dropdown.open{display:block;}
+.lang-option{display:flex;align-items:center;gap:10px;padding:10px 14px;cursor:pointer;transition:background .15s;font-size:13px;}
+.lang-option:hover{background:#f5f5f5;}
+.lang-option.active{background:#fef2f2;color:var(--red);font-weight:600;}
+.lang-flag{font-size:18px;width:24px;text-align:center;}
+
+/* BANNER */
+.banner{background:linear-gradient(135deg,var(--red) 0%,#a01f1f 100%);padding:24px 20px 20px;position:relative;overflow:hidden;}
+.banner::after{content:'';position:absolute;bottom:0;left:0;right:0;height:4px;background:var(--yellow);}
+.ban-top{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+.ban-logo{height:38px;width:auto;object-fit:contain;max-width:130px;background:rgba(255,255,255,0.15);padding:4px 8px;border-radius:6px;}
+.ban-client-logo{height:38px;width:auto;object-fit:contain;max-width:120px;background:rgba(255,255,255,0.9);padding:4px 8px;border-radius:6px;margin-left:auto;display:none;}
+.ban-type{font-family:var(--fh);font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.6);}
+.ban-title{font-family:var(--fh);font-weight:900;font-size:clamp(28px,5vw,42px);color:#fff;line-height:1.1;margin-bottom:14px;}
+.ban-meta{display:flex;gap:20px;flex-wrap:wrap;}
+.bm{display:flex;flex-direction:column;gap:2px;}
+.bm-lbl{font-family:var(--fh);font-size:8px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.5);}
+.bm-val{font-family:var(--fh);font-size:12px;font-weight:700;color:var(--yellow);}
+
+/* PROGRESS */
+.prog-wrap{background:#fff;padding:14px 20px;border-bottom:1px solid #e5e7eb;overflow-x:auto;}
+.prog{display:flex;gap:0;min-width:max-content;}
+.prog-step{display:flex;align-items:center;gap:0;}
+.prog-num{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--fh);font-size:11px;font-weight:800;background:#e5e7eb;color:#9ca3af;transition:all .3s;flex-shrink:0;}
+.prog-num.done{background:var(--green);color:#fff;}
+.prog-num.active{background:var(--red);color:#fff;box-shadow:0 0 0 3px rgba(212,43,43,0.2);}
+.prog-label{font-family:var(--fh);font-size:8px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#9ca3af;margin:0 6px;white-space:nowrap;}
+.prog-label.active{color:var(--red);}
+.prog-line{width:20px;height:2px;background:#e5e7eb;flex-shrink:0;}
+.prog-line.done{background:var(--green);}
+
+/* STEP CONTENT */
+.step-wrap{max-width:720px;margin:0 auto;padding:24px 20px;}
+.sc{display:none;}
+.sc.active{display:block;}
+.step-title{font-family:var(--fh);font-weight:800;font-size:22px;color:#111;margin-bottom:6px;}
+.step-sub{font-size:14px;color:#6b7280;line-height:1.6;margin-bottom:24px;}
+
+/* POPIA */
+.popia{background:#fef2f2;border-left:4px solid var(--red);border-radius:0 8px 8px 0;padding:14px 16px;margin-bottom:24px;}
+.popia-title{font-family:var(--fh);font-size:10px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--red);margin-bottom:6px;}
+.popia p{font-size:13px;color:#374151;line-height:1.6;}
+
+/* FORM */
+.fg{margin-bottom:16px;}
+.fg label{display:block;font-family:var(--fh);font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#374151;margin-bottom:6px;}
+.fg input,.fg select,.fg textarea{width:100%;padding:11px 14px;border:1.5px solid #d1d5db;border-radius:var(--radius);font-family:var(--fb);font-size:14px;background:#fff;color:#111;outline:none;transition:border-color .2s;}
+.fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--red);box-shadow:0 0 0 3px rgba(212,43,43,0.08);}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.three{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;}
+
+/* INDUCTION TYPE */
+.type-cards{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px;}
+.type-card{border:2px solid #d1d5db;border-radius:12px;padding:20px;cursor:pointer;transition:all .2s;text-align:center;}
+.type-card:hover{border-color:var(--red);}
+.type-card.selected{border-color:var(--red);background:#fef2f2;}
+.type-card-icon{font-size:28px;margin-bottom:8px;}
+.type-card-name{font-family:var(--fh);font-size:13px;font-weight:800;color:#111;margin-bottom:4px;}
+.type-card-desc{font-size:12px;color:#6b7280;}
+
+/* GROUP MEMBERS */
+.member-row{background:#f9fafb;border:1.5px solid #e5e7eb;border-radius:8px;padding:14px;margin-bottom:10px;}
+.member-num{font-family:var(--fh);font-size:10px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--red);margin-bottom:10px;}
+.member-grid{display:grid;grid-template-columns:1fr 1fr 140px 1fr 1fr;gap:10px;align-items:end;}
+@media(max-width:700px){.member-grid{grid-template-columns:1fr 1fr;}}
+@media(max-width:400px){.member-grid{grid-template-columns:1fr;}}
+
+/* TOPIC HEADER */
+.topic-hdr{background:var(--red);color:#fff;padding:10px 16px;border-radius:8px 8px 0 0;font-family:var(--fh);font-size:10px;font-weight:800;letter-spacing:2px;text-transform:uppercase;margin-bottom:0;}
+.topic-body{background:#fff;border:1.5px solid #e5e7eb;border-top:none;border-radius:0 0 8px 8px;padding:16px;margin-bottom:20px;}
+
+/* QUIZ */
+.qopts{display:flex;flex-direction:column;gap:8px;margin-top:10px;}
+.qopt{padding:12px 14px;border:1.5px solid #d1d5db;border-radius:8px;cursor:pointer;font-size:14px;transition:all .2s;background:#fff;}
+.qopt:hover{border-color:var(--red);background:#fef2f2;}
+.qopt.correct{border-color:var(--green)!important;background:rgba(34,197,94,0.08)!important;color:#166534;}
+.qopt.wrong{border-color:#ef4444!important;background:rgba(239,68,68,0.08)!important;color:#991b1b;}
+
+/* LEGAL */
+.legal-item{display:flex;gap:12px;align-items:flex-start;padding:14px;border:1.5px solid #e5e7eb;border-radius:8px;margin-bottom:8px;cursor:pointer;transition:all .2s;background:#fff;}
+.legal-item:hover{border-color:var(--red);}
+.legal-item.checked{border-color:var(--green);background:rgba(34,197,94,0.04);}
+.legal-item input{accent-color:var(--green);width:18px;height:18px;flex-shrink:0;margin-top:2px;}
+.legal-text{font-size:13px;color:#374151;line-height:1.6;}
+
+/* EMERGENCY */
+.emergency{background:#fff3cd;border-left:4px solid #f59e0b;border-radius:0 8px 8px 0;padding:14px 16px;margin-top:16px;}
+.emergency-title{font-family:var(--fh);font-size:10px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:#92400e;margin-bottom:8px;}
+.emergency p{font-size:13px;color:#78350f;line-height:1.8;}
+
+/* BUTTONS */
+.btn-row{display:flex;gap:10px;margin-top:24px;justify-content:flex-end;}
+.btn{padding:12px 24px;border:none;border-radius:var(--radius);font-family:var(--fh);font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;cursor:pointer;transition:all .2s;}
+.btn-red{background:var(--red);color:#fff;}
+.btn-red:hover{opacity:.87;}
+.btn-red:disabled{opacity:.4;cursor:not-allowed;}
+.btn-ghost{background:transparent;border:1.5px solid #d1d5db;color:#374151;}
+.btn-ghost:hover{border-color:var(--red);color:var(--red);}
+
+/* CERTIFICATE */
+.cert-done{text-align:center;padding:20px 0;}
+.cert-done-icon{font-size:48px;margin-bottom:12px;}
+.cert-done-title{font-family:var(--fh);font-size:22px;font-weight:900;color:var(--red);margin-bottom:6px;}
+.cert-done-sub{font-size:14px;color:#6b7280;margin-bottom:24px;}
+.cert{background:#fff;border:1px solid #e5e7eb;border-radius:12px;overflow:hidden;max-width:600px;margin:0 auto;box-shadow:0 4px 24px rgba(0,0,0,0.08);}
+.cert-stripe{background:linear-gradient(135deg,var(--red) 0%,#a01f1f 100%);padding:20px 24px;display:flex;align-items:center;justify-content:space-between;}
+.cert-stripe-logo{height:36px;width:auto;object-fit:contain;max-width:110px;background:rgba(255,255,255,0.15);padding:4px 8px;border-radius:6px;}
+.cert-stripe-title{font-family:var(--fh);font-size:9px;font-weight:800;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,0.7);text-align:right;}
+.cert-stripe-sub{font-family:var(--fh);font-size:13px;font-weight:900;color:#fff;text-align:right;}
+.cert-client-logo{text-align:right;padding:12px 24px 0;display:none;}
+.cert-client-logo img{height:36px;object-fit:contain;max-width:120px;border-radius:4px;}
+.cert-body{padding:24px;}
+.cert-label{font-family:var(--fh);font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#9ca3af;margin-bottom:4px;}
+.cert-name{font-family:var(--fh);font-size:clamp(22px,4vw,32px);font-weight:900;color:#111;margin-bottom:4px;}
+.cert-id{font-size:13px;color:#6b7280;margin-bottom:20px;}
+.cert-event{font-family:var(--fh);font-size:clamp(18px,3vw,26px);font-weight:900;color:var(--red);margin-bottom:4px;}
+.cert-venue{font-size:13px;color:#6b7280;margin-bottom:16px;}
+.cert-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;border-top:1px solid #f3f4f6;padding-top:16px;}
+.cert-field label{font-family:var(--fh);font-size:8px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#9ca3af;display:block;margin-bottom:2px;}
+.cert-field span{font-size:13px;font-weight:600;color:#111;}
+.cert-footer{border-top:1px solid #f3f4f6;padding-top:16px;display:flex;align-items:flex-end;justify-content:space-between;gap:16px;}
+.cert-code-label{font-family:var(--fh);font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#9ca3af;margin-bottom:4px;}
+.cert-code{font-family:var(--fh);font-size:22px;font-weight:900;color:var(--red);letter-spacing:5px;}
+.cert-verified{display:inline-flex;align-items:center;gap:5px;font-family:var(--fh);font-size:8px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--green);border:1.5px solid rgba(34,197,94,0.3);padding:4px 10px;border-radius:20px;background:rgba(34,197,94,0.06);margin-bottom:8px;}
+#qrCode{margin-top:8px;}
+.cert-actions{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:16px;}
+.cert-actions .btn{font-size:10px;padding:10px 18px;}
+
+/* MULTI CERT */
+.multi-cert-wrap{display:none;flex-direction:column;gap:20px;}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1f2937;color:#fff;padding:12px 24px;border-radius:8px;font-family:var(--fh);font-size:12px;font-weight:700;letter-spacing:1px;z-index:1000;opacity:0;transition:opacity .3s;white-space:nowrap;}
+.toast.show{opacity:1;}
+.toast.success{background:#065f46;}
+.toast.error{background:#7f1d1d;}
+
+@media(max-width:600px){
+  .two,.three{grid-template-columns:1fr;}
+  .type-cards{grid-template-columns:1fr;}
+  .cert-grid{grid-template-columns:1fr;}
+  .cert-footer{flex-direction:column;align-items:flex-start;}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav">
+  <a class="logo" href="/" title="Return to Portal">
+    <img id="impiLogo" src="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 30'><rect width='80' height='30' fill='%23d42b2b'/><text x='40' y='21' text-anchor='middle' fill='white' font-size='14' font-weight='bold'>IMPI</text></svg>" alt="IMPI"/>
+  </a>
+  <span class="nav-sep">|</span>
+  <span class="nav-type" id="navType" data-i18n="nav_type">Safety Induction Questionnaire</span>
+  <div class="nav-right">
+    <!-- Language switcher -->
+    <div style="position:relative">
+      <button class="lang-btn" onclick="toggleLangMenu()" id="langBtn">🌐 <span id="langLabel">EN</span> ▾</button>
+      <div class="lang-dropdown" id="langDropdown">
+        <div class="lang-option active" onclick="setLang('en')"><span class="lang-flag">🇬🇧</span>English</div>
+        <div class="lang-option" onclick="setLang('af')"><span class="lang-flag">🇿🇦</span>Afrikaans</div>
+        <div class="lang-option" onclick="setLang('zu')"><span class="lang-flag">🇿🇦</span>isiZulu</div>
+        <div class="lang-option" onclick="setLang('sw')"><span class="lang-flag">🇰🇪</span>Swahili</div>
+        <div class="lang-option" onclick="setLang('fr')"><span class="lang-flag">🇫🇷</span>Français</div>
+        <div class="lang-option" onclick="setLang('pt')"><span class="lang-flag">🇲🇿</span>Português</div>
+        <div class="lang-option" onclick="setLang('ha')"><span class="lang-flag">🇳🇬</span>Hausa</div>
+        <div class="lang-option" onclick="setLang('yo')"><span class="lang-flag">🇳🇬</span>Yorùbá</div>
+      </div>
+    </div>
+    <button class="nav-back-btn" onclick="goBack()">← <span data-i18n="btn_back">Back</span></button>
+    <a class="nav-back-btn" href="/">🏠 <span data-i18n="btn_home">Home</span></a>
+  </div>
+</nav>
+
+<!-- BANNER -->
+<div class="banner">
+  <div class="ban-top">
+    <img class="ban-logo" id="banLogo" src="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 30'><rect width='80' height='30' fill='rgba(255,255,255,0.2)'/><text x='40' y='21' text-anchor='middle' fill='white' font-size='14' font-weight='bold'>IMPI</text></svg>" alt="IMPI"/>
+    <span class="ban-type" data-i18n="nav_type">Safety Induction Questionnaire</span>
+    <img class="ban-client-logo" id="banClientLogo" src="" alt=""/>
+  </div>
+  <div class="ban-title" id="banTitle">EVENT</div>
+  <div class="ban-meta">
+    <div class="bm"><div class="bm-lbl" data-i18n="lbl_venue">Venue</div><div class="bm-val" id="banVenue">—</div></div>
+    <div class="bm"><div class="bm-lbl" data-i18n="lbl_buildup">Build-Up</div><div class="bm-val" id="banBU">—</div></div>
+    <div class="bm"><div class="bm-lbl" data-i18n="lbl_event">Event</div><div class="bm-val" id="banEvt">—</div></div>
+    <div class="bm"><div class="bm-lbl" data-i18n="lbl_organiser">Organiser</div><div class="bm-val" id="banOrg">—</div></div>
+  </div>
+</div>
+
+<!-- PROGRESS -->
+<div class="prog-wrap">
+  <div class="prog" id="progBar"></div>
+</div>
+
+<!-- STEPS -->
+<div class="step-wrap">
+
+<!-- STEP 0: INDUCTION TYPE -->
+<div class="sc active" id="step0">
+  <div class="step-title" data-i18n="type_title">Select Induction Type</div>
+  <div class="step-sub" data-i18n="type_sub">Are you completing this induction individually or on behalf of a team?</div>
+  <div class="type-cards">
+    <div class="type-card" id="typeIndiv" onclick="selectType('individual')">
+      <div class="type-card-icon">👤</div>
+      <div class="type-card-name" data-i18n="type_individual">Individual</div>
+      <div class="type-card-desc" data-i18n="type_individual_desc">I am completing this for myself</div>
+    </div>
+    <div class="type-card" id="typeGroup" onclick="selectType('group')">
+      <div class="type-card-icon">👥</div>
+      <div class="type-card-name" data-i18n="type_group">Group / Team</div>
+      <div class="type-card-desc" data-i18n="type_group_desc">I am completing this on behalf of multiple people</div>
+    </div>
+  </div>
+  <div id="groupSizeWrap" style="display:none;margin-bottom:20px">
+    <div class="fg">
+      <label data-i18n="lbl_group_size">Number of additional team members (excluding yourself — the inductor)</label>
+      <select id="groupSize" onchange="buildGroupForm()">
+        <option value="">— Select —</option>
+      </select>
+    </div>
+    <div id="groupMembersForm"></div>
+  </div>
+  <div class="btn-row">
+    <button class="btn btn-red" id="btn0next" onclick="nextStep(0)" disabled data-i18n="btn_next">Next →</button>
+  </div>
+</div>
+
+<!-- STEP 1: PERSONAL INFO -->
+<div class="sc" id="step1">
+  <div class="step-title" data-i18n="step1_title">Personal Information</div>
+  <div class="step-sub" data-i18n="step1_sub">All inductees must complete all questions. Please enter your personal or work email — this email will receive proof of completion.</div>
+  <div class="popia">
+    <div class="popia-title" data-i18n="popia_title">Protection of Personal Information Act (POPIA)</div>
+    <p data-i18n="popia_text">IMPI Protection Agency is committed to protecting your personal data. By engaging with this form, you acknowledge that your personal information is processed in accordance with our privacy policies and POPIA regulations.</p>
+  </div>
+  <div class="fg"><label data-i18n="lbl_email">Email Address *</label><input type="email" id="p_email" placeholder="your@email.com"/></div>
+  <div class="fg">
+    <label data-i18n="lbl_role">Role in Company *</label>
+    <select id="p_role">
+      <option value="" data-i18n="role_select">Select your role...</option>
+      <option value="Project Manager" data-i18n="role_pm">Project Manager / Owner</option>
+      <option value="Contractor" data-i18n="role_contractor">Contractor</option>
+      <option value="Sub-Contractor" data-i18n="role_sub">Sub-Contractor</option>
+      <option value="Exhibitor" data-i18n="role_exhibitor">Exhibitor</option>
+      <option value="Supplier" data-i18n="role_supplier">Supplier</option>
+      <option value="Venue Staff" data-i18n="role_venue">Venue Staff</option>
+      <option value="Event Staff" data-i18n="role_event">Event Staff</option>
+      <option value="Visitor" data-i18n="role_visitor">Visitor</option>
+    </select>
+  </div>
+  <div class="two">
+    <div class="fg"><label data-i18n="lbl_name">First Name *</label><input type="text" id="p_name" placeholder="Your first name"/></div>
+    <div class="fg"><label data-i18n="lbl_surname">Surname *</label><input type="text" id="p_surname" placeholder="Your surname"/></div>
+  </div>
+  <div class="three">
+    <div class="fg">
+      <label data-i18n="lbl_id_type">Identification Type *</label>
+      <select id="p_id_type">
+        <option value="" data-i18n="id_select">Select type...</option>
+        <option value="SA ID">🇿🇦 SA ID Number</option>
+        <option value="Passport">🌍 Passport Number</option>
+        <option value="NIN">🇳🇬 NIN (Nigeria)</option>
+        <option value="National ID">🇰🇪 National ID (Kenya)</option>
+        <option value="Employee No">🏢 Company Employee Number</option>
+        <option value="Other">📋 Other</option>
+      </select>
+    </div>
+    <div class="fg"><label data-i18n="lbl_id">Identification Number *</label><input type="text" id="p_id" placeholder="Enter your identification number"/></div>
+    <div class="fg"><label data-i18n="lbl_phone">Phone Number</label><input type="tel" id="p_phone" placeholder="e.g. 083 000 0000"/></div>
+  </div>
+  <div class="two">
+    <div class="fg"><label data-i18n="lbl_company">Company Name *</label><input type="text" id="p_company" placeholder="Your company name"/></div>
+    <div class="fg"><label data-i18n="lbl_trade">Trade / Occupation *</label><input type="text" id="p_trade" placeholder="e.g. Electrician, Carpenter"/></div>
+  </div>
+  <div class="btn-row">
+    <button class="btn btn-ghost" onclick="prevStep(1)" data-i18n="btn_back">← Back</button>
+    <button class="btn btn-red" onclick="nextStep(1)" data-i18n="btn_next">Next →</button>
+  </div>
+</div>
+
+<!-- TOPIC STEPS: dynamically generated by buildTopicSteps() -->
+<div id="topicSteps"></div>
+
+<!-- STEP 2: SAFETY FILE (fallback, hidden by default — replaced by dynamic steps) -->
+<div class="sc" id="step2" style="display:none">
+  <div class="topic-hdr" data-i18n="topic2">Topic 1 — Safety File &amp; Accreditation</div>
+  <div class="topic-body">
+    <p style="font-size:14px;line-height:1.8;color:#374151" data-i18n="topic2_text">Your company must have a valid safety file available on site at all times during Build-Up, Event, and Breakdown. This file must include: company registration, tax clearance, public liability insurance, letter of good standing (COID), and all relevant compliance documents.</p>
+    <div class="qopts" id="q2_opts">
+      <div class="qopt" onclick="answerQuiz('q2',this,true)" data-i18n="q2_correct">✓ I confirm my company safety file is complete and available on site</div>
+      <div class="qopt" onclick="answerQuiz('q2',this,false)" data-i18n="q2_wrong">I am not sure about the safety file requirements</div>
+    </div>
+  </div>
+  <div class="btn-row">
+    <button class="btn btn-ghost" onclick="prevStep(2)" data-i18n="btn_back">← Back</button>
+    <button class="btn btn-red" id="btn2next" onclick="nextStep(2)" disabled data-i18n="btn_next">Next →</button>
+  </div>
+</div>
+
+<!-- STEP 3: PPE -->
+<div class="sc" id="step3">
+  <div class="topic-hdr" data-i18n="topic3">Topic 2 — Personal Protective Equipment (PPE)</div>
+  <div class="topic-body">
+    <p style="font-size:14px;line-height:1.8;color:#374151;margin-bottom:14px" data-i18n="topic3_text">All contractors, exhibitors and suppliers must wear appropriate PPE at all times during Build-Up and Breakdown. Minimum requirements include: safety boots (steel toe-capped), hard hat/helmet, high-visibility vest, and any additional PPE required for your specific trade.</p>
+    <p style="font-size:13px;color:#dc2626;font-weight:600" data-i18n="topic3_warning">⚠ Access to the venue will be denied without proper PPE.</p>
+    <div class="qopts" id="q3_opts">
+      <div class="qopt" onclick="answerQuiz('q3',this,true)" data-i18n="q3_correct">✓ I understand PPE requirements and will comply at all times</div>
+      <div class="qopt" onclick="answerQuiz('q3',this,false)" data-i18n="q3_wrong">PPE is only required in certain areas</div>
+    </div>
+  </div>
+  <div class="btn-row">
+    <button class="btn btn-ghost" onclick="prevStep(3)" data-i18n="btn_back">← Back</button>
+    <button class="btn btn-red" id="btn3next" onclick="nextStep(3)" disabled data-i18n="btn_next">Next →</button>
+  </div>
+</div>
+
+<!-- STEP 4: HOUSEKEEPING -->
+<div class="sc" id="step4">
+  <div class="topic-hdr" data-i18n="topic4">Topic 3 — Housekeeping &amp; Waste Management</div>
+  <div class="topic-body">
+    <p style="font-size:14px;line-height:1.8;color:#374151;margin-bottom:14px" data-i18n="topic4_text">All contractors and exhibitors are responsible for maintaining a clean and safe working environment. This includes: removing all waste daily, keeping walkways and emergency exits clear at all times, disposing of hazardous materials correctly, and ensuring no trip or slip hazards are left unattended.</p>
+    <div class="qopts" id="q4_opts">
+      <div class="qopt" onclick="answerQuiz('q4',this,true)" data-i18n="q4_correct">✓ I will maintain a clean working area and dispose of waste correctly</div>
+      <div class="qopt" onclick="answerQuiz('q4',this,false)" data-i18n="q4_wrong">Waste removal is the venue's responsibility</div>
+    </div>
+  </div>
+  <div class="btn-row">
+    <button class="btn btn-ghost" onclick="prevStep(4)" data-i18n="btn_back">← Back</button>
+    <button class="btn btn-red" id="btn4next" onclick="nextStep(4)" disabled data-i18n="btn_next">Next →</button>
+  </div>
+</div>
+
+<!-- STEP 5: EMERGENCY PROCEDURES -->
+<div class="sc" id="step5">
+  <div class="topic-hdr" data-i18n="topic5">Topic 4 — Emergency Procedures</div>
+  <div class="topic-body">
+    <p style="font-size:14px;line-height:1.8;color:#374151;margin-bottom:14px" data-i18n="topic5_text">In the event of an emergency: immediately stop all work, raise the alarm, evacuate to the designated assembly point, do not use lifts, do not re-enter the building until cleared by emergency services, and report all incidents to the Safety Manager immediately.</p>
+    <p style="font-size:13px;color:#374151;font-weight:600;margin-bottom:10px" data-i18n="topic5_assembly">Assembly Point: As indicated on site signage</p>
+    <div class="qopts" id="q5_opts">
+      <div class="qopt" onclick="answerQuiz('q5',this,true)" data-i18n="q5_correct">✓ I understand emergency procedures and know my assembly point</div>
+      <div class="qopt" onclick="answerQuiz('q5',this,false)" data-i18n="q5_wrong">I should continue working until told to stop</div>
+    </div>
+  </div>
+  <div class="btn-row">
+    <button class="btn btn-ghost" onclick="prevStep(5)" data-i18n="btn_back">← Back</button>
+    <button class="btn btn-red" id="btn5next" onclick="nextStep(5)" disabled data-i18n="btn_next">Next →</button>
+  </div>
+</div>
+
+<!-- STEP 6: POWER TOOLS -->
+<div class="sc" id="step6">
+  <div class="topic-hdr" data-i18n="topic6">Topic 5 — Power Tools &amp; Equipment</div>
+  <div class="topic-body">
+    <p style="font-size:14px;line-height:1.8;color:#374151;margin-bottom:14px" data-i18n="topic6_text">All power tools and electrical equipment must be tested and tagged before use. Operators must be trained and competent. Extension cords must not present trip hazards. No tools may be left unattended while powered. Generators require prior written approval.</p>
+    <div class="qopts" id="q6_opts">
+      <div class="qopt" onclick="answerQuiz('q6',this,false)" data-i18n="q6_wrong">Any person may use power tools without training</div>
+      <div class="qopt" onclick="answerQuiz('q6',this,true)" data-i18n="q6_correct">✓ Only trained, competent operators may use power tools and all equipment must be tested and tagged</div>
+    </div>
+  </div>
+  <div class="btn-row">
+    <button class="btn btn-ghost" onclick="prevStep(6)" data-i18n="btn_back">← Back</button>
+    <button class="btn btn-red" id="btn6next" onclick="nextStep(6)" disabled data-i18n="btn_next">Next →</button>
+  </div>
+</div>
+
+<!-- STEP 7: VEHICLES -->
+<div class="sc" id="step7">
+  <div class="topic-hdr" data-i18n="topic7">Topic 6 — Vehicles &amp; Material Handling</div>
+  <div class="topic-body">
+    <p style="font-size:14px;line-height:1.8;color:#374151;margin-bottom:14px" data-i18n="topic7_text">Vehicle access to the venue is restricted to designated times and areas only. Speed limit on site is 10km/h. Forklifts and pallet jacks require a valid operator certificate. All loading and unloading must be supervised. Pedestrians have right of way at all times.</p>
+    <div class="qopts" id="q7_opts">
+      <div class="qopt" onclick="answerQuiz('q7',this,true)" data-i18n="q7_correct">✓ I will comply with all vehicle and material handling regulations on site</div>
+      <div class="qopt" onclick="answerQuiz('q7',this,false)" data-i18n="q7_wrong">I can park and drive anywhere on the venue property</div>
+    </div>
+  </div>
+  <div class="btn-row">
+    <button class="btn btn-ghost" onclick="prevStep(7)" data-i18n="btn_back">← Back</button>
+    <button class="btn btn-red" id="btn7next" onclick="nextStep(7)" disabled data-i18n="btn_next">Next →</button>
+  </div>
+</div>
+
+<!-- STEP 8: FIRE SAFETY -->
+<div class="sc" id="step8">
+  <div class="topic-hdr" data-i18n="topic8">Topic 7 — Fire Safety</div>
+  <div class="topic-body">
+    <p style="font-size:14px;line-height:1.8;color:#374151;margin-bottom:14px" data-i18n="topic8_text">No open flames are permitted in the venue without written approval from the Safety Manager. All hot work requires a hot work permit. Fire extinguishers must not be obstructed. Smoking is only permitted in designated areas. Report any fire hazards immediately.</p>
+    <div class="qopts" id="q8_opts">
+      <div class="qopt" onclick="answerQuiz('q8',this,false)" data-i18n="q8_wrong">I can smoke anywhere in the venue</div>
+      <div class="qopt" onclick="answerQuiz('q8',this,true)" data-i18n="q8_correct">✓ I understand fire safety rules and will only smoke in designated areas</div>
+    </div>
+  </div>
+  <div class="btn-row">
+    <button class="btn btn-ghost" onclick="prevStep(8)" data-i18n="btn_back">← Back</button>
+    <button class="btn btn-red" id="btn8next" onclick="nextStep(8)" disabled data-i18n="btn_next">Next →</button>
+  </div>
+</div>
+
+<!-- LEGAL STEP -->
+<div class="sc" id="stepLegal">
+  <div class="step-title" data-i18n="step9_title">Legal Confirmation</div>
+  <div class="step-sub" data-i18n="step9_sub">Please read and confirm each statement before generating your certificate.</div>
+
+  <div class="legal-item" id="l1" onclick="toggleLegal('l1')">
+    <input type="checkbox" id="l1c" onclick="event.stopPropagation()"/>
+    <span class="legal-text" data-i18n="legal1">I Agree — I understand that damaging private property in the venue will result in an invoice for damages charged to my company.</span>
+  </div>
+  <div class="legal-item" id="l2" onclick="toggleLegal('l2')">
+    <input type="checkbox" id="l2c" onclick="event.stopPropagation()"/>
+    <span class="legal-text" data-i18n="legal2">I acknowledge that IMPI Safety Services reserves the right to verify this induction at any time and take corrective action if deficiencies are identified.</span>
+  </div>
+  <div class="legal-item" id="l3" onclick="toggleLegal('l3')">
+    <input type="checkbox" id="l3c" onclick="event.stopPropagation()"/>
+    <span class="legal-text" data-i18n="legal3">I accept that IMPI Safety Services is not liable for any harm, loss, or damage that occurs due to my failure to properly induct my team or their non-compliance.</span>
+  </div>
+  <div class="legal-item" id="l4" onclick="toggleLegal('l4')">
+    <input type="checkbox" id="l4c" onclick="event.stopPropagation()"/>
+    <span class="legal-text" data-i18n="legal4">I confirm I have read and understood all induction rules, safety regulations, PPE requirements, and site rules, and will comply at all times during Build-Up, Event, and Breakdown.</span>
+  </div>
+  <div class="legal-item" id="l5" onclick="toggleLegal('l5')">
+    <input type="checkbox" id="l5c" onclick="event.stopPropagation()"/>
+    <span class="legal-text" data-i18n="legal5">I understand and accept that all rules applicable for Build-Up are also applicable to the Breakdown, including all full right-only movements, security rules, and safety regulations.</span>
+  </div>
+
+  <div class="emergency" id="emergencyContacts">
+    <div class="emergency-title" data-i18n="emergency_title">Emergency Contacts</div>
+    <p id="emergencyText">Loading...</p>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn btn-ghost" onclick="prevLegal()" data-i18n="btn_back">← Back</button>
+    <button class="btn btn-red" id="btnLegalNext" onclick="generateCert()" disabled data-i18n="btn_generate">Generate Certificate →</button>
+  </div>
+</div>
+
+<!-- CERT STEP -->
+<div class="sc" id="stepCert">
+  <div class="cert-done">
+    <div class="cert-done-icon">🎉</div>
+    <div class="cert-done-title" data-i18n="cert_title">Induction Complete!</div>
+    <div class="cert-done-sub" data-i18n="cert_sub">Your certificate has been generated. Present it at the venue entrance.</div>
+  </div>
+
+  <!-- Single certificate -->
+  <div id="certSingle">
+    <div class="cert" id="certificate">
+      <div class="cert-stripe">
+        <img class="cert-stripe-logo" id="certLogo" src="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 30'><rect width='80' height='30' fill='rgba(255,255,255,0.2)'/><text x='40' y='21' text-anchor='middle' fill='white' font-size='14' font-weight='bold'>IMPI</text></svg>" alt="IMPI"/>
+        <div>
+          <div class="cert-stripe-title" data-i18n="cert_official">Official Document</div>
+          <div class="cert-stripe-sub" data-i18n="cert_safety_cert">Safety Induction Certificate</div>
+        </div>
+      </div>
+      <div class="cert-client-logo" id="certClientLogoWrap"><img id="certClientLogo" src="" alt=""/></div>
+      <div class="cert-body">
+        <div class="cert-label" data-i18n="cert_certifies">This certifies that</div>
+        <div class="cert-name" id="cName">—</div>
+        <div class="cert-id" id="cId">—</div>
+        <div style="font-size:12px;color:#9ca3af;margin-bottom:6px" data-i18n="cert_completed_for">Has successfully completed the safety induction for</div>
+        <div class="cert-event" id="cEvTitle">—</div>
+        <div class="cert-venue" id="cVenue">—</div>
+        <div class="cert-grid">
+          <div class="cert-field"><label data-i18n="lbl_role">Role</label><span id="cRole">—</span></div>
+          <div class="cert-field"><label data-i18n="lbl_trade">Trade</label><span id="cTrade">—</span></div>
+          <div class="cert-field"><label data-i18n="lbl_company">Company</label><span id="cCompany">—</span></div>
+          <div class="cert-field"><label data-i18n="cert_completed">Completed</label><span id="cCompleted">—</span></div>
+        </div>
+        <!-- Organiser logo -->
+        <div class="cert-org-logo" id="certOrgLogoWrap" style="display:none;text-align:center;padding:12px 0;border-top:1px solid #f3f4f6">
+          <div style="font-size:8px;font-family:var(--fh);font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#9ca3af;margin-bottom:6px">Organised By</div>
+          <img id="certOrgLogo" src="" alt="" style="height:36px;max-width:160px;object-fit:contain"/>
+        </div>
+        <div class="cert-footer">
+          <div>
+            <div class="cert-verified" data-i18n="cert_verified">✓ Verified &amp; Active</div>
+            <div class="cert-code-label" data-i18n="cert_code_label">Certificate Code</div>
+            <div class="cert-code" id="cCode">—</div>
+            <div style="font-size:11px;color:#9ca3af;margin-top:4px" data-i18n="cert_issued">Issued by IMPI Safety Services International</div>
+          </div>
+          <div>
+            <div id="qrCode"></div>
+            <div style="font-size:9px;color:#9ca3af;text-align:center;margin-top:4px" data-i18n="cert_scan">Scan to Verify</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="cert-actions">
+      <button class="btn btn-red" onclick="window.print()" data-i18n="btn_print">🖨 Print / Save PDF</button>
+      <button class="btn btn-ghost" onclick="shareCert()" data-i18n="btn_share">📤 Share</button>
+      <button class="btn btn-ghost" onclick="resendEmail()" data-i18n="btn_email">📧 Email Certificate</button>
+    </div>
+  </div>
+
+  <!-- Multi certificate (group) -->
+  <div class="multi-cert-wrap" id="certMulti"></div>
+</div>
+
+</div><!-- end step-wrap -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ── STATE ──
+let currentEvent = null;
+let inductionType = 'individual';
+let quizAnswers = {};
+let currentStep = 0;
+let topicCount = 7;
+let totalSteps = 10;
+let steps = ['type','info','safety','ppe','housekeeping','emergency','tools','vehicles','fire','legal','certificate'];
+
+// Populate group size dropdown 2–35
+(function() {
+  const sel = document.getElementById('groupSize');
+  for (let n = 2; n <= 35; n++) {
+    const opt = document.createElement('option');
+    opt.value = n;
+    opt.textContent = n;
+    sel.appendChild(opt);
+  }
+})();
+
+// Legal step = topicCount + 2, Cert step = topicCount + 3
+function legalStepIndex() { return topicCount + 2; }
+function certStepIndex()  { return topicCount + 3; }
+
+function getStepEl(n) {
+  if (n === legalStepIndex()) return document.getElementById('stepLegal');
+  if (n === certStepIndex())  return document.getElementById('stepCert');
+  return document.getElementById('step' + n);
+}
+
+// ── DYNAMIC TOPIC STEPS ──
+function buildTopicSteps(topics) {
+  topicCount = topics.length;
+  totalSteps = topicCount + 3;
+  steps = ['type','info',...topics.map((_,i)=>'topic'+(i+1)),'legal','certificate'];
+
+  const container = document.getElementById('topicSteps');
+  container.innerHTML = topics.map((topic, i) => {
+    const stepN = i + 2;
+    const qid = 'q' + stepN;
+    const warn = topic.warning ? `<p style="font-size:13px;color:#dc2626;font-weight:600;margin-bottom:10px">${escHtml(topic.warning)}</p>` : '';
+    return `<div class="sc" id="step${stepN}">
+  <div class="topic-hdr">${escHtml(topic.title)}</div>
+  <div class="topic-body">
+    <p style="font-size:14px;line-height:1.8;color:#374151;margin-bottom:14px">${escHtml(topic.body)}</p>
+    ${warn}
+    <div class="qopts" id="${qid}_opts">
+      <div class="qopt" onclick="answerQuiz('${qid}',this,true)">${escHtml(topic.quiz_correct)}</div>
+      <div class="qopt" onclick="answerQuiz('${qid}',this,false)">${escHtml(topic.quiz_wrong)}</div>
+    </div>
+  </div>
+  <div class="btn-row">
+    <button class="btn btn-ghost" onclick="prevStep(${stepN})" data-i18n="btn_back">← Back</button>
+    <button class="btn btn-red" id="btn${stepN}next" onclick="nextStep(${stepN})" disabled data-i18n="btn_next">Next →</button>
+  </div>
+</div>`;
+  }).join('\n');
+}
+
+function escHtml(s) {
+  return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+const DEFAULT_TOPICS = [
+  { title:'Topic 1 — Safety File & Accreditation', body:'Your company must have a valid safety file available on site at all times during Build-Up, Event, and Breakdown. This file must include: company registration, tax clearance, public liability insurance, letter of good standing (COID), and all relevant compliance documents.', warning:'', quiz_correct:'✓ I confirm my company safety file is complete and available on site', quiz_wrong:'I am not sure about the safety file requirements' },
+  { title:'Topic 2 — Personal Protective Equipment (PPE)', body:'All contractors, exhibitors and suppliers must wear appropriate PPE at all times during Build-Up and Breakdown. Minimum requirements include: safety boots (steel toe-capped), hard hat/helmet, high-visibility vest, and any additional PPE required for your specific trade.', warning:'⚠ Access to the venue will be denied without proper PPE.', quiz_correct:'✓ I understand PPE requirements and will comply at all times', quiz_wrong:'PPE is only required in certain areas' },
+  { title:'Topic 3 — Housekeeping & Waste Management', body:'All contractors and exhibitors are responsible for maintaining a clean and safe working environment. This includes: removing all waste daily, keeping walkways and emergency exits clear at all times, disposing of hazardous materials correctly, and ensuring no trip or slip hazards are left unattended.', warning:'', quiz_correct:'✓ I will maintain a clean working area and dispose of waste correctly', quiz_wrong:"Waste removal is the venue's responsibility" },
+  { title:'Topic 4 — Emergency Procedures', body:'In the event of an emergency: immediately stop all work, raise the alarm, evacuate to the designated assembly point, do not use lifts, do not re-enter the building until cleared by emergency services, and report all incidents to the Safety Manager immediately.', warning:'Assembly Point: As indicated on site signage', quiz_correct:'✓ I understand emergency procedures and know my assembly point', quiz_wrong:'I should continue working until told to stop' },
+  { title:'Topic 5 — Power Tools & Equipment', body:'All power tools and electrical equipment must be tested and tagged before use. Operators must be trained and competent. Extension cords must not present trip hazards. No tools may be left unattended while powered. Generators require prior written approval.', warning:'', quiz_correct:'✓ Only trained, competent operators may use power tools and all equipment must be tested and tagged', quiz_wrong:'Any person may use power tools without training' },
+  { title:'Topic 6 — Vehicles & Material Handling', body:'Vehicle access to the venue is restricted to designated times and areas only. Speed limit on site is 10km/h. Forklifts and pallet jacks require a valid operator certificate. All loading and unloading must be supervised. Pedestrians have right of way at all times.', warning:'', quiz_correct:'✓ I will comply with all vehicle and material handling regulations on site', quiz_wrong:'I can park and drive anywhere on the venue property' },
+  { title:'Topic 7 — Fire Safety', body:'No open flames are permitted in the venue without written approval from the Safety Manager. All hot work requires a hot work permit. Fire extinguishers must not be obstructed. Smoking is only permitted in designated areas. Report any fire hazards immediately.', warning:'', quiz_correct:'✓ I understand fire safety rules and will only smoke in designated areas', quiz_wrong:'I can smoke anywhere in the venue' }
+];
+
+// ── LANGUAGE SYSTEM ──
+const LANGS = {
+  en: { code:'en', label:'EN', name:'English' },
+  af: { code:'af', label:'AF', name:'Afrikaans' },
+  zu: { code:'zu', label:'ZU', name:'isiZulu' },
+  sw: { code:'sw', label:'SW', name:'Swahili' },
+  fr: { code:'fr', label:'FR', name:'Français' },
+  pt: { code:'pt', label:'PT', name:'Português' },
+  ha: { code:'ha', label:'HA', name:'Hausa' },
+  yo: { code:'yo', label:'YO', name:'Yorùbá' }
+};
+
+const TRANSLATIONS = {
+  en: {
+    nav_type:'Safety Induction Questionnaire', btn_back:'Back', btn_home:'Home',
+    type_title:'Select Induction Type', type_sub:'Are you completing this individually or on behalf of a team?',
+    type_individual:'Individual', type_individual_desc:'I am completing this for myself',
+    type_group:'Group / Team', type_group_desc:'Completing on behalf of multiple people',
+    lbl_group_size:'Number of additional team members (excluding yourself — the inductor)', btn_next:'Next →',
+    step1_title:'Personal Information', step1_sub:'Please enter your details. The email entered will receive your certificate.',
+    popia_title:'Protection of Personal Information Act (POPIA)',
+    popia_text:'IMPI Protection Agency is committed to protecting your personal data. By engaging with this form you acknowledge your information is processed in accordance with POPIA regulations.',
+    lbl_email:'Email Address *', lbl_role:'Role in Company *', lbl_name:'First Name *', lbl_surname:'Surname *',
+    lbl_id_type:'Identification Type *', lbl_id:'Identification Number *', id_select:'Select type...', lbl_phone:'Phone Number', lbl_company:'Company Name *', lbl_trade:'Trade / Occupation *',
+    role_select:'Select your role...', role_pm:'Project Manager / Owner', role_contractor:'Contractor',
+    role_sub:'Sub-Contractor', role_exhibitor:'Exhibitor', role_supplier:'Supplier',
+    role_venue:'Venue Staff', role_event:'Event Staff', role_visitor:'Visitor',
+    topic2:'Topic 1 — Safety File & Accreditation',
+    topic2_text:'Your company must have a valid safety file on site at all times including: company registration, tax clearance, public liability insurance, letter of good standing (COID), and all relevant compliance documents.',
+    q2_correct:'✓ I confirm my company safety file is complete and available on site',
+    q2_wrong:'I am not sure about the safety file requirements',
+    topic3:'Topic 2 — Personal Protective Equipment (PPE)',
+    topic3_text:'All contractors, exhibitors and suppliers must wear appropriate PPE at all times during Build-Up and Breakdown. Minimum: safety boots, hard hat, high-visibility vest, and trade-specific PPE.',
+    topic3_warning:'⚠ Access will be denied without proper PPE.',
+    q3_correct:'✓ I understand PPE requirements and will comply at all times',
+    q3_wrong:'PPE is only required in certain areas',
+    topic4:'Topic 3 — Housekeeping & Waste Management',
+    topic4_text:'All contractors and exhibitors are responsible for maintaining a clean, safe working environment. Remove all waste daily, keep walkways and emergency exits clear, dispose of hazardous materials correctly.',
+    q4_correct:'✓ I will maintain a clean working area and dispose of waste correctly',
+    q4_wrong:'Waste removal is the venue\'s responsibility',
+    topic5:'Topic 4 — Emergency Procedures',
+    topic5_text:'In an emergency: stop all work, raise the alarm, evacuate to the assembly point, do not use lifts, do not re-enter until cleared by emergency services, report all incidents to the Safety Manager.',
+    topic5_assembly:'Assembly Point: As indicated on site signage',
+    q5_correct:'✓ I understand emergency procedures and know my assembly point',
+    q5_wrong:'I should continue working until told to stop',
+    topic6:'Topic 5 — Power Tools & Equipment',
+    topic6_text:'All power tools must be tested and tagged. Operators must be trained and competent. Extension cords must not present trip hazards. No tools may be left unattended while powered. Generators require prior written approval.',
+    q6_correct:'✓ Only trained operators may use power tools and all equipment must be tested and tagged',
+    q6_wrong:'Any person may use power tools without training',
+    topic7:'Topic 6 — Vehicles & Material Handling',
+    topic7_text:'Vehicle access is restricted to designated times and areas. Speed limit on site is 10km/h. Forklifts require a valid operator certificate. Pedestrians have right of way at all times.',
+    q7_correct:'✓ I will comply with all vehicle and material handling regulations on site',
+    q7_wrong:'I can park and drive anywhere on the venue property',
+    topic8:'Topic 7 — Fire Safety',
+    topic8_text:'No open flames without written approval. All hot work requires a hot work permit. Fire extinguishers must not be obstructed. Smoking only in designated areas. Report fire hazards immediately.',
+    q8_correct:'✓ I understand fire safety rules and will only smoke in designated areas',
+    q8_wrong:'I can smoke anywhere in the venue',
+    step9_title:'Legal Confirmation', step9_sub:'Please read and confirm each statement.',
+    legal1:'I Agree — I understand that damaging private property will result in an invoice charged to my company.',
+    legal2:'I acknowledge that IMPI Safety Services reserves the right to verify this induction and take corrective action.',
+    legal3:'I accept that IMPI Safety Services is not liable for harm due to my failure to properly induct my team.',
+    legal4:'I confirm I have read and understood all induction rules, safety regulations, and site rules.',
+    legal5:'I understand all Build-Up rules also apply to Breakdown, including all movement and security rules.',
+    emergency_title:'Emergency Contacts', btn_generate:'Generate Certificate →',
+    cert_title:'Induction Complete!', cert_sub:'Your certificate has been generated. Present it at the venue entrance.',
+    cert_official:'Official Document', cert_safety_cert:'Safety Induction Certificate',
+    cert_certifies:'This certifies that', cert_completed_for:'Has successfully completed the safety induction for',
+    cert_verified:'✓ Verified & Active', cert_code_label:'Certificate Code',
+    cert_issued:'Issued by IMPI Safety Services International', cert_scan:'Scan to Verify',
+    cert_completed:'Completed', btn_print:'🖨 Print / Save PDF', btn_share:'📤 Share', btn_email:'📧 Email Certificate',
+    lbl_venue:'Venue', lbl_buildup:'Build-Up', lbl_event:'Event', lbl_organiser:'Organiser',
+    prog_labels:['Type','Info','Safety File','PPE','Housekeeping','Emergency','Tools','Vehicles','Fire','Legal','Certificate']
+  },
+  af: {
+    nav_type:'Veiligheidsinleiding Vraelys', btn_back:'Terug', btn_home:'Tuis',
+    type_title:'Kies Induksietipe', type_sub:'Voltooi jy dit vir jouself of namens \'n span?',
+    type_individual:'Individueel', type_individual_desc:'Ek voltooi dit vir myself',
+    type_group:'Groep / Span', type_group_desc:'Voltooi namens meerdere mense',
+    lbl_group_size:'Aantal spanlede', btn_next:'Volgende →',
+    step1_title:'Persoonlike Inligting', step1_sub:'Voer asseblief jou besonderhede in.',
+    popia_title:'Beskerming van Persoonlike Inligting Wet (POPIA)',
+    popia_text:'IMPI Beskermingsagentskap is daartoe verbind om jou persoonlike data te beskerm.',
+    lbl_email:'E-posadres *', lbl_role:'Rol in Maatskappy *', lbl_name:'Voornaam *', lbl_surname:'Van *',
+    lbl_id_type:'Identifikasietipe *', lbl_id:'Identifikasienommer *', id_select:'Kies tipe...', lbl_phone:'Telefoonnommer', lbl_company:'Maatskappynaam *', lbl_trade:'Beroep *',
+    role_select:'Kies jou rol...', role_pm:'Projekbestuurder / Eienaar', role_contractor:'Kontrakteur',
+    role_sub:'Sub-Kontrakteur', role_exhibitor:'Uitstalcr', role_supplier:'Verskaffer',
+    role_venue:'Venue Personeel', role_event:'Geleentheids Personeel', role_visitor:'Besoeker',
+    topic2:'Onderwerp 1 — Veiligheidslêer & Akkreditasie',
+    topic2_text:'Jou maatskappy moet \'n geldige veiligheidslêer te alle tye op die perseel hê.',
+    q2_correct:'✓ Ek bevestig dat my maatskappy se veiligheidslêer volledig en beskikbaar is',
+    q2_wrong:'Ek is nie seker van die vereistes nie',
+    topic3:'Onderwerp 2 — Persoonlike Beskermingsuitrusting (PBU)',
+    topic3_text:'Alle kontrakteurs moet toepaslike PBU dra tydens Opbou en Afbreek.',
+    topic3_warning:'⚠ Toegang word geweier sonder behoorlike PBU.',
+    q3_correct:'✓ Ek verstaan PBU-vereistes en sal te alle tye voldoen',
+    q3_wrong:'PBU word slegs in sekere areas vereis',
+    topic4:'Onderwerp 3 — Huishouding & Afvalbestuur',
+    topic4_text:'Alle kontrakteurs is verantwoordelik vir die handhawing van \'n skoon werksarea.',
+    q4_correct:'✓ Ek sal \'n skoon werksarea handhaaf',
+    q4_wrong:'Afvalverwydering is die venue se verantwoordelikheid',
+    topic5:'Onderwerp 4 — Noodprosedures',
+    topic5_text:'In \'n noodgeval: stop alle werk, aktiveer alarm, ontruim na bymekaarkompunt.',
+    topic5_assembly:'Bymekaarkompunt: Soos aangedui op terreinborde',
+    q5_correct:'✓ Ek verstaan noodprosedures en ken my bymekaarkompunt',
+    q5_wrong:'Ek moet voortgaan met werk totdat ek gesê word om te stop',
+    topic6:'Onderwerp 5 — Kragwerktuie & Toerusting',
+    topic6_text:'Alle kragwerktuie moet getoets en gemerk wees. Operateurs moet opgelei wees.',
+    q6_correct:'✓ Slegs opgeleide operateurs mag kragwerktuie gebruik',
+    q6_wrong:'Enige persoon mag kragwerktuie gebruik',
+    topic7:'Onderwerp 6 — Voertuie & Materiaalhantering',
+    topic7_text:'Voertuigtoegang is beperk tot aangewese tye. Spoed op terrein: 10km/h.',
+    q7_correct:'✓ Ek sal aan alle voertuig- en materiaalhanteringregulasies voldoen',
+    q7_wrong:'Ek kan enige plek parkeer en ry',
+    topic8:'Onderwerp 7 — Brandveiligheid',
+    topic8_text:'Geen oop vlamme sonder skriftelike goedkeuring. Rook slegs in aangewese areas.',
+    q8_correct:'✓ Ek verstaan brandveiligheidswette en sal slegs in aangewese areas rook',
+    q8_wrong:'Ek kan enige plek in die venue rook',
+    step9_title:'Regserkenning', step9_sub:'Lees en bevestig asseblief elke stelling.',
+    legal1:'Ek stem saam — Skade aan eiendom sal as \'n faktuur aan my maatskappy gerig word.',
+    legal2:'Ek erken dat IMPI die reg het om hierdie induksie te verifieer.',
+    legal3:'Ek aanvaar dat IMPI nie aanspreeklik is vir skade as gevolg van my versuim nie.',
+    legal4:'Ek bevestig dat ek alle reëls en veiligheidsregulasies gelees en verstaan het.',
+    legal5:'Ek verstaan dat alle Opbou-reëls ook van toepassing is op die Afbreek.',
+    emergency_title:'Noodkontakte', btn_generate:'Genereer Sertifikaat →',
+    cert_title:'Induksie Voltooi!', cert_sub:'Jou sertifikaat is gegenereer.',
+    cert_official:'Amptelike Dokument', cert_safety_cert:'Veiligheidsinleidingsertifikaat',
+    cert_certifies:'Dit sertifiseer dat', cert_completed_for:'Het die veiligheidsinleiding suksesvol voltooi vir',
+    cert_verified:'✓ Geverifieer & Aktief', cert_code_label:'Sertifikaatkode',
+    cert_issued:'Uitgereik deur IMPI Safety Services International', cert_scan:'Skandeer om te verifieer',
+    cert_completed:'Voltooi', btn_print:'🖨 Druk / Stoor PDF', btn_share:'📤 Deel', btn_email:'📧 E-pos Sertifikaat',
+    lbl_venue:'Venue', lbl_buildup:'Opbou', lbl_event:'Geleentheid', lbl_organiser:'Organiseerder',
+    prog_labels:['Tipe','Inligting','Veiligheidslêer','PBU','Huishouding','Nood','Werktuie','Voertuie','Brand','Regs','Sertifikaat']
+  },
+  zu: {
+    nav_type:'Uhlamiwa Lwezokuphepha', btn_back:'Emuva', btn_home:'Ikhaya',
+    type_title:'Khetha Uhlobo Lokwaziswa', type_sub:'Uqedela ngawe wedwa noma egameni leqembu?',
+    type_individual:'Umuntu Oyedwa', type_individual_desc:'Ngiqedela ngami',
+    type_group:'Iqembu / Ispan', type_group_desc:'Ngiqedela egameni labantu abaningana',
+    lbl_group_size:'Inani lamalungu eqembu', btn_next:'Okulandelayo →',
+    step1_title:'Ulwazi Lomuntu', step1_sub:'Sicela ufake imininingwane yakho.',
+    popia_title:'Umthetho Wokuvikelwa Kwemininingwane Yomuntu (POPIA)',
+    popia_text:'IMPI izinikele ekuvikeleni idatha yakho yomuntu.',
+    lbl_email:'Ikheli le-imeyili *', lbl_role:'Indima eNkampanini *', lbl_name:'Igama *', lbl_surname:'Isibongo *',
+    lbl_id:'Inombolo yeID / Ipasipoti *', lbl_phone:'Inombolo yocingo', lbl_company:'Igama leNkampani *', lbl_trade:'Umkhakha / Umsebenzi *',
+    role_select:'Khetha indima yakho...', role_pm:'Umphathi Wephrojekthi', role_contractor:'Ikhontraktha',
+    role_sub:'Ikhontraktha Esezingeni Elingaphansi', role_exhibitor:'Umbukisi', role_supplier:'Umhlinzeki',
+    role_venue:'Abasebenzi beNdawo', role_event:'Abasebenzi Bezikhathi', role_visitor:'Isihambi',
+    topic2:'Isihloko 1 — Ifayela Lokuphepha', topic2_text:'Inkampani yakho kufanele ibe nefayela lokuphepha elivumelekile endaweni.',
+    q2_correct:'✓ Ngiqinisekisa ukuthi ifayela lokuphepha lenkampani yami liphelele', q2_wrong:'Anginaso isiqiniseko ngezidingo',
+    topic3:'Isihloko 2 — Izinto Zokuzivikela (PPE)', topic3_text:'Onke amakhontraktha kufanele aphathe izinto ezifanele zokuzivikela.',
+    topic3_warning:'⚠ Ukungena kuzovikelwa ngaphandle kwe-PPE efanele.',
+    q3_correct:'✓ Ngiyaziqonda izidingo ze-PPE futhi ngizozilandela', q3_wrong:'I-PPE iyadingeka kuphela kwezinye izindawo',
+    topic4:'Isihloko 3 — Ukulondoloza Indawo', topic4_text:'Onke amakhontraktha azibona ngokugcina izindawo zawo zihlanzekile.',
+    q4_correct:'✓ Ngizogcina indawo yami yomsebenzi ihlanzekile', q4_wrong:'Ukususwa kwendle kufanele kwenziwe yindawo',
+    topic5:'Isihloko 4 — Izinqubo Zezimo Eziphuthumayo', topic5_text:'Esimweni esiphuthumayo: misa wonke umsebenzi, phuma usiye emgwaqweni wokuhlangana.',
+    topic5_assembly:'Indawo Yokuhlangana: Njengokukhombisa kwamabodi endaweni',
+    q5_correct:'✓ Ngiyaziqonda izinqubo zezimo eziphuthumayo', q5_wrong:'Ngifanele ngiqhubeke nomsebenzi',
+    topic6:'Isihloko 5 — Amathuluzi Kagesi', topic6_text:'Wonke amathuluzi kagesi kufanele avivelwe futhi afakelwe amachiphi.',
+    q6_correct:'✓ Kuphela abaqeqeshiwe abanezivumelwane abangazisebenzisa', q6_wrong:'Noma ubani angasebenzisa amathuluzi',
+    topic7:'Isihloko 6 — Izimoto', topic7_text:'Ukufinyelela kwezimoto kukhawulelwa. Umkhawulo wesivinini: 10km/h.',
+    q7_correct:'✓ Ngizalandela zonke izindinganiso', q7_wrong:'Ngingapaka noma kuphi',
+    topic8:'Isihloko 7 — Ukuphepha Komlilo', topic8_text:'Akunamlilo ovulekile ngaphandle kwemvume ebhaliwe.',
+    q8_correct:'✓ Ngiyaziqonda imithetho yokuphepha komlilo', q8_wrong:'Ngingabhema noma kuphi',
+    step9_title:'Ukuqinisekisa Komthetho', step9_sub:'Sicela ufunde futhi uqinisekise isitatimende ngasinye.',
+    legal1:'Ngiyavuma — UkuPhazamisa impahla yomuntu uzothola isabelo sezindleko.',
+    legal2:'Ngiyavuma ukuthi i-IMPI inelungelo lokuhlola lo mhlangano.',
+    legal3:'Ngiyamukela ukuthi i-IMPI ayinazibopho zezifo ngenxa yokuhluleka kwami.',
+    legal4:'Ngiqinisekisa ukuthi ngifundile futhi ngiyaqonda yonke imithetho.',
+    legal5:'Ngiyaqonda ukuthi yonke imithetho ye-Build-up isebenza nasesikhathini sokudiliza.',
+    emergency_title:'Izinombolo Zokusiza', btn_generate:'Yenza Isitifiketi →',
+    cert_title:'Ukwaziswa Kuphelile!', cert_sub:'Isitifiketi sakho sikhiwe.',
+    cert_official:'Isiqophi Esisemthethweni', cert_safety_cert:'Isitifiketi Sokwaziswa Kwezokuphepha',
+    cert_certifies:'Lokhu kuqinisekisa ukuthi', cert_completed_for:'Uphumelele ukwaziswa kwezokuphepha',
+    cert_verified:'✓ Kuqinisekisiwe & Kuyasebenza', cert_code_label:'Ikhodi Yesitifiketi',
+    cert_issued:'Ikhishwe yi-IMPI Safety Services International', cert_scan:'Skena ukuze uqinisekise',
+    cert_completed:'Kuqediwe', btn_print:'🖨 Printa / Gcina PDF', btn_share:'📤 Yabelana', btn_email:'📧 I-imeyili Isitifiketi',
+    lbl_venue:'Indawo', lbl_buildup:'Ukwakhiwa', lbl_event:'Umcimbi', lbl_organiser:'Umphathi',
+    prog_labels:['Uhlobo','Ulwazi','Ifayela','PPE','Ukuhlanza','Iphuthunywa','Amathuluzi','Izimoto','Umlilo','Umthetho','Isitifiketi']
+  },
+  sw: {
+    nav_type:'Mafunzo ya Usalama', btn_back:'Rudi', btn_home:'Nyumbani',
+    type_title:'Chagua Aina ya Mafunzo', type_sub:'Unakamilisha hii peke yako au kwa niaba ya timu?',
+    type_individual:'Mtu Mmoja', type_individual_desc:'Ninakamilisha hii kwa ajili yangu',
+    type_group:'Kikundi / Timu', type_group_desc:'Ninakamilisha kwa niaba ya watu wengi',
+    lbl_group_size:'Idadi ya wanachama wa timu', btn_next:'Ifuatayo →',
+    step1_title:'Taarifa za Kibinafsi', step1_sub:'Tafadhali ingiza maelezo yako.',
+    popia_title:'Sheria ya Ulinzi wa Taarifa za Kibinafsi (POPIA)',
+    popia_text:'IMPI imejitolea kulinda data yako ya kibinafsi.',
+    lbl_email:'Anwani ya Barua Pepe *', lbl_role:'Jukumu Kampuni *', lbl_name:'Jina la Kwanza *', lbl_surname:'Jina la Familia *',
+    lbl_id:'Nambari ya Kitambulisho / Pasipoti *', lbl_phone:'Nambari ya Simu', lbl_company:'Jina la Kampuni *', lbl_trade:'Taaluma / Kazi *',
+    role_select:'Chagua jukumu lako...', role_pm:'Meneja wa Mradi', role_contractor:'Mkandarasi',
+    role_sub:'Mkandarasi Mdogo', role_exhibitor:'Monyeshaji', role_supplier:'Msambazaji',
+    role_venue:'Wafanyakazi wa Ukumbi', role_event:'Wafanyakazi wa Tukio', role_visitor:'Mgeni',
+    topic2:'Mada 1 — Faili ya Usalama', topic2_text:'Kampuni yako lazima iwe na faili kamili ya usalama kwenye tovuti wakati wote.',
+    q2_correct:'✓ Nathibitisha kwamba faili ya usalama ya kampuni yangu ipo', q2_wrong:'Sijui mahitaji ya faili ya usalama',
+    topic3:'Mada 2 — Vifaa vya Kujikinga (PPE)', topic3_text:'Wakandarasi wote lazima wavae PPE inayofaa wakati wote.',
+    topic3_warning:'⚠ Uingiaji utakatazwa bila PPE inayofaa.',
+    q3_correct:'✓ Naelewa mahitaji ya PPE na nitafuata wakati wote', q3_wrong:'PPE inahitajika katika maeneo fulani tu',
+    topic4:'Mada 3 — Usafi na Usimamizi wa Taka', topic4_text:'Wakandarasi wote wana jukumu la kudumisha mazingira safi ya kazi.',
+    q4_correct:'✓ Nitadumisha eneo safi la kazi', q4_wrong:'Uondoaji wa taka ni jukumu la ukumbi',
+    topic5:'Mada 4 — Taratibu za Dharura', topic5_text:'Katika dharura: simama kazi yote, piga kengele, nenda kwenye mahali pa kukusanyika.',
+    topic5_assembly:'Mahali pa Kukusanyika: Kama inavyoonyeshwa kwenye mabango',
+    q5_correct:'✓ Naelewa taratibu za dharura', q5_wrong:'Ninapaswa kuendelea kufanya kazi',
+    topic6:'Mada 5 — Zana za Nguvu', topic6_text:'Zana zote za nguvu lazima zipimwe na kuwekwa alama.',
+    q6_correct:'✓ Waendeshaji waliofunzwa tu wanaweza kutumia zana za nguvu', q6_wrong:'Mtu yeyote anaweza kutumia zana',
+    topic7:'Mada 6 — Magari na Ushughulikiaji wa Vifaa', topic7_text:'Uingiaji wa magari umepunguzwa. Kiwango cha kasi: 10km/h.',
+    q7_correct:'✓ Nitafuata kanuni zote za magari', q7_wrong:'Ninaweza kusimama popote',
+    topic8:'Mada 7 — Usalama wa Moto', topic8_text:'Hakuna moto wazi bila idhini ya maandishi. Vuta sigara katika maeneo yaliyoteuliwa tu.',
+    q8_correct:'✓ Naelewa sheria za usalama wa moto', q8_wrong:'Ninaweza kuvuta sigara popote',
+    step9_title:'Uthibitisho wa Kisheria', step9_sub:'Tafadhali soma na uthibitishe kila taarifa.',
+    legal1:'Nakubaliana — Kuharibu mali ya watu wengine kutasababisha ankara kwa kampuni yangu.',
+    legal2:'Nakiri kwamba IMPI ina haki ya kuthibitisha mafunzo haya.',
+    legal3:'Nakubali kwamba IMPI haiwajibiki kwa uharibifu wowote.',
+    legal4:'Nathibitisha kwamba nimesoma na kuelewa sheria na kanuni zote.',
+    legal5:'Naelewa kwamba sheria zote za Ujenzi pia zinatumika wakati wa Kuondoa.',
+    emergency_title:'Nambari za Dharura', btn_generate:'Tengeneza Cheti →',
+    cert_title:'Mafunzo Yamekamilika!', cert_sub:'Cheti chako kimetengenezwa.',
+    cert_official:'Hati Rasmi', cert_safety_cert:'Cheti cha Mafunzo ya Usalama',
+    cert_certifies:'Hii inathibitisha kwamba', cert_completed_for:'Amekamilisha mafunzo ya usalama kwa',
+    cert_verified:'✓ Imethibitishwa & Inafanya Kazi', cert_code_label:'Nambari ya Cheti',
+    cert_issued:'Imetolewa na IMPI Safety Services International', cert_scan:'Scan kuthibitisha',
+    cert_completed:'Imekamilika', btn_print:'🖨 Chapisha / Hifadhi PDF', btn_share:'📤 Shiriki', btn_email:'📧 Barua Pepe Cheti',
+    lbl_venue:'Mahali', lbl_buildup:'Ujenzi', lbl_event:'Tukio', lbl_organiser:'Mratibu',
+    prog_labels:['Aina','Taarifa','Faili','PPE','Usafi','Dharura','Zana','Magari','Moto','Kisheria','Cheti']
+  },
+  fr: {
+    nav_type:'Questionnaire d\'Induction Sécurité', btn_back:'Retour', btn_home:'Accueil',
+    type_title:'Sélectionner le Type d\'Induction', type_sub:'Complétez-vous ceci individuellement ou pour une équipe?',
+    type_individual:'Individuel', type_individual_desc:'Je complète ceci pour moi-même',
+    type_group:'Groupe / Équipe', type_group_desc:'Je complète au nom de plusieurs personnes',
+    lbl_group_size:'Nombre de membres de l\'équipe', btn_next:'Suivant →',
+    step1_title:'Informations Personnelles', step1_sub:'Veuillez saisir vos coordonnées.',
+    popia_title:'Loi sur la Protection des Informations Personnelles (POPIA)',
+    popia_text:'IMPI s\'engage à protéger vos données personnelles.',
+    lbl_email:'Adresse E-mail *', lbl_role:'Rôle dans l\'Entreprise *', lbl_name:'Prénom *', lbl_surname:'Nom de Famille *',
+    lbl_id:'Numéro de Pièce d\'Identité / Passeport *', lbl_phone:'Numéro de Téléphone', lbl_company:'Nom de la Société *', lbl_trade:'Métier / Profession *',
+    role_select:'Sélectionnez votre rôle...', role_pm:'Chef de Projet / Propriétaire', role_contractor:'Sous-traitant',
+    role_sub:'Sous-sous-traitant', role_exhibitor:'Exposant', role_supplier:'Fournisseur',
+    role_venue:'Personnel du Lieu', role_event:'Personnel de l\'Événement', role_visitor:'Visiteur',
+    topic2:'Thème 1 — Dossier de Sécurité', topic2_text:'Votre entreprise doit disposer d\'un dossier de sécurité valide sur site en tout temps.',
+    q2_correct:'✓ Je confirme que le dossier de sécurité de mon entreprise est complet', q2_wrong:'Je ne suis pas sûr des exigences',
+    topic3:'Thème 2 — Équipement de Protection Individuelle (EPI)', topic3_text:'Tous les contractants doivent porter un EPI approprié en tout temps.',
+    topic3_warning:'⚠ L\'accès sera refusé sans EPI approprié.',
+    q3_correct:'✓ Je comprends les exigences EPI et je me conformerai en tout temps', q3_wrong:'L\'EPI n\'est requis que dans certaines zones',
+    topic4:'Thème 3 — Hygiène et Gestion des Déchets', topic4_text:'Tous les contractants sont responsables du maintien d\'un environnement de travail propre.',
+    q4_correct:'✓ Je maintiendrai un espace de travail propre', q4_wrong:'L\'enlèvement des déchets est la responsabilité du site',
+    topic5:'Thème 4 — Procédures d\'Urgence', topic5_text:'En cas d\'urgence: arrêtez tout travail, donnez l\'alarme, évacuez vers le point de rassemblement.',
+    topic5_assembly:'Point de Rassemblement: Tel qu\'indiqué par la signalisation sur site',
+    q5_correct:'✓ Je comprends les procédures d\'urgence', q5_wrong:'Je dois continuer à travailler jusqu\'à ce qu\'on me le dise',
+    topic6:'Thème 5 — Outils Électriques', topic6_text:'Tous les outils électriques doivent être testés et étiquetés. Les opérateurs doivent être formés.',
+    q6_correct:'✓ Seuls les opérateurs formés peuvent utiliser des outils électriques', q6_wrong:'N\'importe qui peut utiliser des outils',
+    topic7:'Thème 6 — Véhicules', topic7_text:'L\'accès des véhicules est limité. Limite de vitesse sur site: 10km/h.',
+    q7_correct:'✓ Je me conformerai à toutes les réglementations', q7_wrong:'Je peux me garer n\'importe où',
+    topic8:'Thème 7 — Sécurité Incendie', topic8_text:'Pas de flammes vives sans autorisation écrite. Fumer seulement dans les zones désignées.',
+    q8_correct:'✓ Je comprends les règles de sécurité incendie', q8_wrong:'Je peux fumer n\'importe où',
+    step9_title:'Confirmation Légale', step9_sub:'Veuillez lire et confirmer chaque déclaration.',
+    legal1:'J\'accepte — Les dommages aux biens entraîneront une facture pour mon entreprise.',
+    legal2:'Je reconnais qu\'IMPI se réserve le droit de vérifier cette induction.',
+    legal3:'J\'accepte qu\'IMPI n\'est pas responsable de tout préjudice dû à ma négligence.',
+    legal4:'Je confirme avoir lu et compris toutes les règles et réglementations.',
+    legal5:'Je comprends que toutes les règles de montage s\'appliquent également au démontage.',
+    emergency_title:'Contacts d\'Urgence', btn_generate:'Générer le Certificat →',
+    cert_title:'Induction Terminée!', cert_sub:'Votre certificat a été généré.',
+    cert_official:'Document Officiel', cert_safety_cert:'Certificat d\'Induction Sécurité',
+    cert_certifies:'Ceci certifie que', cert_completed_for:'A réussi l\'induction de sécurité pour',
+    cert_verified:'✓ Vérifié & Actif', cert_code_label:'Code du Certificat',
+    cert_issued:'Émis par IMPI Safety Services International', cert_scan:'Scanner pour vérifier',
+    cert_completed:'Complété', btn_print:'🖨 Imprimer / Sauvegarder PDF', btn_share:'📤 Partager', btn_email:'📧 Envoyer par E-mail',
+    lbl_venue:'Lieu', lbl_buildup:'Montage', lbl_event:'Événement', lbl_organiser:'Organisateur',
+    prog_labels:['Type','Info','Dossier','EPI','Hygiène','Urgence','Outils','Véhicules','Incendie','Légal','Certificat']
+  },
+  pt: {
+    nav_type:'Questionário de Indução de Segurança', btn_back:'Voltar', btn_home:'Início',
+    type_title:'Selecionar Tipo de Indução', type_sub:'Está a completar isto individualmente ou em nome de uma equipa?',
+    type_individual:'Individual', type_individual_desc:'Estou a completar isto para mim mesmo',
+    type_group:'Grupo / Equipa', type_group_desc:'A completar em nome de várias pessoas',
+    lbl_group_size:'Número de membros da equipa', btn_next:'Próximo →',
+    step1_title:'Informações Pessoais', step1_sub:'Por favor introduza os seus dados.',
+    popia_title:'Lei de Proteção de Informações Pessoais (POPIA)',
+    popia_text:'A IMPI compromete-se a proteger os seus dados pessoais.',
+    lbl_email:'Endereço de E-mail *', lbl_role:'Função na Empresa *', lbl_name:'Primeiro Nome *', lbl_surname:'Apelido *',
+    lbl_id:'Número de BI / Passaporte *', lbl_phone:'Número de Telefone', lbl_company:'Nome da Empresa *', lbl_trade:'Profissão / Ocupação *',
+    role_select:'Selecione a sua função...', role_pm:'Gestor de Projeto / Proprietário', role_contractor:'Empreiteiro',
+    role_sub:'Sub-empreiteiro', role_exhibitor:'Expositor', role_supplier:'Fornecedor',
+    role_venue:'Pessoal do Local', role_event:'Pessoal do Evento', role_visitor:'Visitante',
+    topic2:'Tema 1 — Ficheiro de Segurança', topic2_text:'A sua empresa deve ter um ficheiro de segurança válido no local em todos os momentos.',
+    q2_correct:'✓ Confirmo que o ficheiro de segurança da minha empresa está completo', q2_wrong:'Não tenho a certeza dos requisitos',
+    topic3:'Tema 2 — Equipamento de Proteção Individual (EPI)', topic3_text:'Todos os empreiteiros devem usar EPI adequado em todos os momentos.',
+    topic3_warning:'⚠ O acesso será negado sem EPI adequado.',
+    q3_correct:'✓ Compreendo os requisitos de EPI e vou cumprir em todos os momentos', q3_wrong:'O EPI só é necessário em certas áreas',
+    topic4:'Tema 3 — Limpeza e Gestão de Resíduos', topic4_text:'Todos os empreiteiros são responsáveis por manter um ambiente de trabalho limpo.',
+    q4_correct:'✓ Vou manter a minha área de trabalho limpa', q4_wrong:'A remoção de resíduos é responsabilidade do local',
+    topic5:'Tema 4 — Procedimentos de Emergência', topic5_text:'Em caso de emergência: pare todo o trabalho, dê o alarme, evacue para o ponto de encontro.',
+    topic5_assembly:'Ponto de Encontro: Conforme indicado pela sinalização no local',
+    q5_correct:'✓ Compreendo os procedimentos de emergência', q5_wrong:'Devo continuar a trabalhar até ser instruído',
+    topic6:'Tema 5 — Ferramentas Elétricas', topic6_text:'Todas as ferramentas elétricas devem ser testadas e etiquetadas.',
+    q6_correct:'✓ Apenas operadores treinados podem usar ferramentas elétricas', q6_wrong:'Qualquer pessoa pode usar ferramentas',
+    topic7:'Tema 6 — Veículos', topic7_text:'O acesso de veículos é restrito. Limite de velocidade no local: 10km/h.',
+    q7_correct:'✓ Vou cumprir todos os regulamentos', q7_wrong:'Posso estacionar em qualquer lugar',
+    topic8:'Tema 7 — Segurança Contra Incêndio', topic8_text:'Sem chamas abertas sem aprovação escrita. Fumar apenas em áreas designadas.',
+    q8_correct:'✓ Compreendo as regras de segurança contra incêndio', q8_wrong:'Posso fumar em qualquer lugar',
+    step9_title:'Confirmação Legal', step9_sub:'Por favor leia e confirme cada declaração.',
+    legal1:'Concordo — Danos à propriedade resultarão numa fatura para a minha empresa.',
+    legal2:'Reconheço que a IMPI tem o direito de verificar esta indução.',
+    legal3:'Aceito que a IMPI não é responsável por danos devidos à minha negligência.',
+    legal4:'Confirmo que li e compreendi todas as regras e regulamentos.',
+    legal5:'Compreendo que todas as regras de montagem também se aplicam à desmontagem.',
+    emergency_title:'Contactos de Emergência', btn_generate:'Gerar Certificado →',
+    cert_title:'Indução Concluída!', cert_sub:'O seu certificado foi gerado.',
+    cert_official:'Documento Oficial', cert_safety_cert:'Certificado de Indução de Segurança',
+    cert_certifies:'Este certifica que', cert_completed_for:'Completou com sucesso a indução de segurança para',
+    cert_verified:'✓ Verificado & Ativo', cert_code_label:'Código do Certificado',
+    cert_issued:'Emitido por IMPI Safety Services International', cert_scan:'Digitalizar para verificar',
+    cert_completed:'Concluído', btn_print:'🖨 Imprimir / Guardar PDF', btn_share:'📤 Partilhar', btn_email:'📧 Enviar por E-mail',
+    lbl_venue:'Local', lbl_buildup:'Montagem', lbl_event:'Evento', lbl_organiser:'Organizador',
+    prog_labels:['Tipo','Informação','Ficheiro','EPI','Limpeza','Emergência','Ferramentas','Veículos','Incêndio','Legal','Certificado']
+  },
+  ha: {
+    nav_type:'Tambaya na Tsaro', btn_back:'Koma', btn_home:'Gida',
+    type_title:'Zabi Nau\'in Horarwa', type_sub:'Kana kammala wannan ka kadai ko a madadin ƙungiya?',
+    type_individual:'Mutum ɗaya', type_individual_desc:'Ina kammala wannan don kaina',
+    type_group:'Ƙungiya / Ƙungiyar', type_group_desc:'Ina kammala a madadin mutane da yawa',
+    lbl_group_size:'Adadin membobin ƙungiyar', btn_next:'Na gaba →',
+    step1_title:'Bayanin Sirri', step1_sub:'Da fatan za a shigar da bayananku.',
+    popia_title:'Dokar Kare Bayanan Sirri (POPIA)',
+    popia_text:'IMPI tana da alƙawarin kare bayananku na sirri.',
+    lbl_email:'Adireshin Email *', lbl_role:'Rawar da ake takawa a Kamfanin *', lbl_name:'Sunan Farko *', lbl_surname:'Sunan Iyali *',
+    lbl_id:'Lambar ID / Fasfo *', lbl_phone:'Lambar Waya', lbl_company:'Sunan Kamfani *', lbl_trade:'Sana\'a *',
+    role_select:'Zabi rawarku...', role_pm:'Manajan Aiki', role_contractor:'Mai Kwangila',
+    role_sub:'Ƙaramin Mai Kwangila', role_exhibitor:'Mai Nuni', role_supplier:'Mai Samarwa',
+    role_venue:'Ma\'aikatan Wurin', role_event:'Ma\'aikatan Taron', role_visitor:'Baƙo',
+    topic2:'Batun 1 — Fayil din Tsaro', topic2_text:'Kamfaninku dole ya kasance da fayil ɗin tsaro mai inganci a shafin a kowane lokaci.',
+    q2_correct:'✓ Na tabbatar cewa fayil din tsaro na kamfanina yana cikakke', q2_wrong:'Ban san bukatun ba',
+    topic3:'Batun 2 — Kayan Kariya na Sirri (PPE)', topic3_text:'Duk masu kwangila dole su sanya PPE da ta dace a kowane lokaci.',
+    topic3_warning:'⚠ Za a hana shiga ba tare da PPE da ta dace ba.',
+    q3_correct:'✓ Na fahimci bukatun PPE kuma zan bi su a kowane lokaci', q3_wrong:'PPE ana buƙata kawai a wasu yankuna',
+    topic4:'Batun 3 — Kula da Tsafta', topic4_text:'Duk masu kwangila suna da alhakin kula da yankin aiki mai tsabta.',
+    q4_correct:'✓ Zan kula da yankin aikin da ya tsafta', q4_wrong:'Cire sharar gida alhakin wurin ne',
+    topic5:'Batun 4 — Hanyoyin Gaggawa', topic5_text:'A yayin gaggawa: dakatar da duk aiki, bada faɗakarwa, tafi wurin taro.',
+    topic5_assembly:'Wurin Taro: Kamar yadda aka nuna a alamu a shafin',
+    q5_correct:'✓ Na fahimci hanyoyin gaggawa', q5_wrong:'Ya kamata in ci gaba da aiki',
+    topic6:'Batun 5 — Kayan Aiki na Lantarki', topic6_text:'Duk kayan aikin lantarki dole a gwada su kuma a yi musu alama.',
+    q6_correct:'✓ Masu horarwa kawai za su iya amfani da kayan aiki', q6_wrong:'Kowa zai iya amfani da kayan aiki',
+    topic7:'Batun 6 — Motoci', topic7_text:'An iyakance damar yin hanya da motoci. Iyakar gudu: 10km/h.',
+    q7_correct:'✓ Zan bi duk ƙa\'idodi', q7_wrong:'Zan iya yin parking ko ina',
+    topic8:'Batun 7 — Tsaron Wuta', topic8_text:'Babu wuta a buɗe ba tare da izini ba. Yi shan taba a wurare da aka tsara kawai.',
+    q8_correct:'✓ Na fahimci ƙa\'idojin tsaron wuta', q8_wrong:'Zan iya shan taba ko ina',
+    step9_title:'Tabbacin Shari\'a', step9_sub:'Da fatan za a karanta kuma a tabbatar da kowane sanarwa.',
+    legal1:'Na yarda — Lalatar dukiya za ta haifar da takarda kuɗi ga kamfanina.',
+    legal2:'Na yarda cewa IMPI tana da haƙƙin tabbatar da horarwar nan.',
+    legal3:'Na yarda cewa IMPI ba ta da alhakin lalacewar saboda gazawa ta.',
+    legal4:'Na tabbatar cewa na karanta kuma na fahimci duk ƙa\'idoji da dokoki.',
+    legal5:'Na fahimci cewa duk ƙa\'idojin Gini sun shafi Rusawa.',
+    emergency_title:'Lambobin Gaggawa', btn_generate:'Samar da Takardar Sheda →',
+    cert_title:'Horarwa ta Cika!', cert_sub:'An samar da takardar shedar ku.',
+    cert_official:'Takardar Hukuma', cert_safety_cert:'Takardar Shedar Horarwar Tsaro',
+    cert_certifies:'Wannan yana tabbatar cewa', cert_completed_for:'Ya kammala horarwar tsaro don',
+    cert_verified:'✓ An Tabbatar & Yana Aiki', cert_code_label:'Lambar Takardar Sheda',
+    cert_issued:'An fitar ta hanyar IMPI Safety Services International', cert_scan:'Dubawa don tabbatarwa',
+    cert_completed:'An Kammala', btn_print:'🖨 Buga / Ajiye PDF', btn_share:'📤 Raba', btn_email:'📧 Email Takardar Sheda',
+    lbl_venue:'Wurin', lbl_buildup:'Gini', lbl_event:'Taron', lbl_organiser:'Mai Shirya',
+    prog_labels:['Nau\'i','Bayanai','Fayil','PPE','Tsafta','Gaggawa','Kayan','Motoci','Wuta','Shari\'a','Takardar Sheda']
+  },
+  yo: {
+    nav_type:'Ibeere Ailewu', btn_back:'Pada', btn_home:'Ile',
+    type_title:'Yan Iru Ikẹkọ', type_sub:'Ṣe o n pari eyi fun ara rẹ tabi fun ẹgbẹ kan?',
+    type_individual:'Ẹnikan', type_individual_desc:'Mo n pari eyi fun ara mi',
+    type_group:'Ẹgbẹ', type_group_desc:'Mo n pari fun ọpọlọpọ eniyan',
+    lbl_group_size:'Nọmba awọn ọmọ ẹgbẹ', btn_next:'Itẹle →',
+    step1_title:'Alaye Ti Ara Ẹni', step1_sub:'Jọwọ tẹ alaye rẹ sii.',
+    popia_title:'Ofin Aabo Alaye Ti Ara Ẹni (POPIA)',
+    popia_text:'IMPI ti ni ipinnu lati daabobo data ti ara rẹ.',
+    lbl_email:'Adirẹsi Email *', lbl_role:'Ipa Ninu Ile-iṣẹ *', lbl_name:'Orukọ Akọkọ *', lbl_surname:'Orukọ Idile *',
+    lbl_id:'Nọmba ID / Iwe irinna *', lbl_phone:'Nọmba Foonu', lbl_company:'Orukọ Ile-iṣẹ *', lbl_trade:'Iṣẹ / Oojọ *',
+    role_select:'Yan ipa rẹ...', role_pm:'Olutọju Iṣẹ', role_contractor:'Agbẹlẹgbẹ',
+    role_sub:'Agbẹlẹgbẹ Kekere', role_exhibitor:'Aṣapẹẹrẹ', role_supplier:'Apese',
+    role_venue:'Oṣiṣẹ Ibi', role_event:'Oṣiṣẹ Iṣẹlẹ', role_visitor:'Alejo',
+    topic2:'Koko 1 — Faili Ailewu', topic2_text:'Ile-iṣẹ rẹ gbọdọ ni faili ailewu to wulo ni aaye rẹ ni gbogbo igba.',
+    q2_correct:'✓ Mo jẹrisi pe faili ailewu ile-iṣẹ mi ti pari', q2_wrong:'Emi ko mọ awọn ibeere naa',
+    topic3:'Koko 2 — Ohun elo Aabo Ti Ara Ẹni (PPE)', topic3_text:'Gbogbo awọn agbẹlẹgbẹ gbọdọ wọ PPE to yẹ ni gbogbo igba.',
+    topic3_warning:'⚠ Wọle yoo jẹ kiko laisi PPE to yẹ.',
+    q3_correct:'✓ Mo ni oye awọn ibeere PPE ati pe emi yoo ni ibamu', q3_wrong:'PPE ni a nilo nikan ni awọn agbegbe kan',
+    topic4:'Koko 3 — Mimọ ati Iṣakoso Idọti', topic4_text:'Gbogbo awọn agbẹlẹgbẹ jẹ lododo fun mimu agbegbe iṣẹ mọ.',
+    q4_correct:'✓ Emi yoo ṣetọju agbegbe iṣẹ mọ', q4_wrong:'Yiyọ idọti jẹ ojuse aaye naa',
+    topic5:'Koko 4 — Awọn Ilana pajawiri', topic5_text:'Ni pajawiri: da gbogbo iṣẹ duro, fun itaniji, jade si aaye ipade.',
+    topic5_assembly:'Aaye Ipade: Gẹgẹ bi a ti tọka si awọn ami aaye',
+    q5_correct:'✓ Mo ni oye awọn ilana pajawiri', q5_wrong:'Mo yẹ ki n tẹsiwaju iṣẹ',
+    topic6:'Koko 5 — Awọn Irinṣẹ Ina', topic6_text:'Gbogbo awọn irinṣẹ ina gbọdọ ṣe idanwo ati samisi.',
+    q6_correct:'✓ Awọn oniṣẹ ti o ti kọ nikan ni o le lo awọn irinṣẹ', q6_wrong:'Ẹnikẹni le lo awọn irinṣẹ',
+    topic7:'Koko 6 — Awọn Ọkọ', topic7_text:'Wọle ọkọ ti ni ihamọ. Opin iyara lori aaye: 10km/h.',
+    q7_correct:'✓ Emi yoo tẹle gbogbo awọn ilana', q7_wrong:'Mo le park nibikibi',
+    topic8:'Koko 7 — Aabo Ina', topic8_text:'Ko si iná gbangba laisi igbanilaaye kikọ. Mu siga ni awọn agbegbe ti a yàn nikan.',
+    q8_correct:'✓ Mo ni oye awọn ofin aabo ina', q8_wrong:'Mo le mu siga nibikibi',
+    step9_title:'Ijẹrisi Ofin', step9_sub:'Jọwọ ka ati jẹrisi gbogbo ọrọ kọọkan.',
+    legal1:'Mo gba — Bibajẹ ohun-ini yoo yorisi owo-isan fun ile-iṣẹ mi.',
+    legal2:'Mo jẹwọ pe IMPI ni ẹtọ lati jẹrisi ikẹkọ yii.',
+    legal3:'Mo gba pe IMPI kii ṣe lododo fun eyikeyi ibajẹ nitori aibikita mi.',
+    legal4:'Mo jẹrisi pe mo ti ka ati ni oye gbogbo awọn ofin ati ilana.',
+    legal5:'Mo ni oye pe gbogbo awọn ofin Ikọle tun lo si Yiyọ.',
+    emergency_title:'Awọn Nọmba pajawiri', btn_generate:'Ṣẹda Iwe-ẹri →',
+    cert_title:'Ikẹkọ Ti Pari!', cert_sub:'Iwe-ẹri rẹ ti ṣẹda.',
+    cert_official:'Iwe Osise', cert_safety_cert:'Iwe-ẹri Ikẹkọ Ailewu',
+    cert_certifies:'Eyi jẹrisi pe', cert_completed_for:'Ti pari ikẹkọ ailewu fun',
+    cert_verified:'✓ Ti Jẹrisi & Ti n Ṣiṣẹ', cert_code_label:'Koodu Iwe-ẹri',
+    cert_issued:'Ti jade nipasẹ IMPI Safety Services International', cert_scan:'Ṣayẹwo lati jẹrisi',
+    cert_completed:'Ti Pari', btn_print:'🖨 Tẹ / Fipamọ PDF', btn_share:'📤 Pin', btn_email:'📧 Email Iwe-ẹri',
+    lbl_venue:'Ibi', lbl_buildup:'Ikole', lbl_event:'Iṣẹlẹ', lbl_organiser:'Olùṣètò',
+    prog_labels:['Iru','Alaye','Faili','PPE','Mimọ','Pajawiri','Irinṣẹ','Ọkọ','Ina','Ofin','Iwe-ẹri']
+  }
+};
+
+let currentLang = 'en';
+
+function t(key) {
+  return (TRANSLATIONS[currentLang] && TRANSLATIONS[currentLang][key]) || TRANSLATIONS['en'][key] || key;
+}
+
+function applyTranslations() {
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    const val = t(key);
+    if (val) el.textContent = val;
+  });
+  // Update progress bar labels
+  buildProgressBar();
+}
+
+function setLang(lang) {
+  currentLang = lang;
+  const langInfo = LANGS[lang] || LANGS['en'];
+  document.getElementById('langLabel').textContent = langInfo.label;
+  // Update active state in dropdown
+  document.querySelectorAll('.lang-option').forEach(el => el.classList.remove('active'));
+  const opts = document.querySelectorAll('.lang-option');
+  const codes = Object.keys(LANGS);
+  const idx = codes.indexOf(lang);
+  if (opts[idx]) opts[idx].classList.add('active');
+  // Apply translations
+  applyTranslations();
+  closeLangMenu();
+}
+
+function toggleLangMenu() {
+  document.getElementById('langDropdown').classList.toggle('open');
+}
+function closeLangMenu() {
+  document.getElementById('langDropdown').classList.remove('open');
+}
+document.addEventListener('click', e => {
+  if (!e.target.closest('#langBtn') && !e.target.closest('#langDropdown')) closeLangMenu();
+});
+
+// ── NAVIGATION ──
+function goBack() {
+  if (document.referrer && document.referrer.includes(window.location.hostname)) {
+    window.history.back();
+  } else {
+    const evId = new URLSearchParams(window.location.search).get('event');
+    window.location.href = evId ? '/?ev=' + evId : '/';
+  }
+}
+
+// ── PROGRESS BAR ──
+function buildProgressBar() {
+  const defaultLabels = ['Type','Info',...Array.from({length:topicCount},(_,i)=>'Topic '+(i+1)),'Legal','Cert'];
+  const txLabels = t('prog_labels');
+  const labels = (txLabels && txLabels.length === totalSteps + 1) ? txLabels : defaultLabels;
+  const bar = document.getElementById('progBar');
+  bar.innerHTML = labels.map((lbl, i) => `
+    <div class="prog-step">
+      <div class="prog-num ${i < currentStep ? 'done' : i === currentStep ? 'active' : ''}">${i < currentStep ? '✓' : i+1}</div>
+      <span class="prog-label ${i === currentStep ? 'active' : ''}" style="${i > 2 && i !== currentStep ? 'display:none' : ''}">${lbl}</span>
+      ${i < labels.length-1 ? `<div class="prog-line ${i < currentStep ? 'done' : ''}"></div>` : ''}
+    </div>`).join('');
+}
+
+// ── STEP NAVIGATION ──
+function goToStep(n) {
+  document.querySelectorAll('.sc').forEach(s => s.classList.remove('active'));
+  const el = getStepEl(n);
+  if (el) el.classList.add('active');
+  currentStep = n;
+  buildProgressBar();
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function nextStep(from) {
+  if (from === 1) { if (!validatePersonalInfo()) return; }
+  goToStep(from + 1);
+}
+
+function prevStep(from) {
+  goToStep(from - 1);
+}
+
+function prevLegal() {
+  goToStep(legalStepIndex() - 1);
+}
+
+function validatePersonalInfo() {
+  const fields = ['p_email','p_name','p_surname','p_id','p_company','p_trade'];
+  const roles = document.getElementById('p_role');
+  const idType = document.getElementById('p_id_type');
+  for (const id of fields) {
+    if (!document.getElementById(id).value.trim()) {
+      showToast('Please fill in all required fields', 'error');
+      document.getElementById(id).focus();
+      return false;
+    }
+  }
+  if (!roles.value) { showToast('Please select your role', 'error'); return false; }
+  if (!idType.value) { showToast('Please select your identification type', 'error'); idType.focus(); return false; }
+  return true;
+}
+
+// ── INDUCTION TYPE ──
+function selectType(type) {
+  inductionType = type;
+  document.getElementById('typeIndiv').classList.toggle('selected', type==='individual');
+  document.getElementById('typeGroup').classList.toggle('selected', type==='group');
+  document.getElementById('groupSizeWrap').style.display = type==='group' ? 'block' : 'none';
+  document.getElementById('btn0next').disabled = type==='individual' ? false : !document.getElementById('groupSize').value;
+}
+
+function buildGroupForm() {
+  const n = parseInt(document.getElementById('groupSize').value);
+  if (!n) return;
+  document.getElementById('btn0next').disabled = false;
+  const wrap = document.getElementById('groupMembersForm');
+  wrap.innerHTML = Array.from({length:n}, (_,i) => `
+    <div class="member-row">
+      <div class="member-num">Member ${i+1}</div>
+      <div class="two">
+        <div class="fg"><label>First Name *</label><input type="text" id="gm${i}_name" placeholder="First name"/></div>
+        <div class="fg"><label>Surname *</label><input type="text" id="gm${i}_surname" placeholder="Surname"/></div>
+      </div>
+      <div class="two">
+        <div class="fg"><label>ID / Passport *</label><input type="text" id="gm${i}_id" placeholder="ID number"/></div>
+        <div class="fg"><label>Trade *</label><input type="text" id="gm${i}_trade" placeholder="Trade / occupation"/></div>
+      </div>
+    </div>`).join('');
+}
+
+function getGroupMembers() {
+  const n = parseInt(document.getElementById('groupSize').value) || 0;
+  return Array.from({length:n}, (_,i) => ({
+    name: document.getElementById(`gm${i}_name`)?.value.trim() || '',
+    surname: document.getElementById(`gm${i}_surname`)?.value.trim() || '',
+    id: document.getElementById(`gm${i}_id`)?.value.trim() || '',
+    trade: document.getElementById(`gm${i}_trade`)?.value.trim() || ''
+  }));
+}
+
+// ── QUIZ ──
+function answerQuiz(qid, el, correct) {
+  const opts = el.closest('.qopts');
+  opts.querySelectorAll('.qopt').forEach(o => o.classList.remove('correct','wrong'));
+  el.classList.add(correct ? 'correct' : 'wrong');
+  if (correct) {
+    quizAnswers[qid] = true;
+    const stepN = parseInt(el.closest('.sc').id.replace('step',''));
+    const btn = document.getElementById('btn'+stepN+'next');
+    if (btn) btn.disabled = false;
+  } else {
+    setTimeout(() => {
+      el.classList.remove('wrong');
+      quizAnswers[qid] = false;
+    }, 1500);
+  }
+}
+
+// ── LEGAL ──
+function toggleLegal(id) {
+  const item = document.getElementById(id);
+  const cb = document.getElementById(id+'c');
+  cb.checked = !cb.checked;
+  item.classList.toggle('checked', cb.checked);
+  checkAllLegal();
+}
+
+function checkAllLegal() {
+  const all = ['l1c','l2c','l3c','l4c','l5c'].every(id => document.getElementById(id).checked);
+  document.getElementById('btnLegalNext').disabled = !all;
+}
+
+// ── CERT CODE ──
+function makeCertCode(name, id) {
+  const prefix = (name||'XX').replace(/\s/g,'').slice(0,2).toUpperCase();
+  const idPart = (id||'').replace(/\D/g,'').slice(-3);
+  const ts = Date.now().toString(36).toUpperCase().slice(-3);
+  const rand = Math.random().toString(36).toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,2);
+  return (prefix + idPart + ts + rand).slice(0,8).padEnd(8,'X');
+}
+
+// ── GENERATE CERTIFICATE ──
+async function generateCert() {
+  const btn = document.getElementById('btnLegalNext');
+  btn.disabled = true;
+  btn.textContent = 'Generating...';
+
+  const ev = currentEvent || {id:'DEMO',name:'Event',venue:'—',organiser:'—'};
+  const name = document.getElementById('p_name').value.trim();
+  const surname = document.getElementById('p_surname').value.trim();
+  const email = document.getElementById('p_email').value.trim();
+  const id = document.getElementById('p_id').value.trim();
+  const company = document.getElementById('p_company').value.trim();
+  const role = document.getElementById('p_role').value;
+  const trade = document.getElementById('p_trade').value.trim();
+  const phone = document.getElementById('p_phone')?.value?.trim() || '';
+  const now = new Date();
+  const completedStr = now.toLocaleDateString('en-ZA', {day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
+
+  const isGroup = inductionType === 'group';
+
+  if (isGroup) {
+    const members = getGroupMembers();
+    const results = [];
+    for (const m of members) {
+      const code = makeCertCode(m.name, m.id);
+      try {
+        await fetch('/.netlify/functions/complete', {
+          method:'POST', headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({fullName:m.name,surname:m.surname,email,idNumber:m.id,company,role,trade:m.trade,phone,eventId:ev.id,eventName:ev.name,venue:ev.venue,certCode:code})
+        });
+      } catch(e) {}
+      results.push({...m, code});
+    }
+    showGroupCerts(results, ev, completedStr);
+  } else {
+    const code = makeCertCode(name, id);
+    try {
+      const res = await fetch('/.netlify/functions/complete', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({fullName:name,surname,email,idNumber:id,idType:document.getElementById('p_id_type')?.value||'ID',company,role,trade,phone,eventId:ev.id,eventName:ev.name,venue:ev.venue,certCode:code})
+      });
+      const data = await res.json();
+      if (data.emailSent) showToast('✓ Certificate emailed to ' + email, 'success');
+    } catch(e) {}
+    showSingleCert({name,surname,id,company,role,trade,code,completedStr}, ev);
+  }
+
+  goToStep(certStepIndex());
+  btn.disabled = false;
+  btn.textContent = t('btn_generate');
+}
+
+function showSingleCert(p, ev) {
+  document.getElementById('cName').textContent = (p.name + ' ' + p.surname).toUpperCase();
+  const idType = document.getElementById('p_id_type')?.value || 'ID';
+  document.getElementById('cId').textContent = idType + ': ' + p.id + ' | Cert No: ' + p.code;
+  document.getElementById('cEvTitle').textContent = ev.name;
+  document.getElementById('cVenue').textContent = ev.venue || '—';
+  document.getElementById('cRole').textContent = p.role || '—';
+  document.getElementById('cTrade').textContent = p.trade || '—';
+  document.getElementById('cCompany').textContent = p.company || '—';
+  document.getElementById('cCompleted').textContent = p.completedStr;
+  document.getElementById('cCode').textContent = p.code;
+
+  // Logo
+  const certLogo = document.getElementById('certLogo');
+  if (currentEvent?.impi_logo) certLogo.src = currentEvent.impi_logo;
+
+  // Client logo
+  if (ev.client_logo_url) {
+    document.getElementById('certClientLogoWrap').style.display = 'block';
+    document.getElementById('certClientLogo').src = ev.client_logo_url;
+  }
+
+  // QR code
+  const qrEl = document.getElementById('qrCode');
+  qrEl.innerHTML = '';
+  new QRCode(qrEl, {
+    text: 'IMPIVERT:' + p.code + ':' + p.name + ':' + ev.id,
+    width: 90, height: 90,
+    colorDark: '#000', colorLight: '#fff'
+  });
+
+  document.getElementById('certSingle').style.display = 'block';
+  document.getElementById('certMulti').style.display = 'none';
+}
+
+function showGroupCerts(members, ev, completedStr) {
+  document.getElementById('certSingle').style.display = 'none';
+  const wrap = document.getElementById('certMulti');
+  wrap.style.display = 'flex';
+  wrap.innerHTML = members.map((m, i) => `
+    <div class="cert" id="cert_${i}">
+      <div class="cert-stripe">
+        <div>
+          <div class="cert-stripe-title">${t('cert_official')}</div>
+          <div class="cert-stripe-sub">${t('cert_safety_cert')}</div>
+        </div>
+      </div>
+      <div class="cert-body">
+        <div class="cert-label">${t('cert_certifies')}</div>
+        <div class="cert-name">${(m.name + ' ' + m.surname).toUpperCase()}</div>
+        <div class="cert-id">ID: ${m.id}</div>
+        <div style="font-size:12px;color:#9ca3af;margin-bottom:6px">${t('cert_completed_for')}</div>
+        <div class="cert-event">${ev.name}</div>
+        <div class="cert-venue">${ev.venue||'—'}</div>
+        <div class="cert-grid">
+          <div class="cert-field"><label>${t('lbl_trade')}</label><span>${m.trade||'—'}</span></div>
+          <div class="cert-field"><label>${t('cert_completed')}</label><span>${completedStr}</span></div>
+        </div>
+        <div class="cert-footer">
+          <div>
+            <div class="cert-verified">${t('cert_verified')}</div>
+            <div class="cert-code-label">${t('cert_code_label')}</div>
+            <div class="cert-code">${m.code}</div>
+          </div>
+          <div id="qr_${i}"></div>
+        </div>
+      </div>
+    </div>`).join('');
+
+  members.forEach((m, i) => {
+    new QRCode(document.getElementById('qr_'+i), {
+      text: 'IMPIVERT:' + m.code + ':' + m.name + ':' + ev.id,
+      width: 80, height: 80, colorDark:'#000', colorLight:'#fff'
+    });
+  });
+}
+
+function shareCert() {
+  const code = document.getElementById('cCode').textContent;
+  if (navigator.share) {
+    navigator.share({title:'IMPI Safety Certificate', text:'My certificate code: ' + code});
+  } else {
+    navigator.clipboard.writeText(code).then(() => showToast('Code copied: ' + code, 'success'));
+  }
+}
+
+async function resendEmail() {
+  const email = document.getElementById('p_email').value.trim();
+  const code = document.getElementById('cCode').textContent;
+  if (!email) { showToast('No email address found', 'error'); return; }
+  showToast('Sending...', 'success');
+  try {
+    const ev = currentEvent || {};
+    const res = await fetch('/.netlify/functions/complete', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        fullName: document.getElementById('p_name').value.trim(),
+        surname: document.getElementById('p_surname').value.trim(),
+        email, idNumber: document.getElementById('p_id').value.trim(),
+        company: document.getElementById('p_company').value.trim(),
+        role: document.getElementById('p_role').value,
+        trade: document.getElementById('p_trade').value.trim(),
+        eventId: ev.id, eventName: ev.name, venue: ev.venue, certCode: code
+      })
+    });
+    const d = await res.json();
+    if (d.emailSent) showToast('✓ Emailed to ' + email, 'success');
+    else showToast('Saved but email failed. Screenshot your code: ' + code, 'error');
+  } catch(e) { showToast('Error: ' + e.message, 'error'); }
+}
+
+// ── TOAST ──
+function showToast(msg, type='success') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show ' + type;
+  setTimeout(() => t.classList.remove('show'), 3500);
+}
+
+// ── INIT ──
+async function init() {
+  // Build default topic steps first so the page is usable even if API is slow
+  buildTopicSteps(DEFAULT_TOPICS);
+  buildProgressBar();
+
+  // Load design settings
+  try {
+    const dr = await fetch('/.netlify/functions/design');
+    if (dr.ok) {
+      const ds = await dr.json();
+      if (ds.impi_logo_url) {
+        document.querySelectorAll('#impiLogo,#banLogo,#certLogo').forEach(img => img.src = ds.impi_logo_url);
+        if (currentEvent) currentEvent.impi_logo = ds.impi_logo_url;
+      }
+      if (ds.primary_color) document.documentElement.style.setProperty('--red', ds.primary_color);
+      if (ds.accent_color) document.documentElement.style.setProperty('--yellow', ds.accent_color);
+    }
+  } catch(e) {}
+
+  // Load event and custom induction content
+  const eventId = new URLSearchParams(window.location.search).get('event');
+  if (eventId) {
+    try {
+      const res = await fetch('/.netlify/functions/events?id=' + eventId);
+      if (res.ok) {
+        const ev = await res.json();
+        currentEvent = ev;
+        document.getElementById('banTitle').textContent = ev.name || 'EVENT';
+        document.getElementById('banVenue').textContent = ev.venue || '—';
+        document.getElementById('banOrg').textContent = ev.organiser || '—';
+        document.getElementById('banBU').textContent = ev.bu_start ? fmtDate(ev.bu_start) : '—';
+        document.getElementById('banEvt').textContent = ev.ev_start ? fmtDate(ev.ev_start) : '—';
+
+        if (ev.client_logo_url) {
+          document.getElementById('banClientLogo').src = ev.client_logo_url;
+          document.getElementById('banClientLogo').style.display = 'block';
+        }
+        if (ev.organiser_logo_url) currentEvent.organiser_logo_url = ev.organiser_logo_url;
+
+        if (ev.color_primary) document.documentElement.style.setProperty('--red', ev.color_primary);
+        if (ev.color_accent) document.documentElement.style.setProperty('--yellow', ev.color_accent);
+
+        let emg = '';
+        if (ev.safety_mgr || ev.safety_num) emg += (ev.safety_mgr||'Safety Manager') + ': ' + (ev.safety_num||'—') + '\n';
+        if (ev.sec_mgr || ev.sec_num) emg += (ev.sec_mgr||'Security Manager') + ': ' + (ev.sec_num||'—') + '\n';
+        if (ev.amb_num) emg += 'Ambulance / Emergency: ' + ev.amb_num + '\n';
+        if (ev.ev_org_contact) emg += 'Event Organiser: ' + ev.ev_org_contact;
+        document.getElementById('emergencyText').innerText = emg || 'Contact the Safety Manager on site.';
+
+        // Load custom induction content if set
+        if (ev.induction_content && Array.isArray(ev.induction_content) && ev.induction_content.length > 0) {
+          buildTopicSteps(ev.induction_content);
+          buildProgressBar();
+        }
+      }
+    } catch(e) { console.error('Event load error:', e); }
+  }
+
+  applyTranslations();
+}
+
+function fmtDate(d) {
+  if (!d) return '—';
+  return new Date(d + 'T00:00:00').toLocaleDateString('en-ZA', {day:'2-digit', month:'short', year:'numeric'});
+}
+
+init();
+</script>
+</body>
+</html>
