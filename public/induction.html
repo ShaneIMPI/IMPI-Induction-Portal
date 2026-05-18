@@ -155,6 +155,14 @@ body{background:#f0f2f5;font-family:var(--fb);min-height:100vh;}
 
 /* MULTI CERT */
 .multi-cert-wrap{display:none;flex-direction:column;gap:20px;}
+@media print{
+  .nav,.banner,.prog-wrap,.cert-actions,.toast,.step-wrap>div:not(#stepCert){display:none!important;}
+  #stepCert{display:block!important;}
+  .cert-done,.cert-done-icon,.cert-done-title,.cert-done-sub{display:none;}
+  #certSingle{display:none!important;}
+  .multi-cert-wrap{display:flex!important;}
+  .cert{page-break-after:always;box-shadow:none;border:1px solid #ddd;max-width:100%;}
+}
 
 /* TOAST */
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1f2937;color:#fff;padding:12px 24px;border-radius:8px;font-family:var(--fh);font-size:12px;font-weight:700;letter-spacing:1px;z-index:1000;opacity:0;transition:opacity .3s;white-space:nowrap;}
@@ -520,6 +528,9 @@ body{background:#f0f2f5;font-family:var(--fb);min-height:100vh;}
 
   <!-- Multi certificate (group) -->
   <div class="multi-cert-wrap" id="certMulti"></div>
+  <div id="multiCertActions" style="display:none;text-align:center;margin-top:16px">
+    <button class="btn btn-red" onclick="window.print()">🖨 Print All Certificates</button>
+  </div>
 </div>
 
 </div><!-- end step-wrap -->
@@ -1421,46 +1432,88 @@ function showSingleCert(p, ev) {
   document.getElementById('certMulti').style.display = 'none';
 }
 
-function showGroupCerts(members, ev, completedStr) {
+function showGroupCerts(results, ev, completedStr) {
   document.getElementById('certSingle').style.display = 'none';
   const wrap = document.getElementById('certMulti');
   wrap.style.display = 'flex';
-  wrap.innerHTML = members.map((m, i) => `
-    <div class="cert" id="cert_${i}">
-      <div class="cert-stripe">
-        <div>
-          <div class="cert-stripe-title">${t('cert_official')}</div>
-          <div class="cert-stripe-sub">${t('cert_safety_cert')}</div>
-        </div>
-      </div>
-      <div class="cert-body">
-        <div class="cert-label">${t('cert_certifies')}</div>
-        <div class="cert-name">${(m.name + ' ' + m.surname).toUpperCase()}</div>
-        <div class="cert-id">ID: ${m.id}</div>
-        <div style="font-size:12px;color:#9ca3af;margin-bottom:6px">${t('cert_completed_for')}</div>
-        <div class="cert-event">${ev.name}</div>
-        <div class="cert-venue">${ev.venue||'—'}</div>
-        <div class="cert-grid">
-          <div class="cert-field"><label>${t('lbl_trade')}</label><span>${m.trade||'—'}</span></div>
-          <div class="cert-field"><label>${t('cert_completed')}</label><span>${completedStr}</span></div>
-        </div>
-        <div class="cert-footer">
-          <div>
-            <div class="cert-verified">${t('cert_verified')}</div>
-            <div class="cert-code-label">${t('cert_code_label')}</div>
-            <div class="cert-code">${m.code}</div>
-          </div>
-          <div id="qr_${i}"></div>
-        </div>
-      </div>
-    </div>`).join('');
 
-  members.forEach((m, i) => {
-    new QRCode(document.getElementById('qr_'+i), {
-      text: 'IMPIVERT:' + m.code + ':' + m.name + ':' + ev.id,
-      width: 80, height: 80, colorDark:'#000', colorLight:'#fff'
-    });
+  const impiLogoSrc = currentEvent?.impi_logo || document.getElementById('certLogo')?.src || '';
+  const clientLogoSrc = ev.client_logo_url || '';
+  const orgLogoSrc = ev.organiser_logo_url || '';
+
+  function logosHtml() {
+    return `<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+      ${impiLogoSrc ? `<img src="${impiLogoSrc}" style="height:32px;width:auto;object-fit:contain;background:rgba(255,255,255,0.15);padding:3px 7px;border-radius:5px" alt="IMPI"/>` : ''}
+      ${clientLogoSrc ? `<img src="${clientLogoSrc}" style="height:32px;width:auto;object-fit:contain;background:rgba(255,255,255,0.9);padding:3px 7px;border-radius:5px" alt="Event"/>` : ''}
+      ${orgLogoSrc ? `<img src="${orgLogoSrc}" style="height:32px;width:auto;object-fit:contain;background:rgba(255,255,255,0.9);padding:3px 7px;border-radius:5px" alt="Organiser"/>` : ''}
+    </div>`;
+  }
+
+  wrap.innerHTML = results.map((m, i) => {
+    if (m.fraudBlocked) {
+      return `<div style="background:#fef2f2;border:1.5px solid rgba(212,43,43,0.3);border-radius:8px;padding:16px;display:flex;align-items:center;gap:12px">
+        <span style="font-size:20px">⛔</span>
+        <div>
+          <div style="font-family:var(--fh);font-size:11px;font-weight:800;color:var(--red);margin-bottom:2px">${m.isInductor ? '👑 Team Leader — ' : ''}Duplicate — different ID number</div>
+          <div style="font-size:13px;color:#374151">${m.name} ${m.surname} — a record already exists with this name but a different ID number. Certificate not generated.</div>
+        </div>
+      </div>`;
+    }
+
+    const alreadyBadge = m.alreadyCompleted
+      ? `<div style="background:#dbeafe;color:#1d4ed8;display:inline-flex;align-items:center;gap:4px;font-family:var(--fh);font-size:8px;font-weight:800;letter-spacing:1px;text-transform:uppercase;padding:3px 8px;border-radius:20px;margin-bottom:8px">✓ Already Completed — Existing Code Below</div>`
+      : '';
+
+    const leaderBadge = m.isInductor
+      ? `<div style="background:rgba(255,255,255,0.25);display:inline-flex;align-items:center;gap:5px;font-family:var(--fh);font-size:9px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:#fff;padding:4px 10px;border-radius:20px;margin-bottom:6px">👑 Team Leader</div>`
+      : '';
+
+    return `
+      <div class="cert" id="cert_${i}">
+        <div class="cert-stripe" style="flex-direction:column;align-items:flex-start;gap:8px">
+          ${logosHtml()}
+          <div style="display:flex;flex-direction:column;align-items:flex-start;gap:2px">
+            ${leaderBadge}
+            <div class="cert-stripe-title">${t('cert_official')}</div>
+            <div class="cert-stripe-sub">${t('cert_safety_cert')}</div>
+          </div>
+        </div>
+        <div class="cert-body">
+          ${alreadyBadge}
+          <div class="cert-label">${t('cert_certifies')}</div>
+          <div class="cert-name">${(m.name + ' ' + m.surname).toUpperCase()}</div>
+          <div class="cert-id">${m.id_type || 'ID'}: ${m.id}</div>
+          <div style="font-size:12px;color:#9ca3af;margin-bottom:6px">${t('cert_completed_for')}</div>
+          <div class="cert-event">${ev.name}</div>
+          <div class="cert-venue">${ev.venue || '—'}</div>
+          <div class="cert-grid">
+            <div class="cert-field"><label>${t('lbl_role')}</label><span>${m.role || '—'}</span></div>
+            <div class="cert-field"><label>${t('lbl_trade')}</label><span>${m.trade || '—'}</span></div>
+            <div class="cert-field"><label>${t('lbl_company')}</label><span>${m.company || '—'}</span></div>
+            <div class="cert-field"><label>${t('cert_completed')}</label><span>${completedStr}</span></div>
+          </div>
+          <div class="cert-footer">
+            <div>
+              <div class="cert-verified">${t('cert_verified')}</div>
+              <div class="cert-code-label">${t('cert_code_label')}</div>
+              <div class="cert-code">${m.code || '—'}</div>
+            </div>
+            <div id="qr_${i}"></div>
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+
+  results.forEach((m, i) => {
+    if (m.code && document.getElementById('qr_' + i)) {
+      new QRCode(document.getElementById('qr_' + i), {
+        text: 'IMPIVERT:' + m.code + ':' + m.name + ':' + ev.id,
+        width: 80, height: 80, colorDark: '#000', colorLight: '#fff'
+      });
+    }
   });
+
+  document.getElementById('multiCertActions').style.display = 'block';
 }
 
 function shareCert() {
