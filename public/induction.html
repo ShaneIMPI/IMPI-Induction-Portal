@@ -1271,45 +1271,114 @@ async function generateCert() {
   btn.disabled = true;
   btn.textContent = 'Generating...';
 
-  const ev = currentEvent || {id:'DEMO',name:'Event',venue:'—',organiser:'—'};
-  const name = document.getElementById('p_name').value.trim();
+  const ev = currentEvent || {id:'DEMO', name:'Event', venue:'—', organiser:'—'};
+  const name    = document.getElementById('p_name').value.trim();
   const surname = document.getElementById('p_surname').value.trim();
-  const email = document.getElementById('p_email').value.trim();
-  const id = document.getElementById('p_id').value.trim();
+  const email   = document.getElementById('p_email').value.trim();
+  const id      = document.getElementById('p_id').value.trim();
+  const idType  = document.getElementById('p_id_type')?.value || 'SA ID';
   const company = document.getElementById('p_company').value.trim();
-  const role = document.getElementById('p_role').value;
-  const trade = document.getElementById('p_trade').value.trim();
-  const phone = document.getElementById('p_phone')?.value?.trim() || '';
-  const now = new Date();
-  const completedStr = now.toLocaleDateString('en-ZA', {day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
+  const role    = document.getElementById('p_role').value;
+  const trade   = document.getElementById('p_trade').value.trim();
+  const phone   = document.getElementById('p_phone')?.value?.trim() || '';
+  const now     = new Date();
+  const completedStr = now.toLocaleDateString('en-ZA', {day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit'});
 
-  const isGroup = inductionType === 'group';
-
-  if (isGroup) {
+  if (inductionType === 'group') {
     const members = getGroupMembers();
-    const results = [];
-    for (const m of members) {
-      const code = makeCertCode(m.name, m.id);
-      try {
-        await fetch('/.netlify/functions/complete', {
-          method:'POST', headers:{'Content-Type':'application/json'},
-          body: JSON.stringify({fullName:m.name,surname:m.surname,email,idNumber:m.id,company,role,trade:m.trade,phone,eventId:ev.id,eventName:ev.name,venue:ev.venue,certCode:code})
-        });
-      } catch(e) {}
-      results.push({...m, code});
+
+    // Validate all member fields first
+    const errors = validateGroupMembers(members);
+    if (errors.length) {
+      showToast(errors[0], 'error');
+      btn.disabled = false;
+      btn.textContent = t('btn_generate');
+      return;
     }
+
+    const total = members.length + 1; // inductor + N members
+    const results = [];
+    let certNum = 0;
+
+    function setProgress(n) {
+      btn.textContent = `Generating certificate ${n} of ${total}...`;
+    }
+
+    // --- Inductor ---
+    certNum++;
+    setProgress(certNum);
+    const inductorDup = await checkDuplicate(name, surname, ev.id, id);
+    if (inductorDup.hasSameId) {
+      results.push({name, surname, id_type: idType, id, role, company, trade, code: inductorDup.existingCode, alreadyCompleted: true, isInductor: true});
+    } else if (inductorDup.isDuplicate) {
+      results.push({name, surname, id_type: idType, id, role, company, trade, code: null, fraudBlocked: true, isInductor: true});
+    } else {
+      const code = makeCertCode(name, id);
+      try {
+        await saveWithRetry({
+          fullName: name, surname, email,
+          idNumber: id, idType, company, role, trade, phone,
+          eventId: ev.id, certCode: code,
+          is_group: true, group_count: members.length
+        });
+      } catch(e) { console.error('Inductor save failed:', e); }
+      results.push({name, surname, id_type: idType, id, role, company, trade, code, isInductor: true});
+    }
+
+    // --- Team members ---
+    for (const m of members) {
+      certNum++;
+      setProgress(certNum);
+      const dup = await checkDuplicate(m.name, m.surname, ev.id, m.id);
+      if (dup.hasSameId) {
+        results.push({...m, role, company, code: dup.existingCode, alreadyCompleted: true});
+      } else if (dup.isDuplicate) {
+        results.push({...m, role, company, code: null, fraudBlocked: true});
+      } else {
+        const code = makeCertCode(m.name, m.id);
+        try {
+          await saveWithRetry({
+            fullName: m.name, surname: m.surname,
+            idNumber: m.id, idType: m.id_type,
+            company, role, trade: m.trade, phone,
+            eventId: ev.id, certCode: code
+            // no email field → backend skips sending email for members
+          });
+        } catch(e) { console.error('Member save failed:', e); }
+        results.push({...m, role, company, code});
+      }
+    }
+
     showGroupCerts(results, ev, completedStr);
+
   } else {
+    // --- Single induction ---
+    const dup = await checkDuplicate(name, surname, ev.id, id);
+    if (dup.hasSameId) {
+      showModal('Already Completed',
+        `You have already completed this induction. Your certificate code is: <strong style="font-family:monospace;font-size:16px;letter-spacing:2px;color:#d42b2b">${dup.existingCode}</strong>`);
+      btn.disabled = false;
+      btn.textContent = t('btn_generate');
+      return;
+    }
+    if (dup.isDuplicate) {
+      showModal('Duplicate Registration',
+        `A person with the name <strong>${name} ${surname}</strong> has already completed this induction with a different ID number. Please verify your identity or contact the safety manager.`);
+      btn.disabled = false;
+      btn.textContent = t('btn_generate');
+      return;
+    }
+
     const code = makeCertCode(name, id);
     try {
       const res = await fetch('/.netlify/functions/complete', {
         method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({fullName:name,surname,email,idNumber:id,idType:document.getElementById('p_id_type')?.value||'ID',company,role,trade,phone,eventId:ev.id,eventName:ev.name,venue:ev.venue,certCode:code})
+        body: JSON.stringify({fullName:name, surname, email, idNumber:id, idType, company, role, trade, phone, eventId:ev.id, certCode:code})
       });
       const data = await res.json();
       if (data.emailSent) showToast('✓ Certificate emailed to ' + email, 'success');
     } catch(e) {}
-    showSingleCert({name,surname,id,company,role,trade,code,completedStr}, ev);
+    showSingleCert({name, surname, id, company, role, trade, code, completedStr}, ev);
   }
 
   goToStep(certStepIndex());
