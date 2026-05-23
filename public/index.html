@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>IMPI Safety Induction Portal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --bg: #F7F8FA;
+  --surface: #FFFFFF;
+  --surface2: #F0F2F6;
+  --border: #E2E6EE;
+  --text-primary: #0F1623;
+  --text-secondary: #4B5563;
+  --text-muted: #9CA3AF;
+  --accent-red: #D42B2B;
+  --accent-red-light: #FEF2F2;
+  --accent-yellow: #F5C800;
+  --accent-yellow-light: #FFFBEB;
+  --green: #16A34A;
+  --green-light: #DCFCE7;
+  --blue: #2563EB;
+  --blue-light: #DBEAFE;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.04);
+  --shadow-lg: 0 16px 48px rgba(0,0,0,0.12), 0 4px 16px rgba(0,0,0,0.06);
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --fh: 'Montserrat', sans-serif;
+  --fb: 'Inter', sans-serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body { background: var(--bg); color: var(--text-primary); font-family: var(--fb); overflow-x: hidden; }
+img { max-width: 100%; }
+
+/* ── NAV ── */
+.site-nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+  height: 64px; padding: 0 40px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.nav-logo-wrap {
+  display: flex; align-items: center; gap: 10px; text-decoration: none;
+}
+.site-logo {
+  height: 40px; width: auto; object-fit: contain;
+  display: none;
+}
+.nav-logo-fallback {
+  font-family: var(--fh); font-size: 20px; font-weight: 900;
+  color: var(--accent-red); letter-spacing: -0.5px;
+}
+.nav-verify-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-family: var(--fb); font-size: 13px; font-weight: 600;
+  color: var(--accent-red);
+  border: 1.5px solid var(--accent-red);
+  padding: 8px 18px; border-radius: 100px;
+  text-decoration: none; background: transparent;
+  transition: background 0.2s, color 0.2s;
+}
+.nav-verify-btn:hover {
+  background: var(--accent-red-light);
+}
+
+/* ── HERO ── */
+#hero {
+  min-height: 100vh;
+  background: linear-gradient(160deg, #0F1623 0%, #1a0505 50%, #260808 100%);
+  background-size: cover; background-position: center;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 100px 40px 80px;
+  position: relative; overflow: hidden;
+  color: #fff;
+}
+.hero-inner {
+  position: relative; z-index: 2;
+  max-width: 760px; width: 100%;
+  text-align: center;
+  animation: fadeUp 0.7s ease both;
+}
+@keyframes fadeUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+#heroLogo {
+  height: 120px; width: auto; object-fit: contain;
+  margin-bottom: 32px;
+  display: none;
+  filter: drop-shadow(0 8px 32px rgba(212,43,43,0.3));
+  animation: fadeUp 0.7s 0.05s ease both;
+}
+.hero-logo-fallback {
+  font-family: var(--fh); font-size: 48px; font-weight: 900;
+  color: var(--accent-red); margin-bottom: 28px; letter-spacing: -1px;
+  animation: fadeUp 0.7s 0.05s ease both;
+}
+#heroTitle {
+  font-family: var(--fh); font-weight: 900;
+  font-size: clamp(32px, 5.5vw, 58px);
+  line-height: 1.08; letter-spacing: -1px;
+  color: #fff; margin-bottom: 20px;
+  animation: fadeUp 0.7s 0.1s ease both;
+}
+#heroSubtitle {
+  font-size: clamp(14px, 1.8vw, 17px); color: rgba(255,255,255,0.65); line-height: 1.75;
+  max-width: 520px; margin: 0 auto 48px;
+  animation: fadeUp 0.7s 0.15s ease both;
+}
+.hero-scroll-hint {
+  position: absolute; bottom: 28px; left: 50%; transform: translateX(-50%);
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  font-family: var(--fh); font-size: 9px; font-weight: 700; letter-spacing: 2px;
+  text-transform: uppercase; color: rgba(255,255,255,0.25);
+  animation: scrollBounce 2s infinite;
+  z-index: 2;
+}
+.hero-scroll-arrow {
+  width: 18px; height: 18px;
+  border-right: 2px solid rgba(255,255,255,0.2);
+  border-bottom: 2px solid rgba(255,255,255,0.2);
+  transform: rotate(45deg);
+}
+@keyframes scrollBounce {
+  0%,100% { transform: translateX(-50%) translateY(0); }
+  50% { transform: translateX(-50%) translateY(7px); }
+}
+
+/* ── INFO STRIP ── */
+.info-strip {
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+  border-bottom: 1px solid var(--border);
+}
+.info-strip-inner {
+  max-width: 1100px; margin: 0 auto;
+  display: grid; grid-template-columns: repeat(4, 1fr);
+}
+.info-item {
+  padding: 28px 24px;
+  border-right: 1px solid var(--border);
+  display: flex; align-items: center; gap: 16px;
+}
+.info-item:last-child { border-right: none; }
+.info-icon { font-size: 28px; flex-shrink: 0; }
+.info-label {
+  font-family: var(--fh); font-size: 9px; font-weight: 700;
+  letter-spacing: 2px; text-transform: uppercase;
+  color: var(--text-muted); margin-bottom: 4px;
+}
+.info-value {
+  font-family: var(--fh); font-size: 16px; font-weight: 900;
+  color: var(--text-primary); margin-bottom: 2px;
+}
+.info-note { font-size: 11px; color: var(--text-muted); }
+
+/* ── EVENTS SECTION ── */
+.events-wrap {
+  max-width: 1100px; margin: 0 auto;
+  padding: 60px 40px;
+}
+.section-eyebrow {
+  font-family: var(--fh); font-size: 10px; font-weight: 700;
+  letter-spacing: 3px; text-transform: uppercase;
+  color: var(--accent-red); margin-bottom: 10px;
+}
+.section-title {
+  font-family: var(--fh); font-size: clamp(26px, 3.5vw, 36px); font-weight: 900;
+  color: var(--text-primary); margin-bottom: 8px;
+}
+.section-sub { font-size: 14px; color: var(--text-secondary); margin-bottom: 36px; }
+
+/* ── SKELETON ── */
+.skeleton-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
+.skeleton-card {
+  background: var(--surface); border-radius: var(--radius-lg);
+  border: 1px solid var(--border); padding: 28px; overflow: hidden;
+}
+.skeleton-block {
+  background: linear-gradient(90deg, var(--surface2) 25%, #e8ebf0 50%, var(--surface2) 75%);
+  background-size: 400% 100%;
+  border-radius: var(--radius-sm);
+  animation: shimmer 1.4s infinite;
+}
+@keyframes shimmer { 0% { background-position: 100% 0; } 100% { background-position: -100% 0; } }
+.sk-logo { height: 48px; width: 120px; margin-bottom: 20px; }
+.sk-badge { height: 22px; width: 80px; border-radius: 100px; margin-bottom: 16px; }
+.sk-title { height: 20px; width: 90%; margin-bottom: 10px; }
+.sk-meta { height: 14px; width: 70%; margin-bottom: 6px; }
+.sk-meta2 { height: 14px; width: 55%; margin-bottom: 24px; }
+.sk-btn { height: 38px; width: 100%; border-radius: var(--radius-md); }
+
+/* ── EVENTS GRID ── */
+.events-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
+.event-card {
+  background: var(--surface); border-radius: var(--radius-lg);
+  border: 1px solid var(--border); box-shadow: var(--shadow-sm);
+  overflow: hidden; cursor: pointer;
+  display: flex; flex-direction: column;
+  transition: box-shadow 0.25s, transform 0.25s, border-color 0.25s;
+}
+.event-card:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+  border-color: #d0d5e0;
+}
+.event-card-logo {
+  padding: 20px 24px 0;
+  min-height: 80px;
+  display: flex; align-items: center;
+}
+.event-card-icon { font-size: 42px; line-height: 1; }
+.event-card-body { padding: 12px 24px 0; flex: 1; }
+.event-status-wrap { margin-bottom: 10px; }
+.status-badge {
+  display: inline-block;
+  font-family: var(--fh); font-size: 10px; font-weight: 700;
+  letter-spacing: 1.5px; text-transform: uppercase;
+  padding: 3px 10px; border-radius: 100px;
+}
+.event-card-name {
+  font-family: var(--fh); font-size: 16px; font-weight: 800;
+  color: var(--text-primary); margin-bottom: 6px; line-height: 1.35;
+}
+.event-card-meta {
+  font-size: 12px; color: var(--text-secondary); margin-bottom: 5px; line-height: 1.5;
+}
+.event-card-footer { padding: 16px 24px 20px; }
+.event-cta-btn {
+  width: 100%; padding: 10px 16px;
+  font-family: var(--fh); font-size: 12px; font-weight: 700; letter-spacing: 0.5px;
+  background: var(--accent-red); color: #fff;
+  border: none; border-radius: var(--radius-md); cursor: pointer;
+  transition: background 0.2s, opacity 0.2s;
+}
+.event-cta-btn:hover { background: #b82424; }
+.event-cta-btn.btn-disabled {
+  background: var(--surface2); color: var(--text-muted);
+  cursor: default;
+}
+.event-cta-btn.btn-disabled:hover { background: var(--surface2); }
+
+/* ── EMPTY STATE ── */
+.empty-state {
+  grid-column: 1 / -1;
+  text-align: center; padding: 60px 24px;
+  color: var(--text-secondary);
+}
+.empty-icon { font-size: 48px; margin-bottom: 16px; }
+.empty-state p { font-size: 15px; }
+
+/* ── EVENT DETAIL ── */
+#eventDetail {
+  max-width: 1100px; margin: 0 auto;
+  padding: 60px 40px;
+  display: none;
+}
+.back-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-family: var(--fb); font-size: 13px; font-weight: 600;
+  color: var(--text-secondary);
+  background: var(--surface); border: 1px solid var(--border);
+  padding: 8px 16px; border-radius: 100px; cursor: pointer;
+  transition: all 0.2s; margin-bottom: 32px;
+  text-decoration: none; box-shadow: var(--shadow-sm);
+}
+.back-btn:hover { border-color: #c5cbd8; color: var(--text-primary); box-shadow: var(--shadow-md); }
+.detail-title {
+  font-family: var(--fh); font-weight: 900;
+  font-size: clamp(28px, 4.5vw, 48px);
+  line-height: 1.08; letter-spacing: -0.5px;
+  color: var(--text-primary); margin-bottom: 10px;
+}
+.detail-venue {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 14px; color: var(--text-secondary);
+  background: var(--surface2); border: 1px solid var(--border);
+  padding: 5px 14px; border-radius: 100px; margin-bottom: 28px;
+}
+.detail-dates {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0; background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);
+  overflow: hidden; margin-bottom: 24px;
+}
+.date-item {
+  padding: 18px 22px;
+  border-right: 1px solid var(--border);
+}
+.date-item:last-child { border-right: none; }
+.date-label {
+  font-family: var(--fh); font-size: 9px; font-weight: 700;
+  letter-spacing: 2px; text-transform: uppercase;
+  color: var(--text-muted); margin-bottom: 5px;
+}
+.date-val {
+  font-family: var(--fh); font-size: 13px; font-weight: 800;
+  color: var(--text-primary);
+}
+.status-notice {
+  border-radius: var(--radius-md); padding: 14px 18px;
+  font-size: 14px; font-weight: 500; margin-bottom: 24px;
+  display: flex; align-items: center; gap: 10px;
+}
+.notice-yellow {
+  background: var(--accent-yellow-light);
+  border: 1px solid #fde68a;
+  color: #92400e;
+}
+.notice-grey {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+}
+.action-cards {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 16px; margin-top: 8px;
+}
+.action-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 28px 24px;
+  text-decoration: none; display: flex; flex-direction: column;
+  box-shadow: var(--shadow-sm); color: var(--text-primary);
+  transition: box-shadow 0.25s, transform 0.25s, border-color 0.25s;
+}
+.action-card:hover {
+  box-shadow: var(--shadow-md); transform: translateY(-2px); border-color: #d0d5e0;
+}
+.action-card-disabled {
+  opacity: 0.5; pointer-events: none;
+}
+.action-icon { font-size: 32px; margin-bottom: 14px; }
+.action-title {
+  font-family: var(--fh); font-size: 15px; font-weight: 800;
+  color: var(--text-primary); margin-bottom: 6px;
+}
+.action-sub { font-size: 13px; color: var(--text-secondary); line-height: 1.55; flex: 1; }
+
+/* ── TOPICS SECTION ── */
+.topics-section {
+  background: var(--surface2);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  padding: 60px 40px;
+}
+.topics-inner { max-width: 1100px; margin: 0 auto; }
+.topics-grid {
+  display: grid; grid-template-columns: repeat(2, 1fr);
+  gap: 12px; margin-top: 32px;
+}
+.topic-item {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-md); padding: 14px 18px;
+  display: flex; align-items: flex-start; gap: 12px;
+  box-shadow: var(--shadow-sm);
+}
+.topic-check {
+  color: var(--accent-yellow); font-size: 15px; font-weight: 800;
+  flex-shrink: 0; margin-top: 1px;
+}
+.topic-name { font-size: 13px; color: var(--text-secondary); line-height: 1.45; font-weight: 500; }
+
+/* ── FOOTER ── */
+.site-footer {
+  background: var(--text-primary);
+  padding: 40px 40px;
+  color: rgba(255,255,255,0.5);
+}
+.footer-inner {
+  max-width: 1100px; margin: 0 auto;
+  display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;
+}
+.footer-left { display: flex; align-items: center; gap: 14px; }
+.footer-logo {
+  height: 32px; width: auto; object-fit: contain;
+  display: none; filter: brightness(0) invert(1) opacity(0.6);
+}
+.footer-logo-text {
+  font-family: var(--fh); font-size: 14px; font-weight: 900;
+  color: rgba(255,255,255,0.55);
+}
+.footer-copy { font-size: 12px; color: rgba(255,255,255,0.3); margin-top: 2px; }
+.footer-right { display: flex; align-items: center; gap: 20px; }
+.footer-link {
+  font-size: 13px; color: rgba(255,255,255,0.4);
+  text-decoration: none; font-weight: 500;
+  transition: color 0.2s;
+}
+.footer-link:hover { color: rgba(255,255,255,0.75); }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 900px) {
+  .site-nav { padding: 0 20px; }
+  #hero { padding: 90px 24px 70px; }
+  .info-strip-inner { grid-template-columns: 1fr 1fr; }
+  .info-item:nth-child(2) { border-right: none; }
+  .info-item { padding: 20px 16px; }
+  .events-wrap, #eventDetail { padding: 40px 24px; }
+  .detail-dates { grid-template-columns: 1fr 1fr; }
+  .date-item:nth-child(2) { border-right: none; }
+  .topics-section { padding: 40px 24px; }
+  .topics-grid { grid-template-columns: 1fr; }
+  .site-footer { padding: 32px 24px; }
+  .footer-inner { flex-direction: column; align-items: flex-start; }
+}
+@media (max-width: 600px) {
+  .info-strip-inner { grid-template-columns: 1fr 1fr; }
+  .events-grid { grid-template-columns: 1fr; }
+  .action-cards { grid-template-columns: 1fr; }
+  .detail-dates { grid-template-columns: 1fr; }
+  .date-item { border-right: none !important; border-bottom: 1px solid var(--border); }
+  .date-item:last-child { border-bottom: none; }
+}
+</style>
+</head>
+<body>
+
+<!-- ── NAV ── -->
+<nav class="site-nav">
+  <a class="nav-logo-wrap" href="/">
+    <img class="site-logo" src="" alt="IMPI"/>
+    <span class="nav-logo-fallback">IMPI</span>
+  </a>
+  <a class="nav-verify-btn" href="/verify.html">🔍 Verify Certificate</a>
+</nav>
+
+<!-- ── HERO ── -->
+<section id="hero">
+  <div class="hero-inner">
+    <img id="heroLogo" src="" alt="IMPI"/>
+    <div class="hero-logo-fallback" id="heroLogoFallback">IMPI</div>
+    <h1 id="heroTitle">IMPI Safety Induction Portal</h1>
+    <p id="heroSubtitle">Complete your mandatory safety induction and receive your verifiable certificate instantly.</p>
+  </div>
+  <div class="hero-scroll-hint">
+    <div class="hero-scroll-arrow"></div>
+    Scroll to begin
+  </div>
+</section>
+
+<!-- ── INFO STRIP ── -->
+<div class="info-strip">
+  <div class="info-strip-inner">
+    <div class="info-item">
+      <div class="info-icon">⏱️</div>
+      <div>
+        <div class="info-label">Duration</div>
+        <div class="info-value">10 – 15 min</div>
+        <div class="info-note">To complete</div>
+      </div>
+    </div>
+    <div class="info-item">
+      <div class="info-icon">📋</div>
+      <div>
+        <div class="info-label">Topics</div>
+        <div class="info-value">7 Safety Topics</div>
+        <div class="info-note">Safety &amp; compliance</div>
+      </div>
+    </div>
+    <div class="info-item">
+      <div class="info-icon">🪪</div>
+      <div>
+        <div class="info-label">Required</div>
+        <div class="info-value">ID Number</div>
+        <div class="info-note">+ Company &amp; email</div>
+      </div>
+    </div>
+    <div class="info-item">
+      <div class="info-icon">🏆</div>
+      <div>
+        <div class="info-label">You Receive</div>
+        <div class="info-value">Certificate</div>
+        <div class="info-note">Emailed instantly</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── EVENTS SECTION ── -->
+<section id="eventsSection">
+  <div class="events-wrap">
+    <div class="section-eyebrow">Available Events</div>
+    <h2 class="section-title">Select Your Event</h2>
+    <p class="section-sub">Choose the event you are attending to begin your safety induction.</p>
+    <!-- Skeleton (shown while loading) -->
+    <div class="skeleton-grid" id="eventsLoading">
+      <div class="skeleton-card">
+        <div class="skeleton-block sk-logo"></div>
+        <div class="skeleton-block sk-badge"></div>
+        <div class="skeleton-block sk-title"></div>
+        <div class="skeleton-block sk-meta"></div>
+        <div class="skeleton-block sk-meta2"></div>
+        <div class="skeleton-block sk-btn"></div>
+      </div>
+      <div class="skeleton-card">
+        <div class="skeleton-block sk-logo"></div>
+        <div class="skeleton-block sk-badge"></div>
+        <div class="skeleton-block sk-title"></div>
+        <div class="skeleton-block sk-meta"></div>
+        <div class="skeleton-block sk-meta2"></div>
+        <div class="skeleton-block sk-btn"></div>
+      </div>
+      <div class="skeleton-card">
+        <div class="skeleton-block sk-logo"></div>
+        <div class="skeleton-block sk-badge"></div>
+        <div class="skeleton-block sk-title"></div>
+        <div class="skeleton-block sk-meta"></div>
+        <div class="skeleton-block sk-meta2"></div>
+        <div class="skeleton-block sk-btn"></div>
+      </div>
+    </div>
+    <!-- Actual grid (populated by JS) -->
+    <div class="events-grid" id="eventsGrid" style="display:none"></div>
+  </div>
+</section>
+
+<!-- ── EVENT DETAIL ── -->
+<section id="eventDetail">
+  <div id="detailContent"></div>
+</section>
+
+<!-- ── TOPICS SECTION ── -->
+<section class="topics-section">
+  <div class="topics-inner">
+    <div class="section-eyebrow">Safety Programme</div>
+    <h2 class="section-title">What You'll Learn</h2>
+    <p class="section-sub">The induction covers 8 essential safety topics required for all contractors, exhibitors and suppliers on site.</p>
+    <div class="topics-grid">
+      <div class="topic-item"><span class="topic-check">✓</span><span class="topic-name">Safety File &amp; Accreditation Requirements</span></div>
+      <div class="topic-item"><span class="topic-check">✓</span><span class="topic-name">Personal Protective Equipment (PPE)</span></div>
+      <div class="topic-item"><span class="topic-check">✓</span><span class="topic-name">Emergency Procedures &amp; Evacuation Routes</span></div>
+      <div class="topic-item"><span class="topic-check">✓</span><span class="topic-name">Fire Safety &amp; Prevention</span></div>
+      <div class="topic-item"><span class="topic-check">✓</span><span class="topic-name">Working at Heights Regulations</span></div>
+      <div class="topic-item"><span class="topic-check">✓</span><span class="topic-name">Electrical Safety Standards</span></div>
+      <div class="topic-item"><span class="topic-check">✓</span><span class="topic-name">Housekeeping &amp; Waste Management</span></div>
+      <div class="topic-item"><span class="topic-check">✓</span><span class="topic-name">Incident Reporting Procedures</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ── FOOTER ── -->
+<footer class="site-footer">
+  <div class="footer-inner">
+    <div class="footer-left">
+      <img class="footer-logo" src="" alt="IMPI"/>
+      <div>
+        <div class="footer-logo-text">IMPI</div>
+        <div class="footer-copy">© 2026 IMPI Safety Services International. All rights reserved.</div>
+      </div>
+    </div>
+    <div class="footer-right">
+      <a class="footer-link" href="/verify.html">🔍 Verify Certificate</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+let allEvents = [];
+let designSettings = {};
+
+async function init() {
+  // Load design settings
+  try {
+    const res = await fetch('/api/design');
+    designSettings = await res.json();
+    applyDesignSettings(designSettings);
+  } catch (e) {
+    console.warn('Design settings unavailable:', e.message);
+  }
+
+  // Load events
+  try {
+    const res = await fetch('/api/events');
+    const events = await res.json();
+    allEvents = Array.isArray(events) ? events : [];
+    renderEvents(allEvents.filter(function(e) { return e.status !== 'archived'; }));
+  } catch (e) {
+    console.error('Events load error:', e);
+    document.getElementById('eventsLoading').style.display = 'none';
+    document.getElementById('eventsGrid').style.display = 'grid';
+    document.getElementById('eventsGrid').innerHTML = '<div class="empty-state"><div class="empty-icon">⚠️</div><p>Events could not be loaded. Please refresh the page.</p></div>';
+  }
+}
+
+function applyDesignSettings(d) {
+  var logoUrl = d.impi_logo_url;
+  var size = parseInt(d.logo_size) || 120;
+
+  // Nav logos (.site-logo elements)
+  document.querySelectorAll('.site-logo').forEach(function(el) {
+    if (logoUrl) {
+      el.src = logoUrl;
+      el.style.display = 'block';
+    }
+    el.style.height = Math.min(size, 80) + 'px';
+  });
+
+  // Hide fallback text in nav if logo is set
+  if (logoUrl) {
+    document.querySelectorAll('.nav-logo-fallback').forEach(function(el) {
+      el.style.display = 'none';
+    });
+  }
+
+  // Hero logo
+  var heroLogo = document.getElementById('heroLogo');
+  var heroFallback = document.getElementById('heroLogoFallback');
+  if (heroLogo) {
+    if (logoUrl) {
+      heroLogo.src = logoUrl;
+      heroLogo.style.display = 'block';
+      if (heroFallback) heroFallback.style.display = 'none';
+    }
+    heroLogo.style.height = size + 'px';
+  }
+
+  // Footer logo
+  var footerLogo = document.querySelector('.footer-logo');
+  if (footerLogo && logoUrl) {
+    footerLogo.src = logoUrl;
+    footerLogo.style.display = 'block';
+    var footerText = document.querySelector('.footer-logo-text');
+    if (footerText) footerText.style.display = 'none';
+  }
+
+  // Hero background image
+  if (d.hero_image_url) {
+    var hero = document.getElementById('hero');
+    hero.style.backgroundImage = "linear-gradient(rgba(0,0,0,0.55),rgba(0,0,0,0.55)), url('" + d.hero_image_url + "')";
+  }
+
+  // Hero text
+  if (d.heading_text) document.getElementById('heroTitle').textContent = d.heading_text;
+  if (d.subtitle_text) document.getElementById('heroSubtitle').textContent = d.subtitle_text;
+
+  // Primary color
+  if (d.primary_color) document.documentElement.style.setProperty('--accent-red', d.primary_color);
+}
+
+function renderEvents(events) {
+  var loading = document.getElementById('eventsLoading');
+  var grid = document.getElementById('eventsGrid');
+  loading.style.display = 'none';
+  grid.style.display = 'grid';
+
+  if (!events || events.length === 0) {
+    grid.innerHTML = '<div class="empty-state"><div class="empty-icon">📅</div><p>No active events at this time. Check back soon.</p></div>';
+    return;
+  }
+
+  grid.innerHTML = events.map(function(ev) {
+    return '<div class="event-card" onclick="showEventDetail(\'' + ev.id + '\')">' +
+      '<div class="event-card-logo">' +
+        (ev.client_logo_url
+          ? '<img src="' + escHtml(ev.client_logo_url) + '" alt="' + escHtml(ev.name) + '" style="height:60px;max-width:140px;object-fit:contain">'
+          : '<div class="event-card-icon">🏟️</div>') +
+      '</div>' +
+      '<div class="event-card-body">' +
+        '<div class="event-status-wrap">' + statusBadge(ev.status) + '</div>' +
+        '<h3 class="event-card-name">' + escHtml(ev.name) + '</h3>' +
+        (ev.venue ? '<div class="event-card-meta">📍 ' + escHtml(ev.venue) + '</div>' : '') +
+        (ev.ev_start ? '<div class="event-card-meta">📅 ' + formatDate(ev.ev_start) + '</div>' : '') +
+      '</div>' +
+      '<div class="event-card-footer">' +
+        '<button class="event-cta-btn' + (ev.status !== 'active' ? ' btn-disabled' : '') + '">' +
+          (ev.status === 'active' ? 'Start Induction →' : ev.status === 'draft' ? 'Coming Soon' : 'Event Closed') +
+        '</button>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+}
+
+function statusBadge(status) {
+  var map = {
+    draft:     ['var(--blue-light)', 'var(--blue)', 'Draft'],
+    active:    ['var(--green-light)', 'var(--green)', 'Active'],
+    completed: ['var(--surface2)', 'var(--text-muted)', 'Completed']
+  };
+  var cfg = map[status] || ['var(--surface2)', 'var(--text-muted)', status || ''];
+  return '<span class="status-badge" style="background:' + cfg[0] + ';color:' + cfg[1] + '">' + cfg[2] + '</span>';
+}
+
+function showEventDetail(id) {
+  var ev = allEvents.find(function(e) { return e.id === id; });
+  if (!ev) return;
+  document.getElementById('eventsSection').style.display = 'none';
+  var detail = document.getElementById('eventDetail');
+  detail.style.display = 'block';
+  renderEventDetail(ev);
+  detail.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function showEventsList() {
+  document.getElementById('eventDetail').style.display = 'none';
+  document.getElementById('eventsSection').style.display = 'block';
+}
+
+function renderEventDetail(ev) {
+  var isActive = ev.status === 'active';
+  var isDraft = ev.status === 'draft';
+  var isCompleted = ev.status === 'completed';
+
+  // Split event name: first word in accent colour
+  var words = ev.name ? ev.name.split(' ') : ['Event'];
+  var nameHtml = words.length > 1
+    ? '<span style="color:var(--accent-red)">' + escHtml(words[0]) + '</span> ' + escHtml(words.slice(1).join(' '))
+    : '<span style="color:var(--accent-red)">' + escHtml(ev.name) + '</span>';
+
+  // Build date strip items
+  var datesHtml = '';
+  if (ev.bu_start) datesHtml += '<div class="date-item"><div class="date-label">Build-Up</div><div class="date-val">' + formatDate(ev.bu_start) + (ev.bu_end ? ' – ' + formatDate(ev.bu_end) : '') + '</div></div>';
+  if (ev.ev_start) datesHtml += '<div class="date-item"><div class="date-label">Event</div><div class="date-val">' + formatDate(ev.ev_start) + (ev.ev_end ? ' – ' + formatDate(ev.ev_end) : '') + '</div></div>';
+  if (ev.bd_start) datesHtml += '<div class="date-item"><div class="date-label">Breakdown</div><div class="date-val">' + formatDate(ev.bd_start) + (ev.bd_end ? ' – ' + formatDate(ev.bd_end) : '') + '</div></div>';
+  if (ev.organiser) datesHtml += '<div class="date-item"><div class="date-label">Organiser</div><div class="date-val">' + escHtml(ev.organiser) + '</div></div>';
+
+  // Notice block
+  var noticeHtml = '';
+  if (isDraft) noticeHtml = '<div class="status-notice notice-yellow">🕐 Coming Soon — induction is not yet open for this event.</div>';
+  if (isCompleted) noticeHtml = '<div class="status-notice notice-grey">✅ This event has closed. No further inductions are being accepted.</div>';
+
+  // Action cards
+  var actionsHtml =
+    '<a href="' + (isActive ? '/induction.html?event=' + ev.id : '#') + '" class="action-card' + (!isActive ? ' action-card-disabled' : '') + '">' +
+      '<div class="action-icon">📱</div>' +
+      '<div class="action-title">Online Induction</div>' +
+      '<div class="action-sub">' + (isActive ? 'Start your safety induction now' : 'Not currently available') + '</div>' +
+    '</a>';
+
+  if (ev.manual_url) {
+    actionsHtml +=
+      '<a href="' + escHtml(ev.manual_url) + '" target="_blank" rel="noopener" class="action-card">' +
+        '<div class="action-icon">📄</div>' +
+        '<div class="action-title">Download Manual</div>' +
+        '<div class="action-sub">' + escHtml(ev.manual_name || 'Induction Manual') + '</div>' +
+      '</a>';
+  }
+
+  actionsHtml +=
+    '<a href="/verify.html" class="action-card">' +
+      '<div class="action-icon">🔍</div>' +
+      '<div class="action-title">Verify Certificate</div>' +
+      '<div class="action-sub">Check a certificate is valid</div>' +
+    '</a>';
+
+  document.getElementById('detailContent').innerHTML =
+    '<button class="back-btn" onclick="showEventsList()">← Back to Events</button>' +
+    '<h2 class="detail-title">' + nameHtml + '</h2>' +
+    (ev.venue ? '<div class="detail-venue">📍 ' + escHtml(ev.venue) + '</div>' : '') +
+    (datesHtml ? '<div class="detail-dates">' + datesHtml + '</div>' : '') +
+    noticeHtml +
+    '<div class="action-cards">' + actionsHtml + '</div>';
+}
+
+function formatDate(dateStr) {
+  if (!dateStr) return '';
+  try {
+    return new Date(dateStr + 'T00:00:00').toLocaleDateString('en-ZA', { day: '2-digit', month: 'short', year: 'numeric' });
+  } catch(e) { return dateStr; }
+}
+
+function escHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
