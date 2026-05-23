@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Verify Certificate — IMPI Safety</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0a0b0e;
+      --surface: #13151a;
+      --surface2: #1c1f28;
+      --border: rgba(255,255,255,0.08);
+      --text: #f1f5f9;
+      --muted: rgba(255,255,255,0.45);
+      --red: #d42b2b;
+      --yellow: #f5c800;
+      --green: #22c55e;
+      --green-bg: rgba(34,197,94,0.12);
+      --red-bg: rgba(212,43,43,0.12);
+      --fh: 'Montserrat', sans-serif;
+      --fb: 'Inter', sans-serif;
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--fb);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── NAV ── */
+    .nav {
+      position: sticky;
+      top: 0;
+      left: 0;
+      right: 0;
+      background: rgba(10,11,14,0.96);
+      border-bottom: 1px solid var(--border);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 28px;
+      z-index: 100;
+    }
+
+    .nav-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+    }
+
+    .site-logo {
+      height: 36px;
+      width: auto;
+      object-fit: contain;
+      display: none;
+    }
+
+    .nav-fallback {
+      font-family: var(--fh);
+      font-size: 20px;
+      font-weight: 900;
+      color: var(--red);
+      letter-spacing: 2px;
+    }
+
+    .nav-label {
+      font-family: var(--fh);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .nav-back {
+      font-family: var(--fh);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--muted);
+      text-decoration: none;
+      border: 1px solid var(--border);
+      padding: 8px 16px;
+      border-radius: 24px;
+      transition: color 0.2s, border-color 0.2s;
+    }
+
+    .nav-back:hover {
+      color: var(--text);
+      border-color: rgba(255,255,255,0.3);
+    }
+
+    /* ── MAIN ── */
+    main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 60px 20px 80px;
+    }
+
+    /* ── HERO ── */
+    .hero {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    .hero-icon {
+      font-size: 48px;
+      line-height: 1;
+      margin-bottom: 20px;
+    }
+
+    .hero-title {
+      font-family: var(--fh);
+      font-size: 36px;
+      font-weight: 900;
+      letter-spacing: -0.5px;
+      margin-bottom: 12px;
+      color: var(--text);
+    }
+
+    .hero-sub {
+      font-size: 15px;
+      color: var(--muted);
+      line-height: 1.65;
+      max-width: 400px;
+      margin: 0 auto;
+    }
+
+    /* ── CHECK SECTION ── */
+    .check-section {
+      width: 100%;
+      max-width: 520px;
+    }
+
+    .check-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 36px 32px;
+    }
+
+    .input-label {
+      font-family: var(--fh);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 10px;
+      display: block;
+    }
+
+    .code-input {
+      width: 100%;
+      background: var(--surface2);
+      border: 2px solid var(--border);
+      color: var(--text);
+      padding: 16px 20px;
+      border-radius: 12px;
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: 4px;
+      text-align: center;
+      text-transform: uppercase;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      margin-bottom: 16px;
+      -webkit-appearance: none;
+    }
+
+    .code-input::placeholder {
+      font-size: 14px;
+      letter-spacing: 3px;
+      font-weight: 600;
+      color: rgba(255,255,255,0.2);
+      font-family: var(--fb);
+    }
+
+    .code-input:focus {
+      border-color: var(--red);
+      box-shadow: 0 0 0 3px rgba(212,43,43,0.15);
+    }
+
+    .btn-row {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .btn {
+      width: 100%;
+      padding: 15px 20px;
+      border: none;
+      border-radius: 12px;
+      font-family: var(--fh);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: opacity 0.2s, background 0.2s, transform 0.1s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .btn:active {
+      transform: scale(0.985);
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .btn-primary {
+      background: var(--red);
+      color: #fff;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      opacity: 0.88;
+    }
+
+    .btn-secondary {
+      background: var(--surface2);
+      color: var(--muted);
+      border: 1px solid var(--border);
+    }
+
+    .btn-secondary:hover:not(:disabled) {
+      background: rgba(255,255,255,0.07);
+      color: var(--text);
+    }
+
+    /* Spinner */
+    .spinner {
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(255,255,255,0.25);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      flex-shrink: 0;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* ── SCANNER SECTION ── */
+    .scanner-section {
+      display: none;
+      margin-top: 20px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 24px;
+    }
+
+    .scanner-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+
+    .scanner-title {
+      font-family: var(--fh);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .btn-close {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-family: var(--fh);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: color 0.2s, background 0.2s;
+    }
+
+    .btn-close:hover {
+      color: var(--text);
+      background: rgba(255,255,255,0.1);
+    }
+
+    .video-wrap {
+      position: relative;
+      border-radius: 12px;
+      overflow: hidden;
+      background: #000;
+      margin-bottom: 12px;
+    }
+
+    #qrVideo {
+      width: 100%;
+      max-height: 300px;
+      display: block;
+      object-fit: cover;
+    }
+
+    .qr-frame-overlay {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+    }
+
+    .qr-frame {
+      width: 160px;
+      height: 160px;
+      border: 2.5px solid var(--red);
+      border-radius: 12px;
+      box-shadow: 0 0 0 9999px rgba(0,0,0,0.42);
+    }
+
+    .scan-status {
+      font-size: 12px;
+      color: var(--muted);
+      text-align: center;
+      min-height: 20px;
+    }
+
+    /* ── RESULT SECTION ── */
+    #result {
+      display: none;
+      margin-top: 20px;
+      animation: fadeInUp 0.3s ease;
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .result-card {
+      border-radius: 16px;
+      padding: 28px 28px;
+      border: 1px solid transparent;
+    }
+
+    .result-card.valid {
+      background: var(--green-bg);
+      border-color: rgba(34,197,94,0.25);
+      border-left: 4px solid var(--green);
+    }
+
+    .result-card.invalid {
+      background: var(--red-bg);
+      border-color: rgba(212,43,43,0.25);
+      border-left: 4px solid var(--red);
+    }
+
+    .result-status-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+
+    .result-status-icon {
+      font-size: 28px;
+      line-height: 1;
+    }
+
+    .result-status-text {
+      font-family: var(--fh);
+      font-size: 16px;
+      font-weight: 900;
+      letter-spacing: 0.5px;
+    }
+
+    .result-card.valid .result-status-text {
+      color: var(--green);
+    }
+
+    .result-card.invalid .result-status-text {
+      color: #f87171;
+    }
+
+    .result-cert-code {
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: 4px;
+      color: var(--text);
+      margin-bottom: 20px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .result-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    .result-row {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      padding: 9px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      font-size: 14px;
+    }
+
+    .result-row:last-child {
+      border-bottom: none;
+    }
+
+    .result-lbl {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 500;
+      width: 120px;
+      flex-shrink: 0;
+      padding-top: 1px;
+    }
+
+    .result-val {
+      color: var(--text);
+      font-weight: 500;
+      line-height: 1.45;
+    }
+
+    .result-invalid-msg {
+      font-size: 14px;
+      color: rgba(255,255,255,0.55);
+      line-height: 1.6;
+      margin-top: 4px;
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 28px 20px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: 0.5px;
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 580px) {
+      .nav {
+        padding: 0 16px;
+      }
+
+      .nav-label {
+        display: none;
+      }
+
+      main {
+        padding: 40px 16px 60px;
+      }
+
+      .hero-title {
+        font-size: 28px;
+      }
+
+      .check-card {
+        padding: 28px 20px;
+      }
+
+      .code-input {
+        font-size: 20px;
+        letter-spacing: 3px;
+      }
+
+      .result-card {
+        padding: 22px 20px;
+      }
+
+      .result-lbl {
+        width: 100px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav class="nav">
+    <a class="nav-brand" href="/">
+      <img class="site-logo" id="navLogo" alt="IMPI Safety"/>
+      <span class="nav-fallback" id="navFallback">IMPI</span>
+      <span class="nav-label">Certificate Verify</span>
+    </a>
+    <a class="nav-back" href="/">&#8592; Back to Portal</a>
+  </nav>
+
+  <!-- MAIN -->
+  <main>
+
+    <!-- HERO -->
+    <div class="hero">
+      <div class="hero-icon">🔍</div>
+      <h1 class="hero-title">Verify Certificate</h1>
+      <p class="hero-sub">Enter the certificate code or scan the QR code from the attendee's certificate to verify authenticity.</p>
+    </div>
+
+    <!-- CHECK SECTION -->
+    <div class="check-section">
+
+      <div class="check-card">
+        <label class="input-label" for="codeInput">Certificate Code</label>
+        <input
+          class="code-input"
+          id="codeInput"
+          type="text"
+          placeholder="e.g. AB12CD78"
+          maxlength="12"
+          autocomplete="off"
+          autocorrect="off"
+          autocapitalize="characters"
+          spellcheck="false"
+        />
+        <div class="btn-row">
+          <button class="btn btn-primary" id="btnCheck" onclick="checkCert()">
+            <span id="btnCheckLabel">&#10003; Check Certificate</span>
+          </button>
+          <button class="btn btn-secondary" id="btnScan" onclick="startQrScan()">
+            📷 Scan QR Code
+          </button>
+        </div>
+      </div>
+
+      <!-- SCANNER SECTION -->
+      <div class="scanner-section" id="scannerSection">
+        <div class="scanner-header">
+          <span class="scanner-title">QR Scanner</span>
+          <button class="btn-close" onclick="closeScan()">✕ Close</button>
+        </div>
+        <div class="video-wrap">
+          <video id="qrVideo" autoplay playsinline muted></video>
+          <div class="qr-frame-overlay">
+            <div class="qr-frame"></div>
+          </div>
+        </div>
+        <div class="scan-status" id="scanStatus">Initialising scanner...</div>
+      </div>
+
+      <!-- RESULT SECTION -->
+      <div id="result"></div>
+
+    </div><!-- /.check-section -->
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer>
+    &copy; <span id="footerYear"></span> IMPI Safety Training. All rights reserved.
+  </footer>
+
+  <script>
+    // ── FOOTER YEAR ──
+    document.getElementById('footerYear').textContent = new Date().getFullYear();
+
+    // ── DESIGN LOADER ──
+    async function loadDesign() {
+      try {
+        const res = await fetch('/api/design');
+        const d = await res.json();
+        if (d.impi_logo_url) {
+          document.querySelectorAll('.site-logo').forEach(el => {
+            el.src = d.impi_logo_url;
+            el.style.display = 'block';
+          });
+          const fb = document.getElementById('navFallback');
+          if (fb) fb.style.display = 'none';
+        }
+      } catch {}
+    }
+
+    // ── URL PARAM AUTO-CHECK ──
+    (function () {
+      const code = new URLSearchParams(window.location.search).get('code');
+      if (code) {
+        document.getElementById('codeInput').value = code.toUpperCase();
+        // wait for DOM to be ready
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', () => checkCert());
+        } else {
+          checkCert();
+        }
+      }
+    })();
+
+    // ── AUTO-UPPERCASE INPUT ──
+    document.getElementById('codeInput').addEventListener('input', function (e) {
+      const pos = e.target.selectionStart;
+      e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+      e.target.setSelectionRange(pos, pos);
+    });
+
+    // ── ENTER KEY ──
+    document.getElementById('codeInput').addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') checkCert();
+    });
+
+    // ── LOADING STATE ──
+    function setLoading(on) {
+      const btn = document.getElementById('btnCheck');
+      const lbl = document.getElementById('btnCheckLabel');
+      btn.disabled = on;
+      if (on) {
+        lbl.innerHTML = '<span class="spinner"></span> Checking...';
+      } else {
+        lbl.textContent = '✓ Check Certificate';
+      }
+    }
+
+    function hideResult() {
+      const el = document.getElementById('result');
+      el.style.display = 'none';
+      el.innerHTML = '';
+    }
+
+    // ── CHECK CERT ──
+    async function checkCert() {
+      const code = document.getElementById('codeInput').value.trim().toUpperCase();
+      if (!code) {
+        document.getElementById('codeInput').focus();
+        return;
+      }
+      setLoading(true);
+      hideResult();
+      try {
+        const res = await fetch('/api/verify?code=' + encodeURIComponent(code));
+        const data = await res.json();
+        showResult(data);
+      } catch (e) {
+        showResult({ valid: false, message: 'Connection error. Please try again.' });
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    // ── SHOW RESULT ──
+    function showResult(data) {
+      const el = document.getElementById('result');
+      el.style.display = 'block';
+
+      if (data.valid) {
+        const name = [data.full_name, data.surname].filter(Boolean).join(' ') || data.name || '—';
+        const dt = data.completed_at
+          ? new Date(data.completed_at).toLocaleDateString('en-ZA', {
+              day: '2-digit', month: 'short', year: 'numeric',
+              hour: '2-digit', minute: '2-digit'
+            })
+          : '—';
+
+        const idType = data.id_type ? (data.id_type + ' Number') : 'ID Number';
+
+        el.innerHTML = `
+          <div class="result-card valid">
+            <div class="result-status-row">
+              <span class="result-status-icon">✅</span>
+              <span class="result-status-text">Certificate Verified</span>
+            </div>
+            ${data.cert_code ? `<div class="result-cert-code">${escHtml(data.cert_code)}</div>` : ''}
+            <div class="result-grid">
+              <div class="result-row">
+                <span class="result-lbl">Full Name</span>
+                <span class="result-val">${escHtml(name)}</span>
+              </div>
+              ${data.company ? `<div class="result-row"><span class="result-lbl">Company</span><span class="result-val">${escHtml(data.company)}</span></div>` : ''}
+              ${data.role ? `<div class="result-row"><span class="result-lbl">Role</span><span class="result-val">${escHtml(data.role)}</span></div>` : ''}
+              ${data.id_number ? `<div class="result-row"><span class="result-lbl">${escHtml(idType)}</span><span class="result-val">${escHtml(data.id_number)}</span></div>` : ''}
+              ${data.event_id ? `<div class="result-row"><span class="result-lbl">Event</span><span class="result-val">${escHtml(data.event_id)}</span></div>` : ''}
+              <div class="result-row">
+                <span class="result-lbl">Completed</span>
+                <span class="result-val">${dt}</span>
+              </div>
+            </div>
+          </div>`;
+      } else {
+        const msg = data.message || 'Certificate not found in our records.';
+        el.innerHTML = `
+          <div class="result-card invalid">
+            <div class="result-status-row">
+              <span class="result-status-icon">❌</span>
+              <span class="result-status-text">Not Found</span>
+            </div>
+            <p class="result-invalid-msg">${escHtml(msg)}</p>
+          </div>`;
+      }
+
+      el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    // ── HTML ESCAPE ──
+    function escHtml(str) {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    // ── jsQR CDN FALLBACK LOADER ──
+    const JSQR_CDNS = [
+      'https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js',
+      'https://unpkg.com/jsqr@1.4.0/dist/jsQR.js',
+      'https://cdnjs.cloudflare.com/ajax/libs/jsqr/1.4.0/jsQR.js'
+    ];
+
+    async function loadJsQR() {
+      for (const url of JSQR_CDNS) {
+        try {
+          await new Promise((resolve, reject) => {
+            const s = document.createElement('script');
+            s.src = url;
+            s.onload = resolve;
+            s.onerror = reject;
+            document.head.appendChild(s);
+          });
+          if (window.jsQR) return true;
+        } catch {}
+      }
+      return false;
+    }
+
+    // ── QR SCANNER STATE ──
+    let scanInterval = null;
+    let mediaStream = null;
+
+    async function startQrScan() {
+      document.getElementById('scannerSection').style.display = 'block';
+      document.getElementById('btnScan').disabled = true;
+      document.getElementById('scanStatus').textContent = 'Loading QR scanner...';
+
+      const loaded = await Promise.race([
+        loadJsQR(),
+        new Promise(r => setTimeout(() => r(false), 5000))
+      ]);
+
+      if (!loaded) {
+        document.getElementById('scanStatus').textContent = 'QR scanner unavailable. Enter code manually.';
+        document.getElementById('btnScan').disabled = false;
+        return;
+      }
+
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        document.getElementById('scanStatus').textContent = 'Camera not supported on this browser.';
+        document.getElementById('btnScan').disabled = false;
+        return;
+      }
+
+      try {
+        mediaStream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: 'environment' }
+        });
+      } catch (err) {
+        let msg = 'Camera access denied.';
+        if (err && err.name === 'NotFoundError') msg = 'No camera found on this device.';
+        document.getElementById('scanStatus').textContent = msg;
+        document.getElementById('btnScan').disabled = false;
+        return;
+      }
+
+      const video = document.getElementById('qrVideo');
+      video.srcObject = mediaStream;
+      video.play();
+      document.getElementById('scanStatus').textContent = 'Point camera at QR code...';
+
+      const startScan = () => {
+        if (scanInterval) return;
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+
+        scanInterval = setInterval(() => {
+          if (video.readyState < 2) return;
+          canvas.width = video.videoWidth;
+          canvas.height = video.videoHeight;
+          ctx.drawImage(video, 0, 0);
+          const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+
+          // Try normal scan
+          let result = jsQR(imgData.data, imgData.width, imgData.height);
+
+          // Try inverted if normal fails
+          if (!result) {
+            const inv = new Uint8ClampedArray(imgData.data);
+            for (let i = 0; i < inv.length; i += 4) {
+              inv[i]     = 255 - inv[i];
+              inv[i + 1] = 255 - inv[i + 1];
+              inv[i + 2] = 255 - inv[i + 2];
+              // alpha (inv[i+3]) unchanged
+            }
+            result = jsQR(inv, imgData.width, imgData.height);
+          }
+
+          if (result && result.data) {
+            stopCamera();
+            const parts = result.data.split(':');
+            const code = (parts[0] === 'IMPIVERT' ? parts[1] : result.data)
+              .replace(/[^A-Z0-9]/gi, '')
+              .toUpperCase();
+            document.getElementById('codeInput').value = code;
+            document.getElementById('scannerSection').style.display = 'none';
+            document.getElementById('btnScan').disabled = false;
+            checkCert();
+          }
+        }, 150);
+      };
+
+      video.addEventListener('canplay', startScan, { once: true });
+      setTimeout(startScan, 1500);
+    }
+
+    function stopCamera() {
+      clearInterval(scanInterval);
+      scanInterval = null;
+      if (mediaStream) {
+        mediaStream.getTracks().forEach(t => t.stop());
+        mediaStream = null;
+      }
+    }
+
+    function closeScan() {
+      stopCamera();
+      document.getElementById('scannerSection').style.display = 'none';
+      document.getElementById('btnScan').disabled = false;
+      document.getElementById('scanStatus').textContent = 'Initialising scanner...';
+    }
+
+    // ── CLEANUP ON PAGE HIDE ──
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) stopCamera();
+    });
+
+    // ── INIT ──
+    document.addEventListener('DOMContentLoaded', loadDesign);
+  </script>
+
+</body>
+</html>
