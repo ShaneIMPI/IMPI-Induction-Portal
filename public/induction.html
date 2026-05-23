@@ -1473,6 +1473,14 @@ function renderGroupCerts(results, ev, completedDate) {
       <div class="cert-field"><label>${t('company')}</label><span>${escHtml(person.company || '—')}</span></div>
       <div class="cert-field"><label>${t('completed_on')}</label><span>${escHtml(completedDate)}</span></div>
     </div>
+    ${(ev.organiser_logo_url || ev.organiser) ? `
+    <div class="cert-org-section">
+      <div class="cert-org-label">${t('organised_by')}</div>
+      ${ev.organiser_logo_url
+        ? `<img src="${escHtml(ev.organiser_logo_url)}" class="cert-org-logo" alt="Organiser"/>`
+        : `<div class="cert-org-name">${escHtml(ev.organiser || '')}</div>`}
+    </div>
+    ` : ''}
     <div class="cert-footer">
       <div class="cert-code-wrap">
         <div class="cert-verified">✓ ${t('verified')}</div>
