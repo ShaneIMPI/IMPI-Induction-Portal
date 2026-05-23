@@ -1,0 +1,9 @@
+{
+  "name": "impi-induction-portal",
+  "version": "2.0.0",
+  "private": true,
+  "dependencies": {
+    "@supabase/supabase-js": "^2.49.4",
+    "resend": "^4.5.1"
+  }
+}
