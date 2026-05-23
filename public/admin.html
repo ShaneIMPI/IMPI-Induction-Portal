@@ -1,958 +1,1284 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>IMPI Admin — Dashboard</title>
-<meta name="robots" content="noindex,nofollow"/>
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="robots" content="noindex,nofollow">
+<title>IMPI Admin</title>
 <style>
 :root{
-  --red:#d42b2b;--red2:#a01f1f;--yellow:#f5c800;
-  --bg:#f0f2f5;--white:#fff;--dark:#111;
-  --text:#1a1a2e;--text2:#374151;--muted:#9ca3af;
-  --border:#e5e7eb;--off:#f9fafb;
-  --green:#16a34a;--gbg:#dcfce7;
-  --fh:'Montserrat',sans-serif;--fb:'Inter',sans-serif;
-  --rdim:rgba(212,43,43,0.06);
+  --bg:#F7F8FA;--surface:#fff;--border:#E5E7EB;
+  --text:#111827;--text-muted:#6B7280;
+  --primary:#D42B2B;--primary-hover:#B71C1C;
+  --radius:8px;--sidebar-w:220px;
 }
 *{box-sizing:border-box;margin:0;padding:0;}
-body{background:var(--bg);font-family:var(--fb);color:var(--text);min-height:100vh;display:flex;}
-.sb{width:220px;min-height:100vh;background:var(--white);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;position:sticky;top:0;height:100vh;}
-.sb-logo{padding:20px 20px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;}
-.sb-logo img{height:32px;width:auto;object-fit:contain;}
-.sb-logo-text{font-family:var(--fh);font-size:10px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);}
-.sb-nav{padding:12px 10px;flex:1;}
-.sb-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;cursor:pointer;font-family:var(--fh);font-size:11px;font-weight:700;letter-spacing:.5px;color:var(--text2);transition:all .15s;margin-bottom:2px;}
-.sb-item:hover{background:var(--off);}
-.sb-item.active{background:var(--rdim);color:var(--red);}
-.sb-icon{font-size:15px;width:20px;text-align:center;}
-.sb-footer{padding:16px;border-top:1px solid var(--border);}
-.sb-logout{display:flex;align-items:center;gap:8px;font-family:var(--fh);font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);cursor:pointer;padding:8px 10px;border-radius:6px;transition:all .15s;}
-.sb-logout:hover{color:var(--red);background:var(--rdim);}
-.main{flex:1;overflow:auto;}
-.top-bar{background:var(--white);border-bottom:1px solid var(--border);padding:0 28px;height:56px;display:flex;align-items:center;justify-content:space-between;}
-.top-title{font-family:var(--fh);font-size:13px;font-weight:800;letter-spacing:.5px;color:var(--text);}
-.top-site{font-size:12px;color:var(--muted);}
-.top-site a{color:var(--red);text-decoration:none;font-weight:600;}
-#loginWrap{position:fixed;inset:0;background:#f0f2f5;display:flex;align-items:center;justify-content:center;z-index:100;}
-.login-card{background:var(--white);border:1px solid var(--border);border-radius:14px;padding:40px 36px;max-width:400px;width:100%;box-shadow:0 4px 24px rgba(0,0,0,0.06);}
-.login-logo{text-align:center;margin-bottom:24px;}
-.login-logo img{height:64px;width:auto;object-fit:contain;}
-.login-title{font-family:var(--fh);font-size:20px;font-weight:900;text-align:center;margin-bottom:4px;}
-.login-sub{color:var(--muted);font-size:13px;text-align:center;margin-bottom:28px;}
-.content{padding:28px;}
+body{font-family:Inter,system-ui,sans-serif;background:var(--bg);color:var(--text);height:100vh;overflow:hidden;display:flex;flex-direction:column;}
+/* Login */
+#loginWrap{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:100;}
+.login-card{max-width:400px;width:90%;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:40px;}
+.login-logo-wrap{text-align:center;margin-bottom:24px;}
+#loginLogo{max-height:56px;display:none;}
+.login-brand{font-size:18px;font-weight:800;color:var(--primary);}
+.login-title{font-size:20px;font-weight:700;margin-bottom:8px;}
+.login-sub{font-size:14px;color:var(--text-muted);margin-bottom:28px;}
+.login-err{color:var(--primary);font-size:13px;margin-top:8px;display:none;}
+/* App */
+#appWrap{display:flex;height:100vh;overflow:hidden;}
+/* Sidebar */
+.sidebar{width:var(--sidebar-w);background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto;}
+.sidebar-logo{padding:20px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border);}
+.sidebar-logo img{height:32px;width:auto;object-fit:contain;}
+.sidebar-brand{font-size:13px;font-weight:700;color:var(--text);}
+.sidebar-nav{flex:1;padding:12px 8px;display:flex;flex-direction:column;gap:2px;}
+.nav-item{width:100%;text-align:left;background:none;border:none;padding:8px 12px;border-radius:6px;font-size:13px;cursor:pointer;color:var(--text-muted);transition:background .15s;font-family:inherit;}
+.nav-item:hover{background:#F3F4F6;}
+.nav-item.active{background:#FEF2F2;color:var(--primary);font-weight:600;}
+.sidebar-footer{padding:16px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:8px;}
+.sidebar-user{font-size:12px;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.signout-btn{background:none;border:1px solid var(--border);padding:6px 12px;border-radius:6px;font-size:12px;cursor:pointer;color:var(--text-muted);font-family:inherit;}
+.signout-btn:hover{background:#F3F4F6;}
+/* Main */
+.main-content{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+.top-bar{height:52px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 24px;gap:16px;flex-shrink:0;}
+.page-title{font-size:16px;font-weight:700;flex:1;}
+.top-site-link{font-size:13px;color:var(--text-muted);text-decoration:none;}
+.top-site-link:hover{color:var(--text);}
+.content{flex:1;overflow-y:auto;padding:24px;}
 .tab-page{display:none;}
 .tab-page.active{display:block;}
-.page-header{margin-bottom:24px;}
-.page-title{font-family:var(--fh);font-size:20px;font-weight:900;color:var(--text);margin-bottom:3px;}
-.page-sub{font-size:13px;color:var(--muted);}
-.card{background:var(--white);border:1px solid var(--border);border-radius:12px;padding:22px;margin-bottom:16px;}
-.sl{font-family:var(--fh);font-size:10px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:14px;}
-.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px;}
-.stat{background:var(--white);border:1px solid var(--border);border-radius:12px;padding:18px 20px;}
-.stat-val{font-family:var(--fh);font-size:26px;font-weight:900;color:var(--text);margin-bottom:2px;}
-.stat-lbl{font-family:var(--fh);font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);}
-.fg{margin-bottom:14px;}
-.fg label{display:block;font-family:var(--fh);font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text2);margin-bottom:6px;}
-.fg input,.fg select,.fg textarea{width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--fb);font-size:13px;background:var(--white);color:var(--text);outline:none;transition:border-color .2s;}
-.fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--red);}
-.fg textarea{resize:vertical;}
-.two{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
-.three{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
-.btn{padding:9px 18px;border:none;border-radius:8px;font-family:var(--fh);font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:6px;}
-.btn-red{background:var(--red);color:#fff;}
-.btn-red:hover{background:var(--red2);}
-.btn-ghost{background:transparent;border:1.5px solid var(--border);color:var(--text2);}
-.btn-ghost:hover{border-color:var(--red);color:var(--red);}
-.btn-danger{background:rgba(239,68,68,0.08);border:1.5px solid rgba(239,68,68,0.2);color:#dc2626;}
-.btn-danger:hover{background:rgba(239,68,68,0.15);}
-.btn-sm{padding:5px 10px;font-size:9px;}
+/* Stats */
+.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px;}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;}
+.stat-value{font-size:32px;font-weight:800;color:var(--primary);}
+.stat-label{font-size:13px;color:var(--text-muted);margin-top:4px;}
+/* Cards */
+.section-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px;margin-bottom:24px;}
+.section-title{font-size:15px;font-weight:700;margin:0 0 16px;}
+/* Tables */
+.data-table{width:100%;border-collapse:collapse;font-size:13px;}
+.data-table th{text-align:left;padding:8px 12px;border-bottom:2px solid var(--border);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-muted);}
+.data-table td{padding:10px 12px;border-bottom:1px solid var(--border);}
+.data-table tr:last-child td{border-bottom:none;}
+.data-table code{font-family:monospace;font-size:12px;background:#F3F4F6;padding:2px 6px;border-radius:4px;}
+/* Events layout */
+.events-layout{display:flex;gap:0;height:calc(100vh - 52px - 48px);overflow:hidden;margin:-24px;}
+.event-list-panel{width:280px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;}
+.event-list-header{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:8px;flex-shrink:0;}
+.event-list-scroll{flex:1;overflow-y:auto;}
+.event-list-item{padding:12px 16px;cursor:pointer;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:8px;}
+.event-list-item:hover{background:#F9FAFB;}
+.event-list-item.active{background:#FEF2F2;}
+.event-list-name{font-size:13px;font-weight:500;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.event-list-empty{padding:24px;text-align:center;color:var(--text-muted);font-size:13px;}
+.editor-panel{flex:1;overflow-y:auto;padding:24px;background:var(--bg);}
+.editor-placeholder{display:flex;align-items:center;justify-content:center;height:200px;color:var(--text-muted);font-size:14px;}
+.editor-header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:20px;}
+.editor-title{font-size:18px;font-weight:700;}
+/* Forms */
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.form-group{display:flex;flex-direction:column;gap:6px;margin-bottom:16px;}
+.form-group:last-child{margin-bottom:0;}
+label{font-size:12px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;}
+input[type=text],input[type=email],input[type=password],input[type=date],textarea,select{border:1px solid var(--border);border-radius:6px;padding:8px 12px;font-size:14px;font-family:inherit;outline:none;width:100%;background:var(--surface);color:var(--text);}
+input:focus,textarea:focus,select:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(212,43,43,.1);}
+textarea{resize:vertical;}
+/* Buttons */
+.btn-primary{background:var(--primary);color:#fff;border:none;padding:10px 20px;border-radius:var(--radius);font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;}
+.btn-primary:hover{background:var(--primary-hover);}
+.btn-primary:disabled{opacity:.6;cursor:not-allowed;}
+.btn-secondary{background:var(--surface);color:var(--text);border:1px solid var(--border);padding:10px 20px;border-radius:var(--radius);font-size:14px;cursor:pointer;font-family:inherit;}
+.btn-secondary:hover{background:#F3F4F6;}
+.btn-danger{background:#EF4444;color:#fff;border:none;padding:10px 20px;border-radius:var(--radius);font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;}
+.btn-danger:hover{background:#DC2626;}
+.btn-sm{padding:4px 10px;font-size:12px;border-radius:4px;cursor:pointer;border:none;background:#F3F4F6;color:var(--text);font-family:inherit;}
+.btn-sm:hover{background:#E5E7EB;}
+.btn-danger-sm{padding:4px 10px;font-size:12px;border-radius:4px;cursor:pointer;border:none;background:#FEE2E2;color:#DC2626;font-family:inherit;}
+.btn-danger-sm:hover{background:#FECACA;}
+/* Status badges */
+.status-badge{font-size:11px;font-weight:600;padding:2px 8px;border-radius:100px;flex-shrink:0;}
+.status-badge.active{background:#DCFCE7;color:#16A34A;}
+.status-badge.draft{background:#DBEAFE;color:#1D4ED8;}
+.status-badge.completed{background:#F3F4F6;color:#6B7280;}
+.status-badge.archived{background:#1F2937;color:#fff;}
+/* Status selector */
+.status-options{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px;}
+.status-opt{border:2px solid var(--border);border-radius:8px;padding:12px 8px;cursor:pointer;text-align:center;transition:border-color .15s;}
+.status-opt:hover{border-color:#9CA3AF;}
+.status-opt.selected{border-color:var(--primary);background:#FEF2F2;}
+.status-opt .so-label{font-size:12px;font-weight:600;color:var(--text);display:block;margin:4px 0 2px;}
+.status-opt .so-desc{font-size:11px;color:var(--text-muted);display:block;}
+.status-dot{display:inline-block;width:8px;height:8px;border-radius:50%;}
+.status-dot.blue{background:#3B82F6;}
+.status-dot.green{background:#22C55E;}
+.status-dot.grey{background:#9CA3AF;}
+.status-dot.dark{background:#374151;}
+/* Upload zones */
+.upload-zone{border:2px dashed var(--border);border-radius:8px;padding:20px;text-align:center;cursor:pointer;font-size:13px;color:var(--text-muted);transition:border-color .15s;min-height:80px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;}
+.upload-zone:hover,.upload-zone.drag-over{border-color:var(--primary);color:var(--primary);}
+.upload-preview{max-height:80px;max-width:200px;display:none;margin-top:8px;border-radius:4px;}
+/* Color row */
+.color-row{display:flex;gap:8px;align-items:center;}
+input[type=color]{width:44px;height:36px;border:1px solid var(--border);border-radius:6px;padding:2px;cursor:pointer;flex-shrink:0;}
+/* Style options */
+.style-options{display:flex;gap:8px;margin-bottom:16px;}
+.style-opt{flex:1;border:2px solid var(--border);border-radius:8px;padding:12px 8px;cursor:pointer;text-align:center;font-size:12px;font-weight:500;transition:border-color .15s;}
+.style-opt:hover{border-color:#9CA3AF;}
+.style-opt.selected{border-color:var(--primary);background:#FEF2F2;color:var(--primary);}
+/* Topics */
+.topic-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:16px;}
+.topic-card-header{display:flex;align-items:center;gap:8px;margin-bottom:16px;}
+.topic-badge{background:var(--primary);color:#fff;font-size:11px;font-weight:700;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.topic-move-btn,.topic-delete-btn{background:none;border:1px solid var(--border);border-radius:4px;padding:2px 8px;cursor:pointer;font-size:14px;font-family:inherit;}
+.topic-move-btn:hover{background:#F3F4F6;}
+.topic-delete-btn:hover{background:#FEE2E2;color:#DC2626;}
+/* Filter row */
+.filter-row{display:flex;gap:12px;align-items:center;margin-bottom:16px;flex-wrap:wrap;}
+.filter-row select,.filter-row input{flex:1;min-width:160px;}
+.count-display{font-size:13px;color:var(--text-muted);margin-bottom:12px;}
+/* Info box */
+.info-box{background:#EFF6FF;border:1px solid #BFDBFE;border-radius:8px;padding:12px 16px;font-size:13px;color:#1D4ED8;margin-bottom:20px;}
+/* Section header */
+.section-header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px;}
+/* Divider */
+.divider{border:none;border-top:1px solid var(--border);margin:24px 0;}
+/* Toast */
+#toast{position:fixed;top:20px;right:20px;background:#1F2937;color:#fff;padding:12px 20px;border-radius:8px;font-size:14px;z-index:9999;opacity:0;transform:translateY(-8px);transition:all .25s;pointer-events:none;}
+#toast.show{opacity:1;transform:translateY(0);}
+#toast.error{background:#EF4444;}
+#toast.success{background:#22C55E;}
+/* Delete modal */
+#deleteModal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;align-items:center;justify-content:center;}
+#deleteModal.open{display:flex;}
+.modal-box{background:#fff;border-radius:12px;padding:32px;max-width:420px;width:90%;}
+.modal-title{font-size:16px;font-weight:600;color:var(--text);margin-bottom:8px;}
+.modal-msg{color:var(--text-muted);font-size:14px;margin:0 0 24px;line-height:1.5;}
+.modal-actions{display:flex;gap:12px;justify-content:flex-end;}
+/* Scrollable table wrapper */
 .table-wrap{overflow-x:auto;}
-table{width:100%;border-collapse:collapse;font-size:13px;}
-th{font-family:var(--fh);font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);padding:8px 12px;text-align:left;border-bottom:2px solid var(--border);white-space:nowrap;}
-td{padding:10px 12px;border-bottom:1px solid var(--border);color:var(--text2);vertical-align:middle;}
-tr:last-child td{border-bottom:none;}
-tr:hover td{background:#fafafa;}
-.badge{display:inline-block;padding:2px 8px;border-radius:12px;font-family:var(--fh);font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;}
-.badge-green{background:var(--gbg);color:var(--green);}
-.badge-red{background:var(--rdim);color:var(--red);}
-.badge-draft{background:#dbeafe;color:#3b82f6;}
-.badge-active{background:#dcfce7;color:#16a34a;}
-.badge-completed{background:var(--gbg);color:var(--green);}
-.badge-archived{background:#f3f4f6;color:var(--muted);}
-.ev-list{display:flex;flex-direction:column;gap:2px;}
-.ev-row{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-radius:8px;cursor:pointer;transition:background .15s;border:1px solid transparent;}
-.ev-row:hover{background:var(--off);border-color:var(--border);}
-.ev-row.active-event{background:var(--rdim);border-color:rgba(212,43,43,0.2);}
-.ev-name{font-family:var(--fh);font-size:12px;font-weight:800;color:var(--text);margin-bottom:2px;}
-.ev-meta{font-size:11px;color:var(--muted);}
-.ev-acts{display:flex;align-items:center;gap:6px;flex-shrink:0;}
-.editor-panel{display:none;}
-.editor-panel.open{display:block;}
-.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.4);display:none;align-items:center;justify-content:center;z-index:200;}
-.modal-bg.open{display:flex;}
-.modal{background:var(--white);border-radius:14px;padding:28px;max-width:440px;width:100%;box-shadow:0 16px 48px rgba(0,0,0,0.15);}
-.modal-title{font-family:var(--fh);font-size:16px;font-weight:900;margin-bottom:6px;}
-.modal-sub{font-size:13px;color:var(--muted);margin-bottom:20px;line-height:1.5;}
-.modal-btns{display:flex;gap:10px;justify-content:flex-end;margin-top:20px;}
-.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1f2937;color:#fff;padding:10px 22px;border-radius:8px;font-family:var(--fh);font-size:11px;font-weight:700;letter-spacing:.5px;z-index:999;opacity:0;transition:opacity .3s;white-space:nowrap;pointer-events:none;}
-.toast.show{opacity:1;}
-.toast.success{background:#15803d;}
-.toast.error{background:#b91c1c;}
-.upload-zone{border:2px dashed var(--border);border-radius:8px;padding:18px;text-align:center;cursor:pointer;transition:all .2s;}
-.upload-zone:hover{border-color:var(--red);background:var(--rdim);}
-.upload-zone input{display:none;}
-.upload-zone-text{font-family:var(--fh);font-size:10px;font-weight:700;color:var(--muted);}
-.upload-preview{display:flex;align-items:center;gap:10px;margin-top:8px;}
-.upload-preview img{max-height:48px;max-width:120px;object-fit:contain;border-radius:4px;border:1px solid var(--border);}
-.url-input{width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--fb);font-size:12px;color:var(--text2);outline:none;margin-top:6px;transition:border-color .2s;}
-.url-input:focus{border-color:var(--red);}
-.url-input::placeholder{color:var(--muted);}
-.color-row{display:flex;align-items:center;gap:8px;}
-.color-swatch{width:36px;height:36px;border-radius:6px;border:1.5px solid var(--border);cursor:pointer;padding:2px;}
-.btn-shape-opts{display:flex;gap:8px;flex-wrap:wrap;}
-.btn-shape-opt{border:2px solid var(--border);border-radius:8px;padding:8px 12px;cursor:pointer;transition:all .2s;font-size:12px;display:flex;flex-direction:column;align-items:center;gap:4px;}
-.btn-shape-opt:hover{border-color:var(--red);}
-.btn-shape-opt.selected{border-color:var(--red);background:var(--rdim);}
-/* Induction Content Editor */
-.topic-card{background:var(--off);border:1.5px solid var(--border);border-radius:10px;padding:18px;margin-bottom:10px;transition:border-color .2s;}
-.topic-card:hover{border-color:rgba(212,43,43,0.3);}
-.topic-card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
-.topic-card-num{font-family:var(--fh);font-size:10px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(--red);}
-.topic-card-actions{display:flex;gap:4px;}
-.content-section{border-top:2px solid var(--border);margin-top:24px;padding-top:24px;}
-.content-hint{font-size:12px;color:var(--muted);margin-top:3px;line-height:1.5;}
-@media(max-width:768px){
-  .sb{display:none;}
-  .stats-grid{grid-template-columns:1fr 1fr;}
-  .two,.three{grid-template-columns:1fr;}
-}
 </style>
 </head>
 <body>
 
-<!-- LOGIN -->
+<!-- Toast -->
+<div id="toast"></div>
+
+<!-- Delete Confirmation Modal -->
+<div id="deleteModal">
+  <div class="modal-box">
+    <div class="modal-title">Confirm Delete</div>
+    <p id="deleteModalMsg" class="modal-msg"></p>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="document.getElementById('deleteModal').classList.remove('open')">Cancel</button>
+      <button id="deleteModalConfirm" class="btn-danger">Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- Login Overlay -->
 <div id="loginWrap">
   <div class="login-card">
-    <div class="login-logo"><img id="loginLogo" src="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 80'><rect width='120' height='80' fill='%23d42b2b' rx='8'/><text x='60' y='48' text-anchor='middle' fill='white' font-size='22' font-weight='bold' font-family='Arial'>IMPI</text></svg>" alt="IMPI"/></div>
+    <div class="login-logo-wrap">
+      <img id="loginLogo" alt="IMPI">
+      <div id="loginBrand" class="login-brand">IMPI Safety Services</div>
+    </div>
     <div class="login-title">Admin Portal</div>
-    <div class="login-sub">IMPI Safety Services International</div>
-    <div id="loginErr" style="display:none;background:var(--rdim);border:1px solid rgba(212,43,43,0.2);color:var(--red);padding:10px 14px;border-radius:8px;font-size:13px;text-align:center;margin-bottom:14px;"></div>
-    <div class="fg"><label>Email <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted)">(team members only — leave blank for master login)</span></label><input type="email" id="loginEmail" placeholder="your@email.com (optional)" onkeydown="if(event.key==='Enter')doLogin()"/></div>
-    <div class="fg"><label>Password</label><input type="password" id="loginPw" placeholder="Password" onkeydown="if(event.key==='Enter')doLogin()"/></div>
-    <button class="btn btn-red" style="width:100%;justify-content:center" onclick="doLogin()">Sign In</button>
-    <a href="/" style="display:block;text-align:center;margin-top:16px;font-size:12px;color:var(--muted);text-decoration:none;">← Back to Portal</a>
+    <div class="login-sub">Sign in to manage events and completions</div>
+    <div class="form-group">
+      <label>Email (optional)</label>
+      <input type="email" id="loginEmail" placeholder="admin@example.com">
+    </div>
+    <div class="form-group">
+      <label>Password</label>
+      <input type="password" id="loginPw" placeholder="Enter password">
+    </div>
+    <div id="loginError" class="login-err"></div>
+    <button id="loginBtn" class="btn-primary" style="width:100%;margin-top:16px" onclick="login()">Sign In</button>
   </div>
 </div>
 
-<!-- SIDEBAR -->
-<aside class="sb">
-  <div class="sb-logo">
-    <img id="sbLogo" src="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 30'><rect width='80' height='30' fill='%23d42b2b'/><text x='40' y='21' text-anchor='middle' fill='white' font-size='14' font-weight='bold' font-family='Arial'>IMPI</text></svg>" alt="IMPI"/>
-    <span class="sb-logo-text">Admin</span>
-  </div>
-  <nav class="sb-nav">
-    <div class="sb-item active" id="nav-dashboard" onclick="showTab('dashboard')"><span class="sb-icon">📊</span>Dashboard</div>
-    <div class="sb-item" id="nav-events" onclick="showTab('events')"><span class="sb-icon">📅</span>Events</div>
-    <div class="sb-item" id="nav-completions" onclick="showTab('completions')"><span class="sb-icon">🏆</span>Completions</div>
-    <div class="sb-item" id="nav-design" onclick="showTab('design')"><span class="sb-icon">🎨</span>Design</div>
-    <div class="sb-item" id="nav-settings" onclick="showTab('settings')"><span class="sb-icon">⚙️</span>Settings</div>
-  </nav>
-  <div class="sb-footer">
-    <div class="sb-logout" onclick="doLogout()">🚪 Sign Out</div>
-  </div>
-</aside>
-
-<!-- MAIN -->
-<div class="main" id="mainWrap" style="display:none">
-  <div class="top-bar">
-    <div class="top-title" id="topTitle">Dashboard</div>
-    <div class="top-site"><a href="/" target="_blank">impi-inductions.netlify.app ↗</a></div>
-  </div>
-  <div class="content">
-
-    <!-- DASHBOARD -->
-    <div class="tab-page active" id="tab-dashboard">
-      <div class="page-header"><div class="page-title">Dashboard</div><div class="page-sub">Overview of your induction portal</div></div>
-      <div class="stats-grid">
-        <div class="stat"><div class="stat-val" id="statEvents">—</div><div class="stat-lbl">Active Events</div></div>
-        <div class="stat"><div class="stat-val" id="statTotal">—</div><div class="stat-lbl">Total Completions</div></div>
-        <div class="stat"><div class="stat-val" id="statToday">—</div><div class="stat-lbl">Today</div></div>
-        <div class="stat"><div class="stat-val" id="statEmailed">—</div><div class="stat-lbl">Emails Sent</div></div>
-      </div>
-      <div class="card">
-        <div class="sl">Recent Completions</div>
-        <div class="table-wrap"><table id="recentTable"><tr><td style="color:var(--muted);font-size:13px">Loading...</td></tr></table></div>
-      </div>
+<!-- Dashboard App -->
+<div id="appWrap" style="display:none">
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <img id="sidebarLogo" alt="IMPI" style="height:32px;display:none">
+      <span class="sidebar-brand">IMPI Admin</span>
     </div>
-
-    <!-- EVENTS -->
-    <div class="tab-page" id="tab-events">
-      <div class="page-header" style="display:flex;align-items:flex-start;justify-content:space-between">
-        <div><div class="page-title">Events</div><div class="page-sub">Manage induction events and their custom content</div></div>
-        <button class="btn btn-red" onclick="startNewEvent()">+ New Event</button>
-      </div>
-      <div style="display:grid;grid-template-columns:280px 1fr;gap:16px;align-items:start">
-        <div class="card" style="padding:14px">
-          <div class="sl">Events</div>
-          <div class="ev-list" id="evList"><div style="color:var(--muted);font-size:13px;padding:8px">Loading...</div></div>
-        </div>
-        <div class="card editor-panel" id="editorPanel">
-          <div class="sl" id="editorTitle">Edit Event</div>
-          <div class="two">
-            <div class="fg"><label>Event Name *</label><input type="text" id="ev_name" placeholder="e.g. Africa Rail 2026"/></div>
-            <div class="fg"><label>Venue *</label><input type="text" id="ev_venue" placeholder="Convention Centre"/></div>
-          </div>
-          <div class="two">
-            <div class="fg"><label>Organiser</label><input type="text" id="ev_org" placeholder="Organiser name"/></div>
-            <div class="fg"><label>Status</label>
-              <select id="ev_status">
-                <option value="draft">🔵 Draft / Coming Soon</option>
-                <option value="active">🟢 Active</option>
-                <option value="completed">✅ Completed</option>
-                <option value="archived">⚫ Archived</option>
-              </select>
-            </div>
-          </div>
-          <div class="three">
-            <div class="fg"><label>Build-Up Start</label><input type="date" id="ev_bu_start"/></div>
-            <div class="fg"><label>Build-Up End</label><input type="date" id="ev_bu_end"/></div>
-            <div class="fg"><label>Event Start *</label><input type="date" id="ev_ev_start"/></div>
-          </div>
-          <div class="three">
-            <div class="fg"><label>Event End</label><input type="date" id="ev_ev_end"/></div>
-            <div class="fg"><label>Breakdown Start</label><input type="date" id="ev_bd_start"/></div>
-            <div class="fg"><label>Breakdown End</label><input type="date" id="ev_bd_end"/></div>
-          </div>
-          <div class="three">
-            <div class="fg"><label>Safety Manager</label><input type="text" id="ev_safety_mgr" placeholder="Name"/></div>
-            <div class="fg"><label>Safety Number</label><input type="tel" id="ev_safety_num" placeholder="083 000 0000"/></div>
-            <div class="fg"><label>Ambulance / Emergency</label><input type="tel" id="ev_amb_num" placeholder="10177"/></div>
-          </div>
-          <div class="two">
-            <div class="fg"><label>Security Manager</label><input type="text" id="ev_sec_mgr" placeholder="Name"/></div>
-            <div class="fg"><label>Security Number</label><input type="tel" id="ev_sec_num" placeholder="083 000 0000"/></div>
-          </div>
-          <div class="fg"><label>Organiser Contact</label><input type="text" id="ev_org_contact" placeholder="Contact details"/></div>
-          <div class="three">
-            <div class="fg"><label>Primary Colour</label><div class="color-row"><input type="color" class="color-swatch" id="ev_color_primary" value="#d42b2b" oninput="syncHex('ev_color_primary')"/><input type="text" id="ev_color_primary_hex" placeholder="#d42b2b" oninput="syncHex('ev_color_primary')"/></div></div>
-            <div class="fg"><label>Accent Colour</label><div class="color-row"><input type="color" class="color-swatch" id="ev_color_accent" value="#f5c800" oninput="syncHex('ev_color_accent')"/><input type="text" id="ev_color_accent_hex" placeholder="#f5c800" oninput="syncHex('ev_color_accent')"/></div></div>
-            <div class="fg"><label>Text Colour</label><div class="color-row"><input type="color" class="color-swatch" id="ev_color_text" value="#ffffff" oninput="syncHex('ev_color_text')"/><input type="text" id="ev_color_text_hex" placeholder="#ffffff" oninput="syncHex('ev_color_text')"/></div></div>
-          </div>
-          <div class="three">
-            <div class="fg">
-              <label>Event Logo</label>
-              <div class="upload-zone" onclick="document.getElementById('clientLogoFile').click()">
-                <input type="file" id="clientLogoFile" accept=".png,.jpg,.jpeg,.svg,.webp" onchange="uploadEventFile(this,'client_logo')"/>
-                <div class="upload-zone-text">Click to upload event logo</div>
-              </div>
-              <div class="upload-preview" id="clientLogoPreview" style="display:none"><img id="clientLogoImg" src="" alt=""/><button class="btn btn-sm btn-ghost" onclick="clearLogo('client')">Remove</button></div>
-            </div>
-            <div class="fg">
-              <label>Organiser Logo</label>
-              <div class="upload-zone" onclick="document.getElementById('orgLogoFile').click()">
-                <input type="file" id="orgLogoFile" accept=".png,.jpg,.jpeg,.svg,.webp" onchange="uploadEventFile(this,'organiser_logo')"/>
-                <div class="upload-zone-text">Click to upload organiser logo</div>
-              </div>
-              <div class="upload-preview" id="orgLogoPreview" style="display:none"><img id="orgLogoImg" src="" alt=""/><button class="btn btn-sm btn-ghost" onclick="clearLogo('organiser')">Remove</button></div>
-            </div>
-            <div class="fg">
-              <label>Induction Manual (PDF)</label>
-              <div class="upload-zone" onclick="document.getElementById('manualFile').click()">
-                <input type="file" id="manualFile" accept=".pdf" onchange="uploadEventFile(this,'manual')"/>
-                <div class="upload-zone-text">Click to upload PDF</div>
-              </div>
-              <div id="manualName" style="font-size:12px;color:var(--muted);margin-top:6px"></div>
-            </div>
-          </div>
-          <div style="display:flex;gap:10px;margin-top:8px">
-            <button class="btn btn-red" onclick="saveEvent()">💾 Save Event</button>
-            <button class="btn btn-ghost" onclick="cancelEdit()">Cancel</button>
-            <button class="btn btn-danger" id="deleteEvBtn" onclick="confirmDeleteEvent()" style="margin-left:auto;display:none">🗑 Delete</button>
-          </div>
-
-          <!-- ══ INDUCTION CONTENT EDITOR ══ -->
-          <div class="content-section" id="contentSection" style="display:none">
-            <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px;gap:12px;flex-wrap:wrap">
-              <div>
-                <div class="sl" style="margin-bottom:4px">📝 Induction Content</div>
-                <div class="content-hint">Customise topic titles, descriptions, and quiz questions for this event.<br>Topics are shown in the order listed. Add, remove, or reorder as needed.</div>
-              </div>
-              <div style="display:flex;gap:8px;flex-shrink:0">
-                <button class="btn btn-sm btn-ghost" onclick="resetContentToDefaults()">↺ Reset to Defaults</button>
-                <button class="btn btn-sm btn-red" onclick="saveEventContent()">💾 Save Content</button>
-              </div>
-            </div>
-            <div id="topicsList"></div>
-            <button class="btn btn-sm btn-ghost" onclick="addTopic()" style="margin-top:6px">+ Add Topic</button>
-          </div>
-        </div>
-      </div>
+    <nav class="sidebar-nav">
+      <button class="nav-item active" data-tab="dashboard" onclick="showTab('dashboard',this)">📊 Dashboard</button>
+      <button class="nav-item" data-tab="events" onclick="showTab('events',this)">📅 Events</button>
+      <button class="nav-item" data-tab="completions" onclick="showTab('completions',this)">🏆 Completions</button>
+      <button class="nav-item" data-tab="topics" onclick="showTab('topics',this)">📝 Induction Content</button>
+      <button class="nav-item" data-tab="design" onclick="showTab('design',this)">🎨 Design</button>
+      <button class="nav-item" data-tab="settings" onclick="showTab('settings',this)">⚙️ Settings</button>
+    </nav>
+    <div class="sidebar-footer">
+      <span id="sidebarUser" class="sidebar-user"></span>
+      <button class="signout-btn" onclick="signOut()">Sign Out</button>
     </div>
+  </aside>
 
-    <!-- COMPLETIONS -->
-    <div class="tab-page" id="tab-completions">
-      <div class="page-header" style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:12px">
-        <div><div class="page-title">Completions</div><div class="page-sub">All safety induction completions</div></div>
-        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-          <select id="filterEvent" onchange="loadCompletions()" style="padding:7px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--fb);font-size:13px;background:var(--white);color:var(--text);outline:none">
-            <option value="">All Events</option>
-          </select>
-          <input id="compSearch" type="text" placeholder="🔍 Search company, name, email, ID, role..." oninput="filterCompletions()" style="padding:7px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--fb);font-size:13px;background:var(--white);color:var(--text);outline:none;min-width:260px"/>
-          <button class="btn btn-ghost" onclick="exportCSV()">📥 Export CSV</button>
-        </div>
-      </div>
-      <div id="compCount" style="font-size:13px;color:var(--muted);margin-bottom:12px"></div>
-      <div class="card">
-        <div class="table-wrap">
-          <table>
-            <thead><tr><th></th><th>Name</th><th>Company</th><th>Role</th><th>ID Number</th><th>Email</th><th>Event</th><th>Completed</th><th>Email</th><th>Cert Code</th><th>Action</th></tr></thead>
-            <tbody id="compBody"><tr><td colspan="11" style="color:var(--muted);padding:20px">Loading...</td></tr></tbody>
-          </table>
-        </div>
-      </div>
+  <main class="main-content">
+    <div class="top-bar">
+      <span id="pageTitle" class="page-title">Dashboard</span>
+      <a href="/" class="top-site-link">← Live Site</a>
     </div>
+    <div class="content">
 
-    <!-- DESIGN -->
-    <div class="tab-page" id="tab-design">
-      <div class="page-header"><div class="page-title">Design</div><div class="page-sub">Control the visual look of your portal — changes go live instantly</div></div>
-      <div style="display:grid;grid-template-columns:1fr 340px;gap:16px;align-items:start">
-        <div>
-          <div class="card">
-            <div class="sl">Logos</div>
-            <div class="two">
-              <div class="fg">
-                <label>IMPI / Portal Logo</label>
-                <div class="upload-zone" onclick="document.getElementById('impiLogoFile').click()">
-                  <input type="file" id="impiLogoFile" accept=".png,.jpg,.jpeg,.svg,.webp" onchange="uploadDesignAsset(this,'impi_logo_url')"/>
-                  <div class="upload-zone-text">Click to upload (.png, .jpg, .svg)</div>
+      <!-- TAB: Dashboard -->
+      <div id="tab-dashboard" class="tab-page active">
+        <div class="stat-grid">
+          <div class="stat-card"><div class="stat-value" id="statActive">—</div><div class="stat-label">Active Events</div></div>
+          <div class="stat-card"><div class="stat-value" id="statTotal">—</div><div class="stat-label">Total Completions</div></div>
+          <div class="stat-card"><div class="stat-value" id="statToday">—</div><div class="stat-label">Today's Completions</div></div>
+          <div class="stat-card"><div class="stat-value" id="statEmails">—</div><div class="stat-label">Emails Sent</div></div>
+        </div>
+        <div class="section-card">
+          <div class="section-title">Recent Completions</div>
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead><tr><th>Name</th><th>Company</th><th>Event</th><th>Date</th><th>Code</th></tr></thead>
+              <tbody id="recentTbody"><tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:24px">Loading...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB: Events -->
+      <div id="tab-events" class="tab-page">
+        <div class="events-layout">
+          <div class="event-list-panel">
+            <div class="event-list-header">
+              <span style="font-size:13px;font-weight:600">Events</span>
+              <button class="btn-primary" style="padding:6px 12px;font-size:12px" onclick="newEvent()">+ New</button>
+            </div>
+            <div class="event-list-scroll" id="eventList"></div>
+          </div>
+          <div class="editor-panel">
+            <div id="editorPlaceholder" class="editor-placeholder">← Select an event or create a new one</div>
+            <div id="editorForm" style="display:none">
+              <div class="editor-header">
+                <div id="editorTitle" class="editor-title">New Event</div>
+                <div style="display:flex;gap:8px">
+                  <button class="btn-danger" id="deleteEventBtn" style="display:none;padding:8px 16px;font-size:13px" onclick="deleteEvent()">Delete</button>
+                  <button class="btn-primary" onclick="saveEvent()">Save Event</button>
                 </div>
-                <div class="upload-preview" id="impiLogoPreview" style="display:none"><img id="impiLogoImg" src="" alt=""/><button class="btn btn-sm btn-ghost" onclick="clearDesignAsset('impi_logo_url','impiLogoPreview')">Remove</button></div>
-                <input type="url" class="url-input" id="impiLogoUrl" placeholder="Or paste image URL (https://...)" oninput="syncDesignUrl('impi_logo_url',this.value)"/>
               </div>
-              <div class="fg">
-                <label>Hero Background Image</label>
-                <div class="upload-zone" onclick="document.getElementById('heroBgFile').click()">
-                  <input type="file" id="heroBgFile" accept=".jpg,.jpeg,.png,.webp" onchange="uploadDesignAsset(this,'hero_image_url')"/>
-                  <div class="upload-zone-text">Click to upload — wide/landscape image recommended</div>
+
+              <div class="section-card">
+                <div class="section-title">Basic Info</div>
+                <div class="form-grid">
+                  <div class="form-group"><label>Event Name *</label><input type="text" id="evName" placeholder="e.g. Cape Town Expo 2026"></div>
+                  <div class="form-group"><label>Venue</label><input type="text" id="evVenue" placeholder="e.g. CTICC Hall 1"></div>
                 </div>
-                <div class="upload-preview" id="heroBgPreview" style="display:none"><img id="heroBgImg" src="" alt="" style="max-height:60px;object-fit:cover"/><button class="btn btn-sm btn-ghost" onclick="clearDesignAsset('hero_image_url','heroBgPreview')">Remove</button></div>
-                <input type="url" class="url-input" id="heroBgUrl" placeholder="Or paste image URL (https://...)" oninput="syncDesignUrl('hero_image_url',this.value)"/>
+                <div class="form-group"><label>Organiser</label><input type="text" id="evOrganiser" placeholder="e.g. Reed Exhibitions"></div>
+              </div>
+
+              <div class="section-card">
+                <div class="section-title">Event Status</div>
+                <div class="status-options" id="statusOptions">
+                  <div class="status-opt" data-status="draft" onclick="setStatus('draft')">
+                    <span class="status-dot blue"></span>
+                    <span class="so-label">Draft</span>
+                    <span class="so-desc">Induction disabled</span>
+                  </div>
+                  <div class="status-opt selected" data-status="active" onclick="setStatus('active')">
+                    <span class="status-dot green"></span>
+                    <span class="so-label">Active</span>
+                    <span class="so-desc">Induction live</span>
+                  </div>
+                  <div class="status-opt" data-status="completed" onclick="setStatus('completed')">
+                    <span class="status-dot grey"></span>
+                    <span class="so-label">Completed</span>
+                    <span class="so-desc">Event closed</span>
+                  </div>
+                  <div class="status-opt" data-status="archived" onclick="setStatus('archived')">
+                    <span class="status-dot dark"></span>
+                    <span class="so-label">Archived</span>
+                    <span class="so-desc">Hidden from public</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="section-card">
+                <div class="section-title">Date Ranges</div>
+                <div style="display:grid;grid-template-columns:1fr;gap:12px">
+                  <div>
+                    <label style="display:block;margin-bottom:8px">Build-Up</label>
+                    <div style="display:flex;align-items:center;gap:8px">
+                      <input type="date" id="evBuildupStart" style="flex:1">
+                      <span style="color:var(--text-muted);font-size:13px">to</span>
+                      <input type="date" id="evBuildupEnd" style="flex:1">
+                    </div>
+                  </div>
+                  <div>
+                    <label style="display:block;margin-bottom:8px">Event</label>
+                    <div style="display:flex;align-items:center;gap:8px">
+                      <input type="date" id="evEventStart" style="flex:1">
+                      <span style="color:var(--text-muted);font-size:13px">to</span>
+                      <input type="date" id="evEventEnd" style="flex:1">
+                    </div>
+                  </div>
+                  <div>
+                    <label style="display:block;margin-bottom:8px">Breakdown</label>
+                    <div style="display:flex;align-items:center;gap:8px">
+                      <input type="date" id="evBreakdownStart" style="flex:1">
+                      <span style="color:var(--text-muted);font-size:13px">to</span>
+                      <input type="date" id="evBreakdownEnd" style="flex:1">
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="section-card">
+                <div class="section-title">Safety Contacts</div>
+                <div class="form-grid">
+                  <div class="form-group"><label>Safety Manager Name</label><input type="text" id="evSafetyMgrName"></div>
+                  <div class="form-group"><label>Safety Manager Number</label><input type="text" id="evSafetyMgrNum"></div>
+                  <div class="form-group"><label>Security Manager Name</label><input type="text" id="evSecMgrName"></div>
+                  <div class="form-group"><label>Security Manager Number</label><input type="text" id="evSecMgrNum"></div>
+                  <div class="form-group"><label>HSS Contact Name</label><input type="text" id="evHssName"></div>
+                  <div class="form-group"><label>HSS Contact Number</label><input type="text" id="evHssNum"></div>
+                  <div class="form-group"><label>Ambulance / Emergency</label><input type="text" id="evAmbulance"></div>
+                  <div class="form-group"><label>Event Organiser Contact</label><input type="text" id="evOrgContact"></div>
+                </div>
+              </div>
+
+              <div class="section-card">
+                <div class="section-title">Event Branding</div>
+                <div class="form-grid" style="margin-bottom:20px">
+                  <div class="form-group">
+                    <label>Primary Color</label>
+                    <div class="color-row">
+                      <input type="color" id="evPrimary" value="#D42B2B">
+                      <input type="text" id="evPrimaryHex" value="#D42B2B" style="width:auto;flex:1">
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <label>Accent Color</label>
+                    <div class="color-row">
+                      <input type="color" id="evAccent" value="#F5C800">
+                      <input type="text" id="evAccentHex" value="#F5C800" style="width:auto;flex:1">
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <label>Text Color</label>
+                    <div class="color-row">
+                      <input type="color" id="evText" value="#FFFFFF">
+                      <input type="text" id="evTextHex" value="#FFFFFF" style="width:auto;flex:1">
+                    </div>
+                  </div>
+                </div>
+                <div class="form-grid">
+                  <div class="form-group">
+                    <label>Event Logo</label>
+                    <div class="upload-zone" id="logoZone">
+                      <span>Click or drag logo here</span>
+                      <img id="logoPreview" class="upload-preview" alt="Logo">
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <label>Organiser Logo</label>
+                    <div class="upload-zone" id="orgLogoZone">
+                      <span>Click or drag logo here</span>
+                      <img id="orgLogoPreview" class="upload-preview" alt="Organiser Logo">
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <label>Safety Manual (PDF)</label>
+                    <div class="upload-zone" id="manualZone">
+                      <span>Click or drag PDF here</span>
+                      <div id="manualFile" style="display:none;font-size:12px;margin-top:8px"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div style="margin-top:8px;display:flex;justify-content:flex-end;gap:12px">
+                <button class="btn-danger" id="deleteEventBtn2" style="display:none" onclick="deleteEvent()">Delete Event</button>
+                <button class="btn-primary" onclick="saveEvent()">Save Event</button>
               </div>
             </div>
           </div>
-          <div class="card">
-            <div class="sl">Colours</div>
-            <div class="three">
-              <div class="fg"><label>Primary</label><div class="color-row"><input type="color" class="color-swatch" id="d_primary" value="#d42b2b" oninput="updatePreview()"/><input type="text" id="d_primary_hex" value="#d42b2b" oninput="syncHex('d_primary')"/></div></div>
-              <div class="fg"><label>Accent</label><div class="color-row"><input type="color" class="color-swatch" id="d_accent" value="#f5c800" oninput="updatePreview()"/><input type="text" id="d_accent_hex" value="#f5c800" oninput="syncHex('d_accent')"/></div></div>
-              <div class="fg"><label>Button Text</label><div class="color-row"><input type="color" class="color-swatch" id="d_text" value="#ffffff" oninput="updatePreview()"/><input type="text" id="d_text_hex" value="#ffffff" oninput="syncHex('d_text')"/></div></div>
-            </div>
-          </div>
-          <div class="card">
-            <div class="sl">Button Shape</div>
-            <div class="btn-shape-opts">
-              <div class="btn-shape-opt selected" id="bso-8" onclick="selectRadius(8)"><div style="width:70px;height:32px;background:var(--red);border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:700">Default</div><div style="font-size:11px;color:var(--muted)">Rounded</div></div>
-              <div class="btn-shape-opt" id="bso-0" onclick="selectRadius(0)"><div style="width:70px;height:32px;background:var(--red);border-radius:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:700">Square</div><div style="font-size:11px;color:var(--muted)">Sharp</div></div>
-              <div class="btn-shape-opt" id="bso-20" onclick="selectRadius(20)"><div style="width:70px;height:32px;background:var(--red);border-radius:20px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:700">Pill</div><div style="font-size:11px;color:var(--muted)">Pill</div></div>
-              <div class="btn-shape-opt" id="bso-4" onclick="selectRadius(4)"><div style="width:70px;height:32px;background:var(--red);border-radius:4px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:700">Subtle</div><div style="font-size:11px;color:var(--muted)">Subtle</div></div>
-            </div>
-          </div>
-          <div class="card">
-            <div class="sl">Landing Page Text</div>
-            <div class="fg"><label>Main Heading</label><input type="text" id="d_title" placeholder="IMPI Safety Induction Portal" oninput="updatePreview()"/></div>
-            <div class="fg"><label>Subtitle</label><textarea id="d_subtitle" rows="2" oninput="updatePreview()"></textarea></div>
-          </div>
-          <div style="display:flex;gap:10px">
-            <button class="btn btn-red" onclick="saveDesign()">💾 Save & Go Live</button>
-            <button class="btn btn-ghost" onclick="loadDesign()">↺ Reset to Saved</button>
-          </div>
-        </div>
-        <div style="position:sticky;top:20px">
-          <div style="font-family:var(--fh);font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:8px">👁 Live Preview</div>
-          <div style="border-radius:10px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.1);border:1px solid var(--border)">
-            <div id="prev_header" style="background:#d42b2b;padding:12px 16px;display:flex;align-items:center;gap:10px">
-              <div id="prev_logo" style="width:32px;height:32px;background:rgba(255,255,255,0.2);border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:12px">🏢</div>
-              <span style="font-family:'Montserrat',sans-serif;font-size:10px;font-weight:700;color:rgba(255,255,255,0.7);letter-spacing:1px">SAFETY INDUCTION PORTAL</span>
-            </div>
-            <div id="prev_hero" style="background:linear-gradient(160deg,#0c0c0c,#1a0000);padding:28px 16px;text-align:center">
-              <div id="prev_title" style="font-family:'Montserrat',sans-serif;font-weight:900;font-size:18px;color:#fff;margin-bottom:8px">IMPI Safety Induction Portal</div>
-              <div id="prev_sub" style="font-size:11px;color:rgba(255,255,255,0.5);margin-bottom:14px;line-height:1.5">Complete your mandatory safety induction.</div>
-              <div id="prev_btn" style="display:inline-block;background:#d42b2b;color:#fff;padding:8px 16px;border-radius:8px;font-family:'Montserrat',sans-serif;font-size:10px;font-weight:700">START →</div>
-            </div>
-            <div id="prev_bar" style="height:3px;background:#f5c800"></div>
-          </div>
-          <div style="font-size:11px;color:var(--muted);text-align:center;margin-top:6px">Updates as you change settings</div>
         </div>
       </div>
-    </div>
 
-    <!-- SETTINGS -->
-    <div class="tab-page" id="tab-settings">
-      <div class="page-header"><div class="page-title">Settings</div><div class="page-sub">Manage passwords and team members</div></div>
-      <div style="background:rgba(212,43,43,0.05);border:1px solid rgba(212,43,43,0.15);border-radius:10px;padding:14px 16px;margin-bottom:16px;font-size:13px;color:var(--text2);line-height:1.7">
-        <strong>Role Permissions:</strong><br>
-        🟢 <strong>Staff</strong> — Can view completions and manage events<br>
-        🔵 <strong>Manager</strong> — Full access except settings and user management<br>
-        🟣 <strong>Admin</strong> — Full access including settings and user management
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
-        <div class="card">
-          <div class="sl">Change Admin Password</div>
-          <div class="fg"><label>New Password</label><input type="password" id="newPw" placeholder="Enter new password"/></div>
-          <div class="fg"><label>Confirm Password</label><input type="password" id="confirmPw" placeholder="Confirm new password"/></div>
-          <button class="btn btn-red" onclick="changePassword()">Update Password</button>
+      <!-- TAB: Completions -->
+      <div id="tab-completions" class="tab-page">
+        <div class="section-card" style="margin-bottom:0">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px;flex-wrap:wrap">
+            <div class="section-title" style="margin:0">Completions</div>
+            <button class="btn-secondary" style="padding:8px 16px;font-size:13px" onclick="exportCSV()">⬇ Export CSV</button>
+          </div>
+          <div class="filter-row">
+            <select id="eventFilter" onchange="filterAndRender()" style="max-width:240px">
+              <option value="">All Events</option>
+            </select>
+            <input type="text" id="searchInput" placeholder="Search name, company, ID, code…" oninput="filterAndRender()" style="max-width:320px">
+          </div>
+          <div id="countDisplay" class="count-display">Loading completions…</div>
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>#</th><th>Name</th><th>Surname</th><th>Company</th><th>Role</th>
+                  <th>ID Type</th><th>ID Number</th><th>Email</th><th>Event</th>
+                  <th>Date</th><th>Sent</th><th>Code</th><th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="compTbody"><tr><td colspan="13" style="text-align:center;color:var(--text-muted);padding:24px">Loading…</td></tr></tbody>
+            </table>
+          </div>
         </div>
-        <div class="card">
-          <div class="sl" style="display:flex;align-items:center;justify-content:space-between">Team Members <button class="btn btn-sm btn-ghost" onclick="document.getElementById('addUserModal').classList.add('open')">+ Add</button></div>
-          <div id="userList"><div style="color:var(--muted);font-size:13px">Loading...</div></div>
+      </div>
+
+      <!-- TAB: Topics -->
+      <div id="tab-topics" class="tab-page">
+        <div class="section-card">
+          <div class="section-header">
+            <div class="section-title" style="margin:0">Induction Content</div>
+            <div style="display:flex;gap:8px;align-items:center">
+              <select id="topicsEventSel" onchange="loadTopicsForEvent(this.value)" style="font-size:13px;padding:6px 10px;border:1px solid var(--border);border-radius:6px;background:var(--surface)"></select>
+              <button class="btn-secondary" style="padding:8px 14px;font-size:13px" onclick="addTopic()">+ Add Topic</button>
+              <button class="btn-primary" style="padding:8px 14px;font-size:13px" onclick="saveTopics()">💾 Save All</button>
+            </div>
+          </div>
+          <div class="info-box">Global topics apply to all events unless an event has its own custom set.</div>
+          <div id="topicsContainer"></div>
         </div>
       </div>
-    </div>
 
-  </div>
-</div>
+      <!-- TAB: Design -->
+      <div id="tab-design" class="tab-page">
+        <div class="section-card">
+          <div class="section-title">Logos &amp; Images</div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label>IMPI Logo</label>
+              <div class="upload-zone" id="impiLogoZone">
+                <span>Click or drag image here</span>
+                <img id="impiLogoPreview" class="upload-preview" alt="IMPI Logo">
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Hero Background</label>
+              <div class="upload-zone" id="heroZone">
+                <span>Click or drag image here</span>
+                <img id="heroPreview" class="upload-preview" alt="Hero Background" style="max-height:60px">
+              </div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Logo Size: <span id="logoSizeVal">120px</span></label>
+            <input type="range" id="logoSizeSlider" min="40" max="220" step="5" value="120" style="width:100%;accent-color:var(--primary)">
+          </div>
+        </div>
 
-<!-- MODALS -->
-<div class="modal-bg" id="deleteCompModal">
-  <div class="modal">
-    <div class="modal-title">🗑 Delete Completion</div>
-    <div class="modal-sub" id="deleteCompMsg">Are you sure? This cannot be undone.</div>
-    <div class="modal-btns">
-      <button class="btn btn-ghost" onclick="document.getElementById('deleteCompModal').classList.remove('open')">Cancel</button>
-      <button class="btn btn-danger" onclick="confirmDeleteComp()">Yes, Delete It</button>
-    </div>
-  </div>
-</div>
-<div class="modal-bg" id="deleteEvModal">
-  <div class="modal">
-    <div class="modal-title">🗑 Delete Event</div>
-    <div class="modal-sub">Delete this event? Completion records will remain in the database.</div>
-    <div class="modal-btns">
-      <button class="btn btn-ghost" onclick="document.getElementById('deleteEvModal').classList.remove('open')">Cancel</button>
-      <button class="btn btn-danger" onclick="confirmDeleteEv()">Yes, Delete Event</button>
-    </div>
-  </div>
-</div>
-<div class="modal-bg" id="addUserModal">
-  <div class="modal">
-    <div class="modal-title">Add Team Member</div>
-    <div class="fg"><label>Name</label><input type="text" id="newUserName" placeholder="Full name"/></div>
-    <div class="fg"><label>Email</label><input type="email" id="newUserEmail" placeholder="email@company.com"/></div>
-    <div class="fg"><label>Password</label><input type="password" id="newUserPw" placeholder="Temporary password"/></div>
-    <div class="fg">
-      <label>Role &amp; Permissions</label>
-      <select id="newUserRole" style="width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--fb);font-size:13px;outline:none">
-        <option value="staff">Staff — View completions, manage events</option>
-        <option value="manager">Manager — Full access except settings</option>
-        <option value="admin">Admin — Full access including settings</option>
-      </select>
-    </div>
-    <div class="modal-btns">
-      <button class="btn btn-ghost" onclick="document.getElementById('addUserModal').classList.remove('open')">Cancel</button>
-      <button class="btn btn-red" onclick="addUser()">Add Member</button>
-    </div>
-  </div>
-</div>
+        <div class="section-card">
+          <div class="section-title">Brand Colors</div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Primary Color</label>
+              <div class="color-row">
+                <input type="color" id="primaryColor" value="#D42B2B">
+                <input type="text" id="primaryHex" value="#D42B2B" style="flex:1">
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Accent Color</label>
+              <div class="color-row">
+                <input type="color" id="accentColor" value="#F5C800">
+                <input type="text" id="accentHex" value="#F5C800" style="flex:1">
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Button Text Color</label>
+              <div class="color-row">
+                <input type="color" id="textColor" value="#FFFFFF">
+                <input type="text" id="textHex" value="#FFFFFF" style="flex:1">
+              </div>
+            </div>
+          </div>
+        </div>
 
-<div class="toast" id="toast"></div>
+        <div class="section-card">
+          <div class="section-title">Button Style</div>
+          <div class="style-options">
+            <div class="style-opt selected" data-style="rounded" onclick="selectStyle(this)">
+              <div style="background:#D42B2B;color:#fff;padding:6px 12px;border-radius:8px;font-size:12px;margin-bottom:6px">Button</div>
+              Rounded
+            </div>
+            <div class="style-opt" data-style="square" onclick="selectStyle(this)">
+              <div style="background:#D42B2B;color:#fff;padding:6px 12px;border-radius:0;font-size:12px;margin-bottom:6px">Button</div>
+              Square
+            </div>
+            <div class="style-opt" data-style="pill" onclick="selectStyle(this)">
+              <div style="background:#D42B2B;color:#fff;padding:6px 12px;border-radius:100px;font-size:12px;margin-bottom:6px">Button</div>
+              Pill
+            </div>
+            <div class="style-opt" data-style="outlined" onclick="selectStyle(this)">
+              <div style="background:transparent;color:#D42B2B;padding:6px 12px;border-radius:8px;border:2px solid #D42B2B;font-size:12px;margin-bottom:6px">Button</div>
+              Outlined
+            </div>
+          </div>
+        </div>
+
+        <div class="section-card">
+          <div class="section-title">Portal Text</div>
+          <div class="form-group"><label>Main Heading</label><input type="text" id="headingText" placeholder="Safety Induction Portal"></div>
+          <div class="form-group"><label>Subtitle</label><input type="text" id="subtitleText" placeholder="Complete your safety induction to receive your certificate"></div>
+        </div>
+
+        <div style="display:flex;justify-content:flex-end">
+          <button class="btn-primary" onclick="saveDesignSettings()">Save Design Settings</button>
+        </div>
+      </div>
+
+      <!-- TAB: Settings -->
+      <div id="tab-settings" class="tab-page">
+        <div class="section-card">
+          <div class="section-title">Change Password</div>
+          <div style="max-width:400px">
+            <div class="form-group"><label>Current Password</label><input type="password" id="curPw"></div>
+            <div class="form-group"><label>New Password</label><input type="password" id="newPw"></div>
+            <div class="form-group"><label>Confirm New Password</label><input type="password" id="confPw"></div>
+            <button class="btn-primary" onclick="changePassword()">Change Password</button>
+          </div>
+        </div>
+
+        <div id="teamSection" class="section-card" style="display:none">
+          <div class="section-header">
+            <div class="section-title" style="margin:0">Team Users</div>
+          </div>
+          <div class="table-wrap" style="margin-bottom:24px">
+            <table class="data-table">
+              <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Actions</th></tr></thead>
+              <tbody id="usersTbody"><tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:24px">Loading…</td></tr></tbody>
+            </table>
+          </div>
+          <hr class="divider">
+          <div class="section-title">Add Team User</div>
+          <div style="max-width:500px">
+            <div class="form-grid">
+              <div class="form-group"><label>Name</label><input type="text" id="newUserName"></div>
+              <div class="form-group"><label>Email</label><input type="email" id="newUserEmail"></div>
+              <div class="form-group"><label>Password</label><input type="password" id="newUserPw"></div>
+              <div class="form-group">
+                <label>Role</label>
+                <select id="newUserRole">
+                  <option value="manager">Manager</option>
+                  <option value="staff">Staff</option>
+                </select>
+              </div>
+            </div>
+            <button class="btn-primary" onclick="addTeamUser()">Add User</button>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- .content -->
+  </main>
+</div><!-- #appWrap -->
 
 <script>
-// ── STATE ──
-let adminToken = sessionStorage.getItem('impi_admin_token');
-let editingEventId = null;
-let allEvents = [], allCompletions = [], filteredCompletions = [];
-let pendingDeleteCertCode = null, pendingDeleteEvId = null;
-let designSettings = {};
-let selectedRadius = 8;
-let currentTopics = [];
+/* ── Helpers ── */
+function escHtml(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 
-// ── DEFAULT TOPICS ──
-const DEFAULT_TOPICS = [
-  { id:'t1', title:'Topic 1 — Safety File & Accreditation',
-    body:'Your company must have a valid safety file available on site at all times during Build-Up, Event, and Breakdown. This file must include: company registration, tax clearance, public liability insurance, letter of good standing (COID), and all relevant compliance documents.',
-    warning:'', quiz_correct:'✓ I confirm my company safety file is complete and available on site', quiz_wrong:'I am not sure about the safety file requirements' },
-  { id:'t2', title:'Topic 2 — Personal Protective Equipment (PPE)',
-    body:'All contractors, exhibitors and suppliers must wear appropriate PPE at all times during Build-Up and Breakdown. Minimum requirements include: safety boots (steel toe-capped), hard hat/helmet, high-visibility vest, and any additional PPE required for your specific trade.',
-    warning:'⚠ Access to the venue will be denied without proper PPE.', quiz_correct:'✓ I understand PPE requirements and will comply at all times', quiz_wrong:'PPE is only required in certain areas' },
-  { id:'t3', title:'Topic 3 — Housekeeping & Waste Management',
-    body:'All contractors and exhibitors are responsible for maintaining a clean and safe working environment. This includes: removing all waste daily, keeping walkways and emergency exits clear at all times, disposing of hazardous materials correctly, and ensuring no trip or slip hazards are left unattended.',
-    warning:'', quiz_correct:'✓ I will maintain a clean working area and dispose of waste correctly', quiz_wrong:"Waste removal is the venue's responsibility" },
-  { id:'t4', title:'Topic 4 — Emergency Procedures',
-    body:'In the event of an emergency: immediately stop all work, raise the alarm, evacuate to the designated assembly point, do not use lifts, do not re-enter the building until cleared by emergency services, and report all incidents to the Safety Manager immediately.',
-    warning:'Assembly Point: As indicated on site signage', quiz_correct:'✓ I understand emergency procedures and know my assembly point', quiz_wrong:'I should continue working until told to stop' },
-  { id:'t5', title:'Topic 5 — Power Tools & Equipment',
-    body:'All power tools and electrical equipment must be tested and tagged before use. Operators must be trained and competent. Extension cords must not present trip hazards. No tools may be left unattended while powered. Generators require prior written approval.',
-    warning:'', quiz_correct:'✓ Only trained, competent operators may use power tools and all equipment must be tested and tagged', quiz_wrong:'Any person may use power tools without training' },
-  { id:'t6', title:'Topic 6 — Vehicles & Material Handling',
-    body:'Vehicle access to the venue is restricted to designated times and areas only. Speed limit on site is 10km/h. Forklifts and pallet jacks require a valid operator certificate. All loading and unloading must be supervised. Pedestrians have right of way at all times.',
-    warning:'', quiz_correct:'✓ I will comply with all vehicle and material handling regulations on site', quiz_wrong:'I can park and drive anywhere on the venue property' },
-  { id:'t7', title:'Topic 7 — Fire Safety',
-    body:'No open flames are permitted in the venue without written approval from the Safety Manager. All hot work requires a hot work permit. Fire extinguishers must not be obstructed. Smoking is only permitted in designated areas. Report any fire hazards immediately.',
-    warning:'', quiz_correct:'✓ I understand fire safety rules and will only smoke in designated areas', quiz_wrong:'I can smoke anywhere in the venue' }
-];
+function showToast(msg,type='success'){
+  const t=document.getElementById('toast');
+  t.textContent=msg;
+  t.className='show '+type;
+  clearTimeout(t._to);
+  t._to=setTimeout(()=>t.className='',3500);
+}
 
-// Boot
-fetch('/.netlify/functions/design').then(r=>r.ok?r.json():null).then(s=>{
-  if(s?.impi_logo_url){ document.getElementById('loginLogo').src=s.impi_logo_url; document.getElementById('sbLogo').src=s.impi_logo_url; }
-}).catch(()=>{});
-if(adminToken){ showApp(); }
+function authHeaders(){
+  return {Authorization:'Bearer '+sessionStorage.getItem('impi_admin_token')};
+}
 
-function authHeaders(){ return {'Content-Type':'application/json','Authorization':'Bearer '+adminToken}; }
+function jsonHeaders(){
+  return {'Content-Type':'application/json',Authorization:'Bearer '+sessionStorage.getItem('impi_admin_token')};
+}
 
-// ── AUTH ──
-async function doLogin(){
-  const pw=document.getElementById('loginPw').value.trim();
-  const errEl=document.getElementById('loginErr');
-  if(!pw) return;
+/* ── Auth ── */
+async function login(){
+  const pw=document.getElementById('loginPw').value;
+  const email=document.getElementById('loginEmail').value;
+  const errEl=document.getElementById('loginError');
+  if(!pw){errEl.textContent='Password required';errEl.style.display='block';return;}
   errEl.style.display='none';
+  const btn=document.getElementById('loginBtn');
+  btn.disabled=true;btn.textContent='Signing in…';
   try{
-    const email=document.getElementById('loginEmail')?.value?.trim()||'';
-    const res=await fetch('/.netlify/functions/auth',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:pw,email})});
-    const d=await res.json();
-    if(d.success&&d.token){ adminToken=d.token; sessionStorage.setItem('impi_admin_token',adminToken); showApp(); }
-    else{ errEl.textContent=d.message||'Incorrect credentials. Team members: enter your email address.'; errEl.style.display='block'; document.getElementById('loginPw').value=''; }
-  }catch(e){ errEl.textContent='Connection error.'; errEl.style.display='block'; }
+    const body=email?{email,password:pw}:{password:pw};
+    const res=await fetch('/api/auth',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    const data=await res.json();
+    if(data.token){
+      sessionStorage.setItem('impi_admin_token',data.token);
+      sessionStorage.setItem('impi_admin_role',data.role||'admin');
+      sessionStorage.setItem('impi_admin_name',data.name||data.email||'Admin');
+      initApp();
+    } else {
+      errEl.textContent=data.error||'Invalid credentials';
+      errEl.style.display='block';
+    }
+  }catch(e){
+    errEl.textContent='Connection error';
+    errEl.style.display='block';
+  }finally{
+    btn.disabled=false;btn.textContent='Sign In';
+  }
 }
 
-function doLogout(){ sessionStorage.removeItem('impi_admin_token'); adminToken=null; document.getElementById('loginWrap').style.display='flex'; document.getElementById('mainWrap').style.display='none'; }
-
-function showApp(){ document.getElementById('loginWrap').style.display='none'; document.getElementById('mainWrap').style.display='block'; loadDashboard(); }
-
-// ── TABS ──
-function showTab(name){
-  document.querySelectorAll('.tab-page').forEach(p=>p.classList.remove('active'));
-  document.querySelectorAll('.sb-item').forEach(i=>i.classList.remove('active'));
-  document.getElementById('tab-'+name).classList.add('active');
-  document.getElementById('nav-'+name).classList.add('active');
-  document.getElementById('topTitle').textContent=name.charAt(0).toUpperCase()+name.slice(1);
-  if(name==='events') loadEvents();
-  if(name==='completions') loadCompletions();
-  if(name==='design') loadDesign();
-  if(name==='settings') loadUsers();
+function signOut(){
+  sessionStorage.removeItem('impi_admin_token');
+  sessionStorage.removeItem('impi_admin_role');
+  sessionStorage.removeItem('impi_admin_name');
+  document.getElementById('appWrap').style.display='none';
+  document.getElementById('loginWrap').style.display='';
 }
 
-// ── DASHBOARD ──
+async function initApp(){
+  document.getElementById('loginWrap').style.display='none';
+  document.getElementById('appWrap').style.display='flex';
+  const name=sessionStorage.getItem('impi_admin_name')||'Admin';
+  document.getElementById('sidebarUser').textContent=name;
+  try{
+    const d=await fetch('/api/design').then(r=>r.json());
+    if(d.impi_logo_url){
+      const img=document.getElementById('sidebarLogo');
+      img.src=d.impi_logo_url;img.style.display='block';
+      const limg=document.getElementById('loginLogo');
+      if(limg){limg.src=d.impi_logo_url;limg.style.display='block';document.getElementById('loginBrand').style.display='none';}
+    }
+  }catch{}
+  showTab('dashboard',document.querySelector('.nav-item[data-tab="dashboard"]'));
+}
+
+/* ── Tab routing ── */
+function showTab(tab,btn){
+  document.querySelectorAll('.tab-page').forEach(el=>el.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(el=>el.classList.remove('active'));
+  document.getElementById('tab-'+tab).classList.add('active');
+  if(btn) btn.classList.add('active');
+  const titles={dashboard:'Dashboard',events:'Events',completions:'Completions',topics:'Induction Content',design:'Design',settings:'Settings'};
+  document.getElementById('pageTitle').textContent=titles[tab]||tab;
+  const loaders={dashboard:loadDashboard,events:loadEvents,completions:loadCompletions,topics:loadTopics,design:loadDesign,settings:loadSettings};
+  if(loaders[tab]) loaders[tab]();
+}
+
+/* ── Dashboard ── */
 async function loadDashboard(){
   try{
-    const [evRes,compRes]=await Promise.all([fetch('/.netlify/functions/events',{headers:authHeaders()}),fetch('/.netlify/functions/completions',{headers:authHeaders()})]);
-    allEvents=await evRes.json(); allCompletions=await compRes.json();
-    allEvents=Array.isArray(allEvents)?allEvents:[]; allCompletions=Array.isArray(allCompletions)?allCompletions:[];
-    document.getElementById('statEvents').textContent=allEvents.filter(e=>e.status==='active'||!e.status).length;
-    document.getElementById('statTotal').textContent=allCompletions.length;
-    const today=new Date().toDateString();
-    document.getElementById('statToday').textContent=allCompletions.filter(c=>new Date(c.completed_at).toDateString()===today).length;
-    document.getElementById('statEmailed').textContent=allCompletions.filter(c=>c.email_sent).length;
-    const recent=allCompletions.slice(0,8);
-    document.getElementById('recentTable').innerHTML=recent.length?`<tr>${['Name','Company','Event','Completed','Code'].map(h=>`<th>${h}</th>`).join('')}</tr>${recent.map(c=>`<tr><td>${c.full_name||''} ${c.surname||''}</td><td>${c.company||'—'}</td><td>${c.event_id||'—'}</td><td>${c.completed_at?new Date(c.completed_at).toLocaleDateString('en-ZA'):'—'}</td><td><span style="font-family:monospace;font-weight:700;color:var(--red)">${c.cert_code}</span></td></tr>`).join('')}`:'<tr><td style="color:var(--muted)">No completions yet.</td></tr>';
-  }catch(e){ showToast('Dashboard load error: '+e.message,'error'); }
+    const [events,completions]=await Promise.all([
+      fetch('/api/events',{headers:authHeaders()}).then(r=>r.json()),
+      fetch('/api/completions',{headers:authHeaders()}).then(r=>r.json())
+    ]);
+    const evArr=Array.isArray(events)?events:[];
+    const compArr=Array.isArray(completions)?completions:[];
+    const activeCount=evArr.filter(e=>e.status==='active').length;
+    const today=new Date().toISOString().split('T')[0];
+    const todayCount=compArr.filter(c=>c.completed_at?.startsWith(today)).length;
+    const emailCount=compArr.filter(c=>c.email_sent).length;
+    document.getElementById('statActive').textContent=activeCount;
+    document.getElementById('statTotal').textContent=compArr.length;
+    document.getElementById('statToday').textContent=todayCount;
+    document.getElementById('statEmails').textContent=emailCount;
+    const evMap=Object.fromEntries(evArr.map(e=>[e.id,e.name]));
+    const recent=compArr.slice(0,8);
+    document.getElementById('recentTbody').innerHTML=recent.map(c=>`
+      <tr>
+        <td>${escHtml(c.full_name)} ${escHtml(c.surname||'')}</td>
+        <td>${escHtml(c.company||'—')}</td>
+        <td>${escHtml(evMap[c.event_id]||c.event_id||'')}</td>
+        <td>${c.completed_at?new Date(c.completed_at).toLocaleDateString('en-ZA'):'—'}</td>
+        <td><code>${escHtml(c.cert_code)}</code></td>
+      </tr>
+    `).join('')||'<tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:24px">No completions yet</td></tr>';
+  }catch(e){console.error('[dashboard]',e);}
 }
 
-// ── EVENTS ──
+/* ── Events ── */
+let currentEventId=null;
+let eventsData=[];
+let eventsTabInited=false;
+
 async function loadEvents(){
-  try{
-    const res=await fetch('/.netlify/functions/events',{headers:authHeaders()});
-    allEvents=await res.json(); allEvents=Array.isArray(allEvents)?allEvents:[];
-    renderEvList();
-  }catch(e){ showToast('Error loading events','error'); }
+  const res=await fetch('/api/events',{headers:authHeaders()});
+  eventsData=await res.json();
+  if(!Array.isArray(eventsData)) eventsData=[];
+  renderEventList();
+  if(!eventsTabInited){
+    eventsTabInited=true;
+    syncColor('evPrimary','evPrimaryHex');
+    syncColor('evAccent','evAccentHex');
+    syncColor('evText','evTextHex');
+    setupEventUploadZone('logoZone','logoPreview','client_logo');
+    setupEventUploadZone('orgLogoZone','orgLogoPreview','organiser_logo');
+    setupEventUploadZone('manualZone','manualFile','safety_manual');
+  }
 }
 
-function renderEvList(){
-  const el=document.getElementById('evList');
-  if(!allEvents.length){ el.innerHTML='<div style="color:var(--muted);font-size:13px;padding:8px">No events yet.</div>'; return; }
-  el.innerHTML=allEvents.map(ev=>{
-    const status=ev.status||'active';
-    const cls=status==='draft'?'badge-draft':status==='active'?'badge-active':status==='completed'?'badge-completed':'badge-archived';
-    const lbl=status==='draft'?'Draft':status==='active'?'Active':status==='completed'?'Done':'Archived';
-    const hasContent=ev.induction_content&&Array.isArray(ev.induction_content)&&ev.induction_content.length>0;
-    return `<div class="ev-row ${editingEventId===ev.id?'active-event':''}" onclick="editEvent('${ev.id}')">
-      <div><div class="ev-name">${ev.name}</div><div class="ev-meta">${ev.venue||'No venue'}${hasContent?' · 📝':''}</div></div>
-      <span class="badge ${cls}">${lbl}</span>
-    </div>`;
-  }).join('');
+function renderEventList(){
+  const ul=document.getElementById('eventList');
+  if(!eventsData.length){ul.innerHTML='<div class="event-list-empty">No events yet</div>';return;}
+  ul.innerHTML=eventsData.map(e=>`
+    <div class="event-list-item${e.id===currentEventId?' active':''}" onclick="selectEvent('${escHtml(e.id)}')">
+      <span class="event-list-name">${escHtml(e.name)}</span>
+      <span class="status-badge ${escHtml(e.status||'draft')}">${escHtml(e.status||'draft')}</span>
+    </div>
+  `).join('');
 }
 
-function startNewEvent(){
-  editingEventId=null; clearEditor();
-  document.getElementById('editorTitle').textContent='New Event';
-  document.getElementById('deleteEvBtn').style.display='none';
-  document.getElementById('contentSection').style.display='none';
-  document.getElementById('editorPanel').classList.add('open');
-  renderEvList();
+function selectEvent(id){
+  currentEventId=id;
+  const ev=eventsData.find(e=>e.id===id);
+  if(!ev) return;
+  renderEventList();
+  fillEditor(ev);
 }
 
-function editEvent(id){
-  const ev=allEvents.find(e=>e.id===id); if(!ev) return;
-  editingEventId=id;
-  document.getElementById('editorTitle').textContent='Edit Event';
-  document.getElementById('deleteEvBtn').style.display='flex';
-  document.getElementById('editorPanel').classList.add('open');
-  const fields={ev_name:'name',ev_venue:'venue',ev_org:'organiser',ev_bu_start:'bu_start',ev_bu_end:'bu_end',ev_ev_start:'ev_start',ev_ev_end:'ev_end',ev_bd_start:'bd_start',ev_bd_end:'bd_end',ev_safety_mgr:'safety_mgr',ev_safety_num:'safety_num',ev_sec_mgr:'sec_mgr',ev_sec_num:'sec_num',ev_amb_num:'amb_num',ev_org_contact:'ev_org_contact'};
-  for(const [fid,key] of Object.entries(fields)){ const el=document.getElementById(fid); if(el) el.value=ev[key]||''; }
-  document.getElementById('ev_status').value=ev.status||'active';
-  if(ev.color_primary){ document.getElementById('ev_color_primary').value=ev.color_primary; document.getElementById('ev_color_primary_hex').value=ev.color_primary; }
-  if(ev.color_accent){ document.getElementById('ev_color_accent').value=ev.color_accent; document.getElementById('ev_color_accent_hex').value=ev.color_accent; }
-  if(ev.color_text){ document.getElementById('ev_color_text').value=ev.color_text; document.getElementById('ev_color_text_hex').value=ev.color_text; }
-  if(ev.client_logo_url){ document.getElementById('clientLogoImg').src=ev.client_logo_url; document.getElementById('clientLogoPreview').style.display='flex'; } else document.getElementById('clientLogoPreview').style.display='none';
-  if(ev.organiser_logo_url){ document.getElementById('orgLogoImg').src=ev.organiser_logo_url; document.getElementById('orgLogoPreview').style.display='flex'; } else document.getElementById('orgLogoPreview').style.display='none';
-  document.getElementById('manualName').textContent=ev.manual_name?'📄 '+ev.manual_name:'';
-  loadEventContent(ev.induction_content);
-  renderEvList();
+function newEvent(){
+  currentEventId=null;
+  renderEventList();
+  fillEditor({});
 }
 
-function clearEditor(){
-  ['ev_name','ev_venue','ev_org','ev_bu_start','ev_bu_end','ev_ev_start','ev_ev_end','ev_bd_start','ev_bd_end','ev_safety_mgr','ev_safety_num','ev_sec_mgr','ev_sec_num','ev_amb_num','ev_org_contact'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
-  document.getElementById('ev_status').value='active';
-  ['ev_color_primary','ev_color_accent','ev_color_text'].forEach(id=>{ const vals={'ev_color_primary':'#d42b2b','ev_color_accent':'#f5c800','ev_color_text':'#ffffff'}; document.getElementById(id).value=vals[id]; document.getElementById(id+'_hex').value=vals[id]; });
-  document.getElementById('clientLogoPreview').style.display='none';
-  document.getElementById('manualName').textContent='';
+function fillEditor(ev){
+  document.getElementById('editorPlaceholder').style.display='none';
+  document.getElementById('editorForm').style.display='';
+  document.getElementById('editorTitle').textContent=ev.name||'New Event';
+  const isAdmin=sessionStorage.getItem('impi_admin_role')==='admin';
+  const showDel=!!ev.id&&isAdmin;
+  document.getElementById('deleteEventBtn').style.display=showDel?'':'none';
+  document.getElementById('deleteEventBtn2').style.display=showDel?'':'none';
+  setFieldValue('evName',ev.name);
+  setFieldValue('evVenue',ev.venue);
+  setFieldValue('evOrganiser',ev.organiser);
+  setStatus(ev.status||'draft');
+  setFieldValue('evBuildupStart',ev.buildup_start?.split('T')[0]);
+  setFieldValue('evBuildupEnd',ev.buildup_end?.split('T')[0]);
+  setFieldValue('evEventStart',ev.event_start?.split('T')[0]);
+  setFieldValue('evEventEnd',ev.event_end?.split('T')[0]);
+  setFieldValue('evBreakdownStart',ev.breakdown_start?.split('T')[0]);
+  setFieldValue('evBreakdownEnd',ev.breakdown_end?.split('T')[0]);
+  const c=ev.safety_contacts||{};
+  setFieldValue('evSafetyMgrName',c.safety_manager_name);
+  setFieldValue('evSafetyMgrNum',c.safety_manager_number);
+  setFieldValue('evSecMgrName',c.security_manager_name);
+  setFieldValue('evSecMgrNum',c.security_manager_number);
+  setFieldValue('evHssName',c.hss_contact_name);
+  setFieldValue('evHssNum',c.hss_contact_number);
+  setFieldValue('evAmbulance',c.ambulance_number);
+  setFieldValue('evOrgContact',c.organiser_contact);
+  const col=ev.colors||{};
+  setColorPair('evPrimary','evPrimaryHex',col.primary||'#D42B2B');
+  setColorPair('evAccent','evAccentHex',col.accent||'#F5C800');
+  setColorPair('evText','evTextHex',col.text||'#FFFFFF');
+  showUploadPreview('logoPreview',ev.client_logo);
+  showUploadPreview('orgLogoPreview',ev.organiser_logo);
+  showManualFile('manualFile',ev.safety_manual);
 }
 
-function cancelEdit(){ editingEventId=null; document.getElementById('editorPanel').classList.remove('open'); document.getElementById('contentSection').style.display='none'; renderEvList(); }
+function setFieldValue(id,val){const el=document.getElementById(id);if(el) el.value=val||'';}
+function setColorPair(colorId,textId,hex){
+  const c=document.getElementById(colorId);const t=document.getElementById(textId);
+  if(c) c.value=hex;if(t) t.value=hex;
+}
+
+let currentStatus='draft';
+function setStatus(s){
+  currentStatus=s||'draft';
+  document.querySelectorAll('.status-opt').forEach(el=>{
+    el.classList.toggle('selected',el.dataset.status===currentStatus);
+  });
+}
+
+function syncColor(colorId,textId){
+  const ci=document.getElementById(colorId);const ti=document.getElementById(textId);
+  if(!ci||!ti) return;
+  ci.addEventListener('input',()=>{ti.value=ci.value;});
+  ti.addEventListener('input',()=>{if(/^#[0-9a-f]{6}$/i.test(ti.value)) ci.value=ti.value;});
+}
+
+function showUploadPreview(previewId,url){
+  const el=document.getElementById(previewId);if(!el) return;
+  if(url){el.src=url;el.style.display='block';}else el.style.display='none';
+}
+
+function showManualFile(fileId,url){
+  const el=document.getElementById(fileId);if(!el) return;
+  if(url){
+    const name=url.split('/').pop();
+    el.innerHTML=`<a href="${escHtml(url)}" target="_blank" rel="noopener noreferrer" style="font-size:12px;color:var(--primary)">📄 ${escHtml(name)}</a>`;
+    el.style.display='block';
+  }else el.style.display='none';
+}
+
+function setupEventUploadZone(zoneId,previewId,field){
+  const zone=document.getElementById(zoneId);if(!zone) return;
+  zone.addEventListener('dragover',e=>{e.preventDefault();zone.classList.add('drag-over');});
+  zone.addEventListener('dragleave',()=>zone.classList.remove('drag-over'));
+  zone.addEventListener('drop',async e=>{
+    e.preventDefault();zone.classList.remove('drag-over');
+    const file=e.dataTransfer.files[0];
+    if(file) await uploadEventFile(file,field,previewId);
+  });
+  zone.addEventListener('click',()=>{
+    const input=document.createElement('input');
+    input.type='file';
+    input.accept=field==='safety_manual'?'.pdf':'image/*';
+    input.onchange=async()=>{if(input.files[0]) await uploadEventFile(input.files[0],field,previewId);};
+    input.click();
+  });
+}
+
+async function uploadEventFile(file,field,previewId){
+  if(!currentEventId){showToast('Save event first before uploading files','error');return;}
+  const formData=new FormData();
+  formData.append('file',file);
+  formData.append('type',field==='safety_manual'?'manual':'logo');
+  formData.append('eventId',currentEventId);
+  const res=await fetch('/api/upload',{method:'POST',headers:authHeaders(),body:formData});
+  const data=await res.json();
+  if(data.url){
+    const ev=eventsData.find(e=>e.id===currentEventId);
+    if(ev){
+      ev[field]=data.url;
+      const payload={id:currentEventId};payload[field]=data.url;
+      await fetch('/api/events',{method:'POST',headers:{'Content-Type':'application/json',...authHeaders()},body:JSON.stringify(payload)});
+    }
+    if(field==='safety_manual') showManualFile(previewId,data.url);
+    else showUploadPreview(previewId,data.url);
+    showToast('File uploaded!');
+  }else showToast('Upload failed: '+(data.error||'Unknown'),'error');
+}
 
 async function saveEvent(){
-  const name=document.getElementById('ev_name').value.trim();
-  if(!name){ showToast('Event name is required','error'); return; }
-  const body={
-    name,venue:document.getElementById('ev_venue').value.trim(),organiser:document.getElementById('ev_org').value.trim(),
-    status:document.getElementById('ev_status').value,
-    bu_start:document.getElementById('ev_bu_start').value||null,bu_end:document.getElementById('ev_bu_end').value||null,
-    ev_start:document.getElementById('ev_ev_start').value||null,ev_end:document.getElementById('ev_ev_end').value||null,
-    bd_start:document.getElementById('ev_bd_start').value||null,bd_end:document.getElementById('ev_bd_end').value||null,
-    safety_mgr:document.getElementById('ev_safety_mgr').value.trim(),safety_num:document.getElementById('ev_safety_num').value.trim(),
-    sec_mgr:document.getElementById('ev_sec_mgr').value.trim(),sec_num:document.getElementById('ev_sec_num').value.trim(),
-    amb_num:document.getElementById('ev_amb_num').value.trim(),ev_org_contact:document.getElementById('ev_org_contact').value.trim(),
-    color_primary:document.getElementById('ev_color_primary').value,color_accent:document.getElementById('ev_color_accent').value,color_text:document.getElementById('ev_color_text').value,is_active:true
+  const name=document.getElementById('evName').value.trim();
+  if(!name){showToast('Event name is required','error');return;}
+  const contacts={
+    safety_manager_name:document.getElementById('evSafetyMgrName').value,
+    safety_manager_number:document.getElementById('evSafetyMgrNum').value,
+    security_manager_name:document.getElementById('evSecMgrName').value,
+    security_manager_number:document.getElementById('evSecMgrNum').value,
+    hss_contact_name:document.getElementById('evHssName').value,
+    hss_contact_number:document.getElementById('evHssNum').value,
+    ambulance_number:document.getElementById('evAmbulance').value,
+    organiser_contact:document.getElementById('evOrgContact').value
   };
-  if(editingEventId) body.id=editingEventId;
-  const existing=allEvents.find(e=>e.id===editingEventId);
-  if(existing){ body.client_logo_url=existing.client_logo_url||null; body.organiser_logo_url=existing.organiser_logo_url||null; body.manual_url=existing.manual_url||null; body.manual_name=existing.manual_name||null; body.induction_content=existing.induction_content||null; }
-  try{
-    const method=editingEventId?'PUT':'POST';
-    const res=await fetch('/.netlify/functions/events',{method,headers:authHeaders(),body:JSON.stringify(body)});
-    const data=await res.json();
-    if(data.id||data.success){
-      showToast('✓ Event saved','success');
-      if(!editingEventId&&data.id){ editingEventId=data.id; document.getElementById('deleteEvBtn').style.display='flex'; document.getElementById('editorTitle').textContent='Edit Event'; }
-      await loadEvents();
-      const ev=allEvents.find(e=>e.id===editingEventId);
-      if(ev) loadEventContent(ev.induction_content);
-    } else showToast('Error: '+(data.error||'Failed'),'error');
-  }catch(e){ showToast('Error: '+e.message,'error'); }
+  const colors={
+    primary:document.getElementById('evPrimaryHex').value||'#D42B2B',
+    accent:document.getElementById('evAccentHex').value||'#F5C800',
+    text:document.getElementById('evTextHex').value||'#FFFFFF'
+  };
+  const payload={
+    name,
+    venue:document.getElementById('evVenue').value,
+    organiser:document.getElementById('evOrganiser').value,
+    status:currentStatus,
+    buildup_start:document.getElementById('evBuildupStart').value||null,
+    buildup_end:document.getElementById('evBuildupEnd').value||null,
+    event_start:document.getElementById('evEventStart').value||null,
+    event_end:document.getElementById('evEventEnd').value||null,
+    breakdown_start:document.getElementById('evBreakdownStart').value||null,
+    breakdown_end:document.getElementById('evBreakdownEnd').value||null,
+    safety_contacts:contacts,
+    colors
+  };
+  if(currentEventId) payload.id=currentEventId;
+  const res=await fetch('/api/events',{method:'POST',headers:{'Content-Type':'application/json',...authHeaders()},body:JSON.stringify(payload)});
+  const data=await res.json();
+  if(data.id||data.success){
+    showToast('Event saved!');
+    if(!currentEventId&&data.id) currentEventId=data.id;
+    document.getElementById('editorTitle').textContent=name;
+    const showDel=!!currentEventId&&sessionStorage.getItem('impi_admin_role')==='admin';
+    document.getElementById('deleteEventBtn').style.display=showDel?'':'none';
+    document.getElementById('deleteEventBtn2').style.display=showDel?'':'none';
+    await loadEvents();
+  }else showToast('Save failed: '+(data.error||'Unknown error'),'error');
 }
 
-function confirmDeleteEvent(){ pendingDeleteEvId=editingEventId; document.getElementById('deleteEvModal').classList.add('open'); }
-async function confirmDeleteEv(){
-  document.getElementById('deleteEvModal').classList.remove('open');
-  if(!pendingDeleteEvId) return;
-  try{
-    const res=await fetch('/.netlify/functions/events',{method:'DELETE',headers:authHeaders(),body:JSON.stringify({id:pendingDeleteEvId})});
-    const d=await res.json();
-    if(d.success){ showToast('✓ Event deleted','success'); pendingDeleteEvId=null; editingEventId=null; cancelEdit(); await loadEvents(); }
-    else showToast('Error: '+(d.error||'Failed'),'error');
-  }catch(e){ showToast('Error: '+e.message,'error'); }
+async function deleteEvent(){
+  if(!currentEventId) return;
+  const ev=eventsData.find(e=>e.id===currentEventId);
+  if(!confirm(`Delete event "${ev?.name}"? This cannot be undone.`)) return;
+  const res=await fetch('/api/events',{method:'DELETE',headers:{'Content-Type':'application/json',...authHeaders()},body:JSON.stringify({id:currentEventId})});
+  const data=await res.json();
+  if(data.success){
+    showToast('Event deleted');
+    currentEventId=null;
+    document.getElementById('editorPlaceholder').style.display='';
+    document.getElementById('editorForm').style.display='none';
+    await loadEvents();
+  }else showToast('Delete failed: '+(data.error||'Unknown'),'error');
 }
 
-// ── FILE UPLOADS ──
-async function uploadEventFile(input,type){
-  const file=input.files[0];
-  if(!file||!editingEventId){ showToast('Save the event first before uploading files','error'); input.value=''; return; }
-  const fd=new FormData(); fd.append('file',file); fd.append('eventId',editingEventId); fd.append('type',type);
-  showToast('Uploading...','success');
-  try{
-    const res=await fetch('/.netlify/functions/upload',{method:'POST',headers:{'Authorization':'Bearer '+adminToken},body:fd});
-    const data=JSON.parse(await res.text()||'{}');
-    if(data.url){
-      const ev=allEvents.find(e=>e.id===editingEventId);
-      if(ev){
-        if(type==='client_logo'){ ev.client_logo_url=data.url; document.getElementById('clientLogoImg').src=data.url; document.getElementById('clientLogoPreview').style.display='flex'; }
-        if(type==='organiser_logo'){ ev.organiser_logo_url=data.url; document.getElementById('orgLogoImg').src=data.url; document.getElementById('orgLogoPreview').style.display='flex'; }
-        if(type==='manual'){ ev.manual_url=data.url; ev.manual_name=data.name||file.name; document.getElementById('manualName').textContent='📄 '+ev.manual_name; }
-      }
-      showToast('✓ Uploaded!','success');
-    } else showToast('Upload failed: '+(data.error||'Unknown'),'error');
-  }catch(e){ showToast('Upload error: '+e.message,'error'); }
-  input.value='';
-}
-
-function clearLogo(type){
-  const ev=allEvents.find(e=>e.id===editingEventId);
-  if(type==='client'){ if(ev) ev.client_logo_url=null; document.getElementById('clientLogoPreview').style.display='none'; }
-  if(type==='organiser'){ if(ev) ev.organiser_logo_url=null; document.getElementById('orgLogoPreview').style.display='none'; }
-}
-
-// ── INDUCTION CONTENT ──
-function loadEventContent(existingContent){
-  document.getElementById('contentSection').style.display='block';
-  currentTopics=JSON.parse(JSON.stringify(
-    (existingContent&&Array.isArray(existingContent)&&existingContent.length>0) ? existingContent : DEFAULT_TOPICS
-  ));
-  renderTopicsList();
-}
-
-function esc(s){ return (s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-
-function renderTopicsList(){
-  document.getElementById('topicsList').innerHTML=currentTopics.map((t,i)=>`
-    <div class="topic-card">
-      <div class="topic-card-header">
-        <span class="topic-card-num">Topic ${i+1}</span>
-        <div class="topic-card-actions">
-          <button class="btn btn-sm btn-ghost" onclick="moveTopic(${i},-1)" ${i===0?'disabled style="opacity:0.3"':''} title="Move up">↑</button>
-          <button class="btn btn-sm btn-ghost" onclick="moveTopic(${i},1)" ${i===currentTopics.length-1?'disabled style="opacity:0.3"':''} title="Move down">↓</button>
-          <button class="btn btn-sm btn-danger" onclick="removeTopic(${i})">🗑</button>
-        </div>
-      </div>
-      <div class="fg"><label>Topic Title</label><input type="text" value="${esc(t.title)}" oninput="currentTopics[${i}].title=this.value" placeholder="e.g. Topic 1 — Safety File"/></div>
-      <div class="fg"><label>Description</label><textarea rows="3" oninput="currentTopics[${i}].body=this.value" placeholder="Describe the topic...">${esc(t.body)}</textarea></div>
-      <div class="fg"><label>Warning / Note <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted)">(optional)</span></label><input type="text" value="${esc(t.warning||'')}" oninput="currentTopics[${i}].warning=this.value" placeholder="⚠ e.g. Access will be denied without PPE"/></div>
-      <div class="two">
-        <div class="fg"><label>✓ Correct Answer</label><input type="text" value="${esc(t.quiz_correct)}" oninput="currentTopics[${i}].quiz_correct=this.value" placeholder="✓ Correct answer..."/></div>
-        <div class="fg"><label>✗ Wrong Answer</label><input type="text" value="${esc(t.quiz_wrong)}" oninput="currentTopics[${i}].quiz_wrong=this.value" placeholder="Wrong answer..."/></div>
-      </div>
-    </div>`).join('');
-}
-
-function moveTopic(i,dir){
-  const j=i+dir; if(j<0||j>=currentTopics.length) return;
-  [currentTopics[i],currentTopics[j]]=[currentTopics[j],currentTopics[i]];
-  renderTopicsList();
-}
-
-function removeTopic(i){
-  if(currentTopics.length<=1){ showToast('At least one topic is required','error'); return; }
-  currentTopics.splice(i,1); renderTopicsList();
-}
-
-function addTopic(){
-  currentTopics.push({id:'t'+Date.now(),title:'Topic '+(currentTopics.length+1)+' — New Topic',body:'',warning:'',quiz_correct:'✓ I understand and will comply',quiz_wrong:'I am not sure'});
-  renderTopicsList();
-  setTimeout(()=>{ const cards=document.querySelectorAll('.topic-card'); if(cards.length) cards[cards.length-1].scrollIntoView({behavior:'smooth',block:'nearest'}); },50);
-}
-
-function resetContentToDefaults(){
-  if(!confirm('Reset all topics to the portal defaults? Your custom content for this event will be lost.')) return;
-  currentTopics=JSON.parse(JSON.stringify(DEFAULT_TOPICS)); renderTopicsList(); showToast('Reset to defaults','success');
-}
-
-async function saveEventContent(){
-  if(!editingEventId){ showToast('Save the event first','error'); return; }
-  try{
-    const res=await fetch('/.netlify/functions/content',{method:'POST',headers:authHeaders(),body:JSON.stringify({eventId:editingEventId,topics:currentTopics})});
-    const d=await res.json();
-    if(d.success){
-      showToast('✓ Induction content saved','success');
-      const ev=allEvents.find(e=>e.id===editingEventId);
-      if(ev) ev.induction_content=currentTopics;
-      renderEvList();
-    } else showToast('Error: '+(d.error||'Failed'),'error');
-  }catch(e){ showToast('Error: '+e.message,'error'); }
-}
-
-// ── COMPLETIONS ──
-function filterCompletions(){
-  const q=document.getElementById('compSearch')?.value.trim().toLowerCase()||'';
-  const eventName=document.getElementById('filterEvent')?.selectedOptions[0]?.text||'All Events';
-  filteredCompletions=q
-    ?allCompletions.filter(c=>[c.full_name,c.surname,c.company,c.email,c.id_number,c.role,c.trade,c.cert_code,c.phone].some(v=>(v||'').toLowerCase().includes(q)))
-    :[...allCompletions];
-  const countEl=document.getElementById('compCount');
-  if(countEl){
-    if(!allCompletions.length){ countEl.textContent=''; }
-    else if(q&&filteredCompletions.length===0){ countEl.textContent=`No completions match '${q}' for ${eventName}`; }
-    else if(q){ countEl.textContent=`Showing ${filteredCompletions.length} of ${allCompletions.length} completions`; }
-    else{ countEl.textContent=`${allCompletions.length} completion${allCompletions.length!==1?'s':''}`; }
-  }
-  renderCompletions();
-}
+/* ── Completions ── */
+let allCompletions=[],allEventsMap={};
 
 async function loadCompletions(){
-  const filterEvt=document.getElementById('filterEvent').value;
-  const sel=document.getElementById('filterEvent'); const cur=sel.value;
-  sel.innerHTML='<option value="">All Events</option>'+allEvents.map(ev=>`<option value="${ev.id}" ${ev.id===cur?'selected':''}>${ev.name}</option>`).join('');
-  try{
-    let url='/.netlify/functions/completions';
-    if(filterEvt) url+='?eventId='+filterEvt;
-    const res=await fetch(url,{headers:authHeaders()});
-    allCompletions=await res.json(); allCompletions=Array.isArray(allCompletions)?allCompletions:[];
-    filterCompletions();
-  }catch(e){ showToast('Error loading completions','error'); }
+  document.getElementById('countDisplay').textContent='Loading…';
+  const [comps,evs]=await Promise.all([
+    fetch('/api/completions',{headers:authHeaders()}).then(r=>r.json()),
+    fetch('/api/events',{headers:authHeaders()}).then(r=>r.json())
+  ]);
+  allCompletions=Array.isArray(comps)?comps:[];
+  const evArr=Array.isArray(evs)?evs:[];
+  allEventsMap=Object.fromEntries(evArr.map(e=>[e.id,e.name]));
+  const filter=document.getElementById('eventFilter');
+  const curVal=filter.value;
+  filter.innerHTML='<option value="">All Events</option>'+
+    evArr.map(e=>`<option value="${escHtml(e.id)}">${escHtml(e.name)}</option>`).join('');
+  filter.value=curVal;
+  filterAndRender();
 }
 
-function renderCompletions(){
-  const tbody=document.getElementById('compBody');
-  if(!filteredCompletions.length){ tbody.innerHTML='<tr><td colspan="11" style="color:var(--muted);padding:20px;text-align:center">No completions found.</td></tr>'; return; }
-  tbody.innerHTML=filteredCompletions.map((c,i)=>`<tr>
-    <td style="color:var(--muted);font-size:11px">${i+1}</td>
-    <td style="font-weight:600">${c.full_name||''} ${c.surname||''}</td>
-    <td>${c.company||'—'}</td><td>${c.role||'—'}</td>
-    <td style="font-family:monospace;font-size:12px">${c.id_number||'—'}</td>
-    <td style="font-size:12px">${c.email||'—'}</td>
-    <td style="font-size:11px;font-family:monospace">${c.event_id||'—'}</td>
-    <td style="font-size:12px;white-space:nowrap">${c.completed_at?new Date(c.completed_at).toLocaleDateString('en-ZA'):'—'}</td>
-    <td>${c.email_sent?'<span class="badge badge-green">✓ Sent</span>':'<span class="badge badge-red">Not sent</span>'}</td>
-    <td><span style="font-family:monospace;font-weight:800;color:var(--red);font-size:12px;letter-spacing:2px">${c.cert_code}</span></td>
-    <td><button class="btn btn-sm btn-danger" onclick="requestDeleteComp('${c.cert_code}','${esc((c.full_name||'')+' '+(c.surname||''))}')">🗑</button></td>
-  </tr>`).join('');
+function filterAndRender(){
+  const eventFilter=document.getElementById('eventFilter').value;
+  const search=document.getElementById('searchInput').value.toLowerCase();
+  let filtered=allCompletions;
+  if(eventFilter) filtered=filtered.filter(c=>c.event_id===eventFilter);
+  if(search) filtered=filtered.filter(c=>
+    [c.full_name,c.surname,c.company,c.email,c.id_number,c.role,c.cert_code].join(' ').toLowerCase().includes(search)
+  );
+  document.getElementById('countDisplay').textContent=`Showing ${filtered.length} of ${allCompletions.length} completions`;
+  document.getElementById('compTbody').innerHTML=filtered.map((c,i)=>`
+    <tr>
+      <td>${i+1}</td>
+      <td>${escHtml(c.full_name)}</td>
+      <td>${escHtml(c.surname||'')}</td>
+      <td>${escHtml(c.company||'—')}</td>
+      <td>${escHtml(c.role||'—')}</td>
+      <td>${escHtml(c.id_type||'—')}</td>
+      <td>${escHtml(c.id_number||'—')}</td>
+      <td>${escHtml(c.email||'—')}</td>
+      <td>${escHtml(allEventsMap[c.event_id]||c.event_id||'—')}</td>
+      <td>${c.completed_at?new Date(c.completed_at).toLocaleDateString('en-ZA'):'—'}</td>
+      <td>${c.email_sent?'✓':'—'}</td>
+      <td><code>${escHtml(c.cert_code)}</code></td>
+      <td><button class="btn-danger-sm" onclick="confirmDeleteCompletion('${escHtml(c.cert_code)}','${escHtml(c.full_name)} ${escHtml(c.surname||'')}')">Delete</button></td>
+    </tr>
+  `).join('')||'<tr><td colspan="13" style="text-align:center;color:var(--text-muted);padding:24px">No completions found</td></tr>';
 }
 
-function requestDeleteComp(certCode,name){
-  pendingDeleteCertCode=certCode;
-  document.getElementById('deleteCompMsg').textContent=`Delete completion for "${name.trim()}" (${certCode})? This cannot be undone.`;
-  document.getElementById('deleteCompModal').classList.add('open');
+function confirmDeleteCompletion(certCode,name){
+  const modal=document.getElementById('deleteModal');
+  document.getElementById('deleteModalMsg').textContent=`Delete completion for ${name} (${certCode})? Certificate will no longer verify.`;
+  document.getElementById('deleteModalConfirm').onclick=()=>deleteCompletion(certCode);
+  modal.classList.add('open');
 }
 
-async function confirmDeleteComp(){
-  document.getElementById('deleteCompModal').classList.remove('open');
-  if(!pendingDeleteCertCode) return;
-  try{
-    const res=await fetch('/.netlify/functions/completions',{method:'DELETE',headers:authHeaders(),body:JSON.stringify({cert_code:pendingDeleteCertCode})});
-    const d=JSON.parse(await res.text()||'{}');
-    if(d.success){ showToast('✓ Record deleted','success'); pendingDeleteCertCode=null; await loadCompletions(); await loadDashboard(); }
-    else showToast('Error: '+(d.error||'Failed'),'error');
-  }catch(e){ showToast('Error: '+e.message,'error'); }
+async function deleteCompletion(certCode){
+  document.getElementById('deleteModal').classList.remove('open');
+  const res=await fetch('/api/completions',{method:'DELETE',headers:{'Content-Type':'application/json',...authHeaders()},body:JSON.stringify({cert_code:certCode})});
+  const data=await res.json();
+  if(data.success){
+    showToast('Completion deleted');
+    allCompletions=allCompletions.filter(c=>c.cert_code!==certCode);
+    filterAndRender();
+  }else showToast('Delete failed: '+(data.error||'Unknown'),'error');
 }
 
 function exportCSV(){
-  if(!filteredCompletions.length){ showToast('No completions to export','error'); return; }
-  const cols=['cert_code','full_name','surname','company','role','trade','id_number','email','phone','event_id','completed_at','email_sent'];
-  const csv=[cols.join(','),...filteredCompletions.map(c=>cols.map(k=>`"${(c[k]||'').toString().replace(/"/g,'""')}"`).join(','))].join('\n');
-  const a=document.createElement('a'); a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv); a.download='completions_'+new Date().toISOString().slice(0,10)+'.csv'; a.click();
-  showToast('✓ CSV exported','success');
+  const eventFilter=document.getElementById('eventFilter').value;
+  const search=document.getElementById('searchInput').value.toLowerCase();
+  let filtered=allCompletions;
+  if(eventFilter) filtered=filtered.filter(c=>c.event_id===eventFilter);
+  if(search) filtered=filtered.filter(c=>
+    [c.full_name,c.surname,c.company,c.email,c.id_number,c.role,c.cert_code].join(' ').toLowerCase().includes(search)
+  );
+  const eventName=eventFilter?(allEventsMap[eventFilter]||'all').replace(/\s+/g,'_'):'all';
+  const date=new Date().toISOString().split('T')[0];
+  const headers=['Name','Surname','Company','Role','ID Type','ID Number','Email','Phone','Trade','Event','Completed','Email Sent','Cert Code'];
+  const rows=filtered.map(c=>[
+    c.full_name,c.surname,c.company,c.role,c.id_type,c.id_number,
+    c.email,c.phone,c.trade,allEventsMap[c.event_id]||c.event_id,
+    c.completed_at,c.email_sent?'Yes':'No',c.cert_code
+  ].map(v=>`"${(v||'').toString().replace(/"/g,'""')}"`).join(','));
+  const csv=[headers.join(','),...rows].join('\n');
+  const blob=new Blob([csv],{type:'text/csv'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=`completions_${eventName}_${date}.csv`;
+  a.click();
 }
 
-// ── DESIGN ──
+/* ── Topics ── */
+let topicsData=[],topicsEventId='global';
+
+async function loadTopics(){
+  const evs=await fetch('/api/events',{headers:authHeaders()}).then(r=>r.json());
+  const evArr=Array.isArray(evs)?evs:[];
+  const sel=document.getElementById('topicsEventSel');
+  sel.innerHTML='<option value="global">Global Defaults</option>'+
+    evArr.map(e=>`<option value="${escHtml(e.id)}">${escHtml(e.name)}</option>`).join('');
+  sel.value=topicsEventId;
+  await loadTopicsForEvent(topicsEventId);
+}
+
+async function loadTopicsForEvent(eventId){
+  topicsEventId=eventId;
+  const res=await fetch(`/api/topics?eventId=${encodeURIComponent(eventId)}`);
+  const data=await res.json();
+  topicsData=Array.isArray(data)?data:(data.topics||[]);
+  renderTopics();
+}
+
+function renderTopics(){
+  const container=document.getElementById('topicsContainer');
+  container.innerHTML=topicsData.map((t,i)=>`
+    <div class="topic-card" id="topic-${i}">
+      <div class="topic-card-header">
+        <span class="topic-badge">${i+1}</span>
+        <div style="flex:1"></div>
+        <button class="topic-move-btn" onclick="moveTopic(${i},-1)" title="Move up">↑</button>
+        <button class="topic-move-btn" onclick="moveTopic(${i},1)" title="Move down">↓</button>
+        <button class="topic-delete-btn" onclick="deleteTopic(${i})">🗑</button>
+      </div>
+      <div class="form-group"><label>Topic Title</label><input type="text" value="${escHtml(t.title||'')}" oninput="updateTopic(${i},'title',this.value)"></div>
+      <div class="form-group"><label>Description</label><textarea rows="3" oninput="updateTopic(${i},'description',this.value)">${escHtml(t.description||'')}</textarea></div>
+      <div class="form-group" style="border-left:3px solid #22c55e;padding-left:12px">
+        <label style="color:#16a34a">✓ Correct Answer</label>
+        <input type="text" value="${escHtml(t.correct_answer||'')}" oninput="updateTopic(${i},'correct_answer',this.value)">
+      </div>
+      <div class="form-group" style="border-left:3px solid #ef4444;padding-left:12px">
+        <label style="color:#dc2626">✗ Wrong Answer</label>
+        <input type="text" value="${escHtml(t.wrong_answer||'')}" oninput="updateTopic(${i},'wrong_answer',this.value)">
+      </div>
+    </div>
+  `).join('')||'<div style="text-align:center;color:var(--text-muted);padding:32px">No topics — click "+ Add Topic" to begin.</div>';
+}
+
+function updateTopic(idx,field,val){topicsData[idx][field]=val;}
+
+function moveTopic(idx,dir){
+  const n=idx+dir;
+  if(n<0||n>=topicsData.length) return;
+  [topicsData[idx],topicsData[n]]=[topicsData[n],topicsData[idx]];
+  renderTopics();
+}
+
+function deleteTopic(idx){topicsData.splice(idx,1);renderTopics();}
+
+function addTopic(){
+  topicsData.push({title:'',description:'',correct_answer:'',wrong_answer:''});
+  renderTopics();
+  document.getElementById(`topic-${topicsData.length-1}`)?.scrollIntoView({behavior:'smooth'});
+}
+
+async function saveTopics(){
+  const res=await fetch('/api/topics',{
+    method:'POST',
+    headers:{'Content-Type':'application/json',...authHeaders()},
+    body:JSON.stringify({eventId:topicsEventId,topics:topicsData})
+  });
+  const data=await res.json();
+  if(data.success) showToast('Topics saved!');
+  else showToast('Save failed: '+(data.error||'Unknown'),'error');
+}
+
+/* ── Design ── */
+let dirtySettings={};
+let designTabInited=false;
+
 async function loadDesign(){
-  try{
-    const res=await fetch('/.netlify/functions/design'); const text=await res.text(); if(!text) return;
-    const s=JSON.parse(text); designSettings=s;
-    if(s.primary_color){ document.getElementById('d_primary').value=s.primary_color; document.getElementById('d_primary_hex').value=s.primary_color; }
-    if(s.accent_color){ document.getElementById('d_accent').value=s.accent_color; document.getElementById('d_accent_hex').value=s.accent_color; }
-    if(s.text_color){ document.getElementById('d_text').value=s.text_color; document.getElementById('d_text_hex').value=s.text_color; }
-    if(s.landing_title) document.getElementById('d_title').value=s.landing_title;
-    if(s.landing_subtitle) document.getElementById('d_subtitle').value=s.landing_subtitle;
-    if(s.button_radius) selectRadius(parseInt(s.button_radius));
-    if(s.impi_logo_url){ document.getElementById('impiLogoUrl').value=s.impi_logo_url; document.getElementById('impiLogoImg').src=s.impi_logo_url; document.getElementById('impiLogoPreview').style.display='flex'; document.getElementById('prev_logo').innerHTML=`<img src="${s.impi_logo_url}" style="height:24px;width:auto;object-fit:contain"/>`; }
-    if(s.hero_image_url){ document.getElementById('heroBgUrl').value=s.hero_image_url; document.getElementById('heroBgImg').src=s.hero_image_url; document.getElementById('heroBgPreview').style.display='flex'; document.getElementById('prev_hero').style.backgroundImage=`url(${s.hero_image_url})`; }
-    updatePreview();
-  }catch(e){ console.error('Design load error:',e); }
+  if(!designTabInited){
+    designTabInited=true;
+    initDesignTab();
+  }
+  const res=await fetch('/api/design');
+  const d=await res.json();
+  const sz=d.logo_size||120;
+  document.getElementById('logoSizeSlider').value=sz;
+  document.getElementById('logoSizeVal').textContent=sz+'px';
+  setColorPairDesign('primaryColor','primaryHex',d.primary_color||'#D42B2B');
+  setColorPairDesign('accentColor','accentHex',d.accent_color||'#F5C800');
+  setColorPairDesign('textColor','textHex',d.text_color||'#FFFFFF');
+  const bs=d.button_style||'rounded';
+  document.querySelectorAll('.style-opt').forEach(el=>el.classList.toggle('selected',el.dataset.style===bs));
+  setFieldValue('headingText',d.heading_text);
+  setFieldValue('subtitleText',d.subtitle_text);
+  setDesignPreview('impiLogoPreview',d.impi_logo_url);
+  setDesignPreview('heroPreview',d.hero_image_url);
+  dirtySettings={};
 }
 
-async function saveDesign(){
-  const logoUrl=document.getElementById('impiLogoUrl').value.trim();
-  const heroUrl=document.getElementById('heroBgUrl').value.trim();
-  if(logoUrl) designSettings.impi_logo_url=logoUrl;
-  if(heroUrl) designSettings.hero_image_url=heroUrl;
-  const settings={primary_color:document.getElementById('d_primary').value,accent_color:document.getElementById('d_accent').value,text_color:document.getElementById('d_text').value,landing_title:document.getElementById('d_title').value,landing_subtitle:document.getElementById('d_subtitle').value,button_radius:String(selectedRadius),impi_logo_url:designSettings.impi_logo_url||'',hero_image_url:designSettings.hero_image_url||''};
-  try{
-    const res=await fetch('/.netlify/functions/design',{method:'POST',headers:authHeaders(),body:JSON.stringify(settings)});
-    const d=JSON.parse(await res.text()||'{}');
-    if(res.ok){ showToast('✓ Design saved and live!','success'); designSettings={...designSettings,...settings}; }
-    else showToast('Error: '+(d.error||'Failed'),'error');
-  }catch(e){ showToast('Error: '+e.message,'error'); }
+function setDesignPreview(id,url){
+  const el=document.getElementById(id);if(!el) return;
+  if(url){el.src=url;el.style.display='block';}else el.style.display='none';
 }
 
-async function uploadDesignAsset(input,settingKey){
-  const file=input.files[0]; if(!file) return;
-  const fd=new FormData(); fd.append('file',file); fd.append('eventId','portal'); fd.append('type','design_asset'); fd.append('settingKey',settingKey);
-  showToast('Uploading...','success');
-  try{
-    const res=await fetch('/.netlify/functions/upload',{method:'POST',headers:{'Authorization':'Bearer '+adminToken},body:fd});
-    const data=JSON.parse(await res.text()||'{}');
-    if(data.url){
-      designSettings[settingKey]=data.url;
-      if(settingKey==='impi_logo_url'){ document.getElementById('impiLogoUrl').value=data.url; document.getElementById('impiLogoImg').src=data.url; document.getElementById('impiLogoPreview').style.display='flex'; document.getElementById('prev_logo').innerHTML=`<img src="${data.url}" style="height:24px;width:auto;object-fit:contain"/>`; }
-      if(settingKey==='hero_image_url'){ document.getElementById('heroBgUrl').value=data.url; document.getElementById('heroBgImg').src=data.url; document.getElementById('heroBgPreview').style.display='flex'; document.getElementById('prev_hero').style.backgroundImage=`url(${data.url})`; }
-      showToast('✓ Image uploaded!','success');
-    } else showToast('Upload failed: '+(data.error||'Unknown'),'error');
-  }catch(e){ showToast('Upload error: '+e.message,'error'); }
-  input.value='';
+function setColorPairDesign(colorId,textId,hex){
+  const c=document.getElementById(colorId);const t=document.getElementById(textId);
+  if(c) c.value=hex;if(t) t.value=hex;
 }
 
-function clearDesignAsset(key,previewId){ designSettings[key]=''; document.getElementById(previewId).style.display='none'; if(key==='impi_logo_url'){ document.getElementById('prev_logo').innerHTML='<span style="font-size:12px">🏢</span>'; document.getElementById('impiLogoUrl').value=''; } if(key==='hero_image_url'){ document.getElementById('prev_hero').style.backgroundImage=''; document.getElementById('heroBgUrl').value=''; } }
-
-function syncDesignUrl(key,url){ designSettings[key]=url; if(key==='impi_logo_url'){ if(url){ document.getElementById('impiLogoImg').src=url; document.getElementById('impiLogoPreview').style.display='flex'; document.getElementById('prev_logo').innerHTML=`<img src="${url}" style="height:24px;width:auto;object-fit:contain"/>`; } else { document.getElementById('impiLogoPreview').style.display='none'; document.getElementById('prev_logo').innerHTML='<span style="font-size:12px">🏢</span>'; } } if(key==='hero_image_url'){ if(url){ document.getElementById('heroBgImg').src=url; document.getElementById('heroBgPreview').style.display='flex'; document.getElementById('prev_hero').style.backgroundImage=`url(${url})`; } else { document.getElementById('heroBgPreview').style.display='none'; document.getElementById('prev_hero').style.backgroundImage=''; } } }
-
-function syncHex(id){ const hex=document.getElementById(id+'_hex').value.trim(); if(/^#[0-9A-Fa-f]{6}$/.test(hex)){ document.getElementById(id).value=hex; updatePreview(); } }
-
-function selectRadius(r){ selectedRadius=r; document.querySelectorAll('.btn-shape-opt').forEach(el=>el.classList.remove('selected')); const opt=document.getElementById('bso-'+r); if(opt) opt.classList.add('selected'); updatePreview(); }
-
-function updatePreview(){
-  const p=document.getElementById('d_primary').value,a=document.getElementById('d_accent').value,t=document.getElementById('d_text').value;
-  const title=document.getElementById('d_title').value||'IMPI Safety Induction Portal';
-  const sub=document.getElementById('d_subtitle').value||'Complete your mandatory safety induction.';
-  document.getElementById('d_primary_hex').value=p; document.getElementById('d_accent_hex').value=a; document.getElementById('d_text_hex').value=t;
-  document.getElementById('prev_header').style.background=p; document.getElementById('prev_btn').style.background=p;
-  document.getElementById('prev_btn').style.color=t; document.getElementById('prev_btn').style.borderRadius=selectedRadius+'px';
-  document.getElementById('prev_bar').style.background=a; document.getElementById('prev_title').textContent=title; document.getElementById('prev_sub').textContent=sub;
+function selectStyle(el){
+  document.querySelectorAll('.style-opt').forEach(o=>o.classList.remove('selected'));
+  el.classList.add('selected');
 }
 
-// ── SETTINGS ──
-async function loadUsers(){
-  try{
-    const res=await fetch('/.netlify/functions/settings?action=listUsers',{headers:authHeaders()});
-    const d=await res.json(); const users=d.users||[];
-    const ul=document.getElementById('userList');
-    ul.innerHTML=users.length?users.map(u=>{
-      const role=u.role||'staff';
-      return `<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);gap:8px">
-        <div style="min-width:0"><div style="font-size:13px;font-weight:600">${u.name}</div><div style="font-size:11px;color:var(--muted)">${u.email}</div></div>
-        <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
-          <select onchange="updateUserRole('${u.id}',this.value)" style="font-family:var(--fh);font-size:9px;font-weight:700;padding:3px 6px;border:1.5px solid var(--border);border-radius:6px;background:var(--white);color:var(--text2);cursor:pointer">
-            <option value="staff" ${role==='staff'?'selected':''}>Staff</option>
-            <option value="manager" ${role==='manager'?'selected':''}>Manager</option>
-            <option value="admin" ${role==='admin'?'selected':''}>Admin</option>
-          </select>
-          <button class="btn btn-sm btn-danger" onclick="removeUser('${u.id}','${u.name}')">Remove</button>
-        </div>
-      </div>`;
-    }).join(''):'<div style="color:var(--muted);font-size:13px">No team members added yet.</div>';
-  }catch(e){}
+function initDesignTab(){
+  document.getElementById('primaryColor').addEventListener('input',()=>{document.getElementById('primaryHex').value=document.getElementById('primaryColor').value;});
+  document.getElementById('primaryHex').addEventListener('input',()=>{const v=document.getElementById('primaryHex').value;if(/^#[0-9a-f]{6}$/i.test(v)) document.getElementById('primaryColor').value=v;});
+  document.getElementById('accentColor').addEventListener('input',()=>{document.getElementById('accentHex').value=document.getElementById('accentColor').value;});
+  document.getElementById('accentHex').addEventListener('input',()=>{const v=document.getElementById('accentHex').value;if(/^#[0-9a-f]{6}$/i.test(v)) document.getElementById('accentColor').value=v;});
+  document.getElementById('textColor').addEventListener('input',()=>{document.getElementById('textHex').value=document.getElementById('textColor').value;});
+  document.getElementById('textHex').addEventListener('input',()=>{const v=document.getElementById('textHex').value;if(/^#[0-9a-f]{6}$/i.test(v)) document.getElementById('textColor').value=v;});
+  document.getElementById('logoSizeSlider').addEventListener('input',function(){document.getElementById('logoSizeVal').textContent=this.value+'px';});
+  setupDesignUploadZone('impiLogoZone','impi_logo_url');
+  setupDesignUploadZone('heroZone','hero_image_url');
+}
+
+function setupDesignUploadZone(zoneId,settingKey){
+  const zone=document.getElementById(zoneId);if(!zone) return;
+  zone.addEventListener('dragover',e=>{e.preventDefault();zone.classList.add('drag-over');});
+  zone.addEventListener('dragleave',()=>zone.classList.remove('drag-over'));
+  zone.addEventListener('drop',async e=>{
+    e.preventDefault();zone.classList.remove('drag-over');
+    const file=e.dataTransfer.files[0];
+    if(file) await uploadDesignAsset(file,settingKey);
+  });
+  zone.addEventListener('click',()=>{
+    const input=document.createElement('input');
+    input.type='file';input.accept='image/*';
+    input.onchange=async()=>{if(input.files[0]) await uploadDesignAsset(input.files[0],settingKey);};
+    input.click();
+  });
+}
+
+async function uploadDesignAsset(file,settingKey){
+  const formData=new FormData();
+  formData.append('file',file);
+  formData.append('type','design_asset');
+  formData.append('eventId','portal');
+  formData.append('settingKey',settingKey);
+  const res=await fetch('/api/upload',{method:'POST',headers:authHeaders(),body:formData});
+  const data=await res.json();
+  if(data.url){
+    const prevId=settingKey==='impi_logo_url'?'impiLogoPreview':'heroPreview';
+    setDesignPreview(prevId,data.url);
+    dirtySettings[settingKey]=data.url;
+    showToast('Image uploaded!');
+  }else showToast('Upload failed: '+(data.error||'Unknown'),'error');
+}
+
+async function saveDesignSettings(){
+  const settings={
+    primary_color:document.getElementById('primaryHex').value||'#D42B2B',
+    accent_color:document.getElementById('accentHex').value||'#F5C800',
+    text_color:document.getElementById('textHex').value||'#FFFFFF',
+    button_style:document.querySelector('.style-opt.selected')?.dataset.style||'rounded',
+    logo_size:document.getElementById('logoSizeSlider').value,
+    heading_text:document.getElementById('headingText').value,
+    subtitle_text:document.getElementById('subtitleText').value,
+    ...dirtySettings
+  };
+  const res=await fetch('/api/design',{method:'POST',headers:{'Content-Type':'application/json',...authHeaders()},body:JSON.stringify(settings)});
+  const data=await res.json();
+  if(data.success){showToast('Design settings saved!');dirtySettings={};}
+  else showToast('Save failed: '+(data.error||'Unknown'),'error');
+}
+
+/* ── Settings ── */
+async function loadSettings(){
+  const role=sessionStorage.getItem('impi_admin_role');
+  const teamSection=document.getElementById('teamSection');
+  if(teamSection) teamSection.style.display=(role==='admin')?'':'none';
+  if(role==='admin') await loadTeamUsers();
+}
+
+async function loadTeamUsers(){
+  const res=await fetch('/api/settings',{method:'POST',headers:{'Content-Type':'application/json',...authHeaders()},body:JSON.stringify({action:'listUsers'})});
+  const data=await res.json();
+  const users=data.users||[];
+  document.getElementById('usersTbody').innerHTML=users.map(u=>`
+    <tr>
+      <td>${escHtml(u.name||'')}</td>
+      <td>${escHtml(u.email||'')}</td>
+      <td>${escHtml(u.role||'')}</td>
+      <td style="display:flex;gap:6px;flex-wrap:wrap">
+        <button class="btn-sm" onclick="changeRole('${escHtml(u.id)}','${escHtml(u.role||'')}')">Change Role</button>
+        <button class="btn-sm" onclick="resetUserPw('${escHtml(u.id)}','${escHtml(u.name||'')}')">Reset PW</button>
+        <button class="btn-danger-sm" onclick="removeUser('${escHtml(u.id)}','${escHtml(u.name||'')}')">Remove</button>
+      </td>
+    </tr>
+  `).join('')||'<tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:24px">No team users</td></tr>';
 }
 
 async function changePassword(){
-  const np=document.getElementById('newPw').value.trim(),cp=document.getElementById('confirmPw').value.trim();
-  if(!np){ showToast('Enter a new password','error'); return; }
-  if(np!==cp){ showToast('Passwords do not match','error'); return; }
-  try{
-    const res=await fetch('/.netlify/functions/settings',{method:'POST',headers:authHeaders(),body:JSON.stringify({action:'changePassword',newPassword:np})});
-    const d=await res.json();
-    if(d.success){ showToast('✓ Password updated','success'); document.getElementById('newPw').value=''; document.getElementById('confirmPw').value=''; }
-    else showToast('Error: '+(d.error||'Failed'),'error');
-  }catch(e){ showToast('Error: '+e.message,'error'); }
+  const cur=document.getElementById('curPw').value;
+  const np=document.getElementById('newPw').value;
+  const cp=document.getElementById('confPw').value;
+  if(np!==cp){showToast('Passwords do not match','error');return;}
+  if(!np){showToast('New password required','error');return;}
+  const res=await fetch('/api/settings',{method:'POST',headers:{'Content-Type':'application/json',...authHeaders()},body:JSON.stringify({action:'changePassword',currentPassword:cur,newPassword:np})});
+  const data=await res.json();
+  if(data.success){
+    showToast('Password changed!');
+    document.getElementById('curPw').value='';
+    document.getElementById('newPw').value='';
+    document.getElementById('confPw').value='';
+  }else showToast(data.error||'Failed to change password','error');
 }
 
-async function addUser(){
-  const name=document.getElementById('newUserName').value.trim(),email=document.getElementById('newUserEmail').value.trim(),pw=document.getElementById('newUserPw').value.trim();
-  if(!name||!email||!pw){ showToast('All fields required','error'); return; }
-  try{
-    const role=document.getElementById('newUserRole').value;
-    const res=await fetch('/.netlify/functions/settings',{method:'POST',headers:authHeaders(),body:JSON.stringify({action:'addUser',name,email,password:pw,role})});
-    const d=await res.json();
-    if(d.success){ showToast('✓ User added','success'); document.getElementById('addUserModal').classList.remove('open'); ['newUserName','newUserEmail','newUserPw'].forEach(id=>document.getElementById(id).value=''); loadUsers(); }
-    else showToast('Error: '+(d.error||'Failed'),'error');
-  }catch(e){ showToast('Error: '+e.message,'error'); }
+async function addTeamUser(){
+  const name=document.getElementById('newUserName').value.trim();
+  const email=document.getElementById('newUserEmail').value.trim();
+  const password=document.getElementById('newUserPw').value;
+  const role=document.getElementById('newUserRole').value;
+  if(!name||!email||!password){showToast('All fields required','error');return;}
+  const res=await fetch('/api/settings',{method:'POST',headers:{'Content-Type':'application/json',...authHeaders()},body:JSON.stringify({action:'addUser',name,email,password,role})});
+  const data=await res.json();
+  if(data.success){
+    showToast('User added!');
+    document.getElementById('newUserName').value='';
+    document.getElementById('newUserEmail').value='';
+    document.getElementById('newUserPw').value='';
+    await loadTeamUsers();
+  }else showToast(data.error||'Failed to add user','error');
 }
 
-async function updateUserRole(id,role){
-  try{
-    const res=await fetch('/.netlify/functions/settings',{method:'POST',headers:authHeaders(),body:JSON.stringify({action:'updateUserRole',userId:id,role})});
-    const d=await res.json();
-    if(d.success) showToast('✓ Role updated','success'); else showToast('Error: '+(d.error||'Failed'),'error');
-  }catch(e){ showToast('Error: '+e.message,'error'); }
+async function changeRole(userId,currentRole){
+  const newRole=currentRole==='manager'?'staff':'manager';
+  const res=await fetch('/api/settings',{method:'POST',headers:{'Content-Type':'application/json',...authHeaders()},body:JSON.stringify({action:'updateUserRole',userId,role:newRole})});
+  const data=await res.json();
+  if(data.success){showToast(`Role changed to ${newRole}`);await loadTeamUsers();}
+  else showToast(data.error||'Failed','error');
 }
 
-async function removeUser(id,name){
-  if(!confirm('Remove '+name+'?')) return;
-  try{
-    const res=await fetch('/.netlify/functions/settings',{method:'POST',headers:authHeaders(),body:JSON.stringify({action:'removeUser',userId:id})});
-    const d=await res.json();
-    if(d.success){ showToast('✓ User removed','success'); loadUsers(); } else showToast('Error: '+(d.error||'Failed'),'error');
-  }catch(e){ showToast('Error: '+e.message,'error'); }
+async function resetUserPw(userId,name){
+  const newPw=prompt(`New password for ${name}:`);
+  if(!newPw) return;
+  const res=await fetch('/api/settings',{method:'POST',headers:{'Content-Type':'application/json',...authHeaders()},body:JSON.stringify({action:'resetUserPw',userId,newPassword:newPw})});
+  const data=await res.json();
+  if(data.success) showToast('Password reset!');
+  else showToast(data.error||'Failed','error');
 }
 
-function showToast(msg,type='success'){ const t=document.getElementById('toast'); t.textContent=msg; t.className='toast show '+type; setTimeout(()=>t.classList.remove('show'),3500); }
+async function removeUser(userId,name){
+  if(!confirm(`Remove user ${name}?`)) return;
+  const res=await fetch('/api/settings',{method:'POST',headers:{'Content-Type':'application/json',...authHeaders()},body:JSON.stringify({action:'removeUser',userId})});
+  const data=await res.json();
+  if(data.success){showToast('User removed');await loadTeamUsers();}
+  else showToast(data.error||'Failed','error');
+}
+
+/* ── Init ── */
+document.addEventListener('DOMContentLoaded',()=>{
+  const token=sessionStorage.getItem('impi_admin_token');
+  if(token){initApp();return;}
+  fetch('/api/design').then(r=>r.json()).then(d=>{
+    if(d.impi_logo_url){
+      const img=document.getElementById('loginLogo');
+      img.src=d.impi_logo_url;img.style.display='block';
+      document.getElementById('loginBrand').style.display='none';
+    }
+  }).catch(()=>{});
+  document.getElementById('loginPw').addEventListener('keydown',e=>{if(e.key==='Enter') login();});
+});
 </script>
 </body>
 </html>
