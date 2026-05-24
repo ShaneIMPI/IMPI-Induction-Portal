@@ -47,13 +47,8 @@ img { max-width: 100%; }
   height: 64px; padding: 0 40px;
   display: flex; align-items: center; justify-content: space-between;
 }
-.nav-logo-wrap {
-  display: flex; align-items: center; gap: 10px; text-decoration: none;
-}
-.site-logo {
-  height: 40px; width: auto; object-fit: contain;
-  display: none;
-}
+.nav-logo-wrap { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+.site-logo { height: 40px; width: auto; object-fit: contain; display: none; }
 .nav-logo-fallback {
   font-family: var(--fh); font-size: 20px; font-weight: 900;
   color: var(--accent-red); letter-spacing: -0.5px;
@@ -61,90 +56,280 @@ img { max-width: 100%; }
 .nav-verify-btn {
   display: inline-flex; align-items: center; gap: 6px;
   font-family: var(--fb); font-size: 13px; font-weight: 600;
-  color: var(--accent-red);
-  border: 1.5px solid var(--accent-red);
+  color: var(--accent-red); border: 1.5px solid var(--accent-red);
   padding: 8px 18px; border-radius: 100px;
   text-decoration: none; background: transparent;
-  transition: background 0.2s, color 0.2s;
+  transition: background 0.2s, color 0.2s; cursor: pointer;
 }
-.nav-verify-btn:hover {
-  background: var(--accent-red-light);
-}
+.nav-verify-btn:hover { background: var(--accent-red-light); }
 
 /* ── HERO ── */
 #hero {
   min-height: 100vh;
-  background: linear-gradient(160deg, #0F1623 0%, #1a0505 50%, #260808 100%);
-  background-size: cover; background-position: center;
-  display: flex; flex-direction: column;
-  align-items: center; justify-content: center;
-  padding: 100px 40px 80px;
-  position: relative; overflow: hidden;
+  background: #030303;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
   color: #fff;
 }
-.hero-inner {
-  position: relative; z-index: 2;
-  max-width: 760px; width: 100%;
-  text-align: center;
-  animation: fadeUp 0.7s ease both;
+
+/* Layer 1 — background image (0.18 opacity) */
+.hero-bg-img {
+  position: absolute; inset: 0; z-index: 0;
+  background-size: cover; background-position: center;
+  opacity: 0.18;
+  pointer-events: none;
 }
-@keyframes fadeUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+
+/* Layer 2 — ambient gradient */
+.hero-ambient {
+  position: absolute; inset: 0; z-index: 1;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 80% 60% at 20% 40%, rgba(212,43,43,0.07), transparent 60%),
+    radial-gradient(ellipse 60% 50% at 80% 70%, rgba(245,200,0,0.05), transparent 60%);
+  filter: blur(40px);
+}
+
+/* Layer 3 — floating pill shapes */
+@keyframes shapeEntrance {
+  from { opacity: 0; transform: translateY(-120px) rotate(var(--rotate)); }
+  to   { opacity: 1; transform: translateY(0) rotate(var(--rotate)); }
+}
+@keyframes shapeFloat {
+  0%, 100% { transform: translateY(0) rotate(var(--rotate)); }
+  50%       { transform: translateY(-15px) rotate(var(--rotate)); }
+}
+
+.hero-shape {
+  position: absolute;
+  border-radius: 9999px;
+  border: 2px solid rgba(255,255,255,0.12);
+  backdrop-filter: blur(2px);
+  z-index: 2;
+  will-change: transform;
+}
+.hero-shape::after {
+  content: '';
+  position: absolute; inset: 0;
+  border-radius: 9999px;
+  background: radial-gradient(circle at 50% 50%, rgba(255,255,255,0.2), transparent 70%);
+}
+
+.hero-shape-1 {
+  width: 600px; height: 140px;
+  --rotate: 12deg;
+  left: -5%; top: 20%;
+  background: linear-gradient(to right, rgba(212,43,43,0.18), transparent);
+  animation:
+    shapeEntrance 2.4s cubic-bezier(0.23,0.86,0.39,0.96) 0.3s both,
+    shapeFloat 12s ease-in-out 0.3s infinite;
+}
+.hero-shape-2 {
+  width: 500px; height: 120px;
+  --rotate: -15deg;
+  right: 0%; top: 72%;
+  background: linear-gradient(to right, rgba(245,200,0,0.15), transparent);
+  animation:
+    shapeEntrance 2.4s cubic-bezier(0.23,0.86,0.39,0.96) 0.5s both,
+    shapeFloat 15s ease-in-out 0.5s infinite;
+}
+.hero-shape-3 {
+  width: 300px; height: 80px;
+  --rotate: -8deg;
+  left: 10%; bottom: 10%;
+  background: linear-gradient(to right, rgba(139,92,246,0.15), transparent);
+  animation:
+    shapeEntrance 2.4s cubic-bezier(0.23,0.86,0.39,0.96) 0.4s both,
+    shapeFloat 10s ease-in-out 0.4s infinite;
+}
+.hero-shape-4 {
+  width: 200px; height: 60px;
+  --rotate: 20deg;
+  right: 22%; top: 14%;
+  background: linear-gradient(to right, rgba(245,200,0,0.18), transparent);
+  animation:
+    shapeEntrance 2.4s cubic-bezier(0.23,0.86,0.39,0.96) 0.6s both,
+    shapeFloat 14s ease-in-out 0.6s infinite;
+}
+.hero-shape-5 {
+  width: 150px; height: 40px;
+  --rotate: -25deg;
+  left: 28%; top: 8%;
+  background: linear-gradient(to right, rgba(6,182,212,0.15), transparent);
+  animation:
+    shapeEntrance 2.4s cubic-bezier(0.23,0.86,0.39,0.96) 0.7s both,
+    shapeFloat 11s ease-in-out 0.7s infinite;
+}
+
+/* Layer 4 — overlays */
+.hero-fade-top {
+  position: absolute; top: 0; left: 0; right: 0;
+  height: 30%;
+  background: linear-gradient(to bottom, rgba(3,3,3,0.8), transparent);
+  pointer-events: none; z-index: 3;
+}
+.hero-fade-bottom {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  height: 50%;
+  background: linear-gradient(to top, rgba(3,3,3,1) 0%, transparent 100%);
+  pointer-events: none; z-index: 3;
+}
+
+/* Layer 5 — hero content */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.hero-content {
+  position: relative; z-index: 10;
+  max-width: 760px; margin: 0 auto;
+  padding: 80px 24px 120px;
+  text-align: center;
+  display: flex; flex-direction: column; align-items: center;
+}
+
+/* Logo */
 #heroLogo {
-  height: 120px; width: auto; object-fit: contain;
-  margin-bottom: 32px;
-  display: none;
-  filter: drop-shadow(0 8px 32px rgba(212,43,43,0.3));
-  animation: fadeUp 0.7s 0.05s ease both;
+  display: block;
+  max-height: 180px; width: auto;
+  object-fit: contain;
+  margin: 0 auto 32px;
+  filter: drop-shadow(0 0 32px rgba(212,43,43,0.4));
+  animation: fadeUp 0.8s ease 0.1s both;
 }
 .hero-logo-fallback {
-  font-family: var(--fh); font-size: 48px; font-weight: 900;
-  color: var(--accent-red); margin-bottom: 28px; letter-spacing: -1px;
-  animation: fadeUp 0.7s 0.05s ease both;
+  font-family: var(--fh); font-size: 3rem; font-weight: 900;
+  color: var(--accent-red); margin-bottom: 32px;
+  text-shadow: 0 0 40px rgba(212,43,43,0.5);
+  animation: fadeUp 0.8s ease 0.1s both;
 }
+
+/* Badge pill */
+.hero-badge {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 6px 16px; border-radius: 999px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.1);
+  font-family: var(--fb); font-size: 0.8rem; font-weight: 500;
+  color: rgba(255,255,255,0.55);
+  letter-spacing: 0.5px; text-transform: uppercase;
+  margin-bottom: 28px;
+  animation: fadeUp 0.8s ease 0.2s both;
+}
+.hero-badge-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--accent-red);
+  box-shadow: 0 0 8px var(--accent-red);
+  flex-shrink: 0;
+}
+
+/* Title */
 #heroTitle {
   font-family: var(--fh); font-weight: 900;
-  font-size: clamp(32px, 5.5vw, 58px);
-  line-height: 1.08; letter-spacing: -1px;
-  color: #fff; margin-bottom: 20px;
-  animation: fadeUp 0.7s 0.1s ease both;
+  font-size: clamp(2.2rem, 5.5vw, 4.5rem);
+  line-height: 1.08; letter-spacing: -1.5px;
+  margin-bottom: 20px;
+  animation: fadeUp 0.8s ease 0.3s both;
 }
+.hero-title-l1 {
+  display: block;
+  background: linear-gradient(180deg, #ffffff 0%, rgba(255,255,255,0.8) 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.hero-title-l2 {
+  display: block;
+  background: linear-gradient(90deg, #ffb3b3 0%, rgba(255,255,255,0.9) 50%, var(--accent-yellow) 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Subtitle */
 #heroSubtitle {
-  font-size: clamp(14px, 1.8vw, 17px); color: rgba(255,255,255,0.65); line-height: 1.75;
-  max-width: 520px; margin: 0 auto 48px;
-  animation: fadeUp 0.7s 0.15s ease both;
+  font-family: var(--fb);
+  font-size: clamp(0.95rem, 2vw, 1.15rem);
+  font-weight: 400;
+  color: rgba(255,255,255,0.38);
+  max-width: 520px; line-height: 1.7; letter-spacing: 0.2px;
+  margin: 0 auto 40px;
+  animation: fadeUp 0.8s ease 0.4s both;
 }
+
+/* CTA buttons */
+.hero-ctas {
+  display: flex; gap: 16px; justify-content: center; flex-wrap: wrap;
+  animation: fadeUp 0.8s ease 0.5s both;
+}
+.cta-primary {
+  background: var(--accent-red); color: #fff;
+  font-family: var(--fb); font-size: 1rem; font-weight: 700;
+  padding: 14px 32px; border-radius: 10px;
+  border: none; cursor: pointer;
+  box-shadow: 0 4px 24px rgba(212,43,43,0.45);
+  display: inline-flex; align-items: center; gap: 10px;
+  text-decoration: none;
+  transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+.cta-primary:hover {
+  background: #b82424;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 40px rgba(212,43,43,0.6);
+}
+.cta-ghost {
+  background: transparent;
+  color: rgba(255,255,255,0.65);
+  font-family: var(--fb); font-size: 0.95rem; font-weight: 500;
+  padding: 13px 28px; border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.14);
+  cursor: pointer; text-decoration: none;
+  display: inline-flex; align-items: center; gap: 8px;
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+.cta-ghost:hover {
+  background: rgba(255,255,255,0.07);
+  color: #fff;
+  border-color: rgba(255,255,255,0.3);
+}
+
+/* Scroll indicator */
 .hero-scroll-hint {
-  position: absolute; bottom: 28px; left: 50%; transform: translateX(-50%);
-  display: flex; flex-direction: column; align-items: center; gap: 8px;
-  font-family: var(--fh); font-size: 9px; font-weight: 700; letter-spacing: 2px;
-  text-transform: uppercase; color: rgba(255,255,255,0.25);
-  animation: scrollBounce 2s infinite;
-  z-index: 2;
+  position: absolute; bottom: 32px; left: 50%;
+  transform: translateX(-50%); z-index: 10;
+  color: rgba(255,255,255,0.3);
+  font-family: var(--fb); font-size: 0.7rem; font-weight: 500;
+  letter-spacing: 2px; text-transform: uppercase;
+  cursor: pointer; text-align: center;
+  animation: fadeUp 1s ease 0.8s both;
 }
-.hero-scroll-arrow {
-  width: 18px; height: 18px;
-  border-right: 2px solid rgba(255,255,255,0.2);
-  border-bottom: 2px solid rgba(255,255,255,0.2);
+@keyframes bounce {
+  0%, 100% { transform: rotate(45deg) translateY(0); }
+  50%       { transform: rotate(45deg) translateY(5px); }
+}
+.scroll-chevron {
+  width: 10px; height: 10px;
+  margin: 8px auto 0;
+  border-right: 2px solid rgba(255,255,255,0.3);
+  border-bottom: 2px solid rgba(255,255,255,0.3);
   transform: rotate(45deg);
+  animation: bounce 2s ease infinite;
 }
-@keyframes scrollBounce {
-  0%,100% { transform: translateX(-50%) translateY(0); }
-  50% { transform: translateX(-50%) translateY(7px); }
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: 0.01ms !important; }
 }
 
 /* ── INFO STRIP ── */
-.info-strip {
-  background: var(--surface);
-  box-shadow: var(--shadow-sm);
-  border-bottom: 1px solid var(--border);
-}
+.info-strip { background: var(--surface); box-shadow: var(--shadow-sm); border-bottom: 1px solid var(--border); }
 .info-strip-inner {
   max-width: 1100px; margin: 0 auto;
   display: grid; grid-template-columns: repeat(4, 1fr);
 }
 .info-item {
-  padding: 28px 24px;
-  border-right: 1px solid var(--border);
+  padding: 28px 24px; border-right: 1px solid var(--border);
   display: flex; align-items: center; gap: 16px;
 }
 .info-item:last-child { border-right: none; }
@@ -154,17 +339,11 @@ img { max-width: 100%; }
   letter-spacing: 2px; text-transform: uppercase;
   color: var(--text-muted); margin-bottom: 4px;
 }
-.info-value {
-  font-family: var(--fh); font-size: 16px; font-weight: 900;
-  color: var(--text-primary); margin-bottom: 2px;
-}
+.info-value { font-family: var(--fh); font-size: 16px; font-weight: 900; color: var(--text-primary); margin-bottom: 2px; }
 .info-note { font-size: 11px; color: var(--text-muted); }
 
 /* ── EVENTS SECTION ── */
-.events-wrap {
-  max-width: 1100px; margin: 0 auto;
-  padding: 60px 40px;
-}
+.events-wrap { max-width: 1100px; margin: 0 auto; padding: 60px 40px; }
 .section-eyebrow {
   font-family: var(--fh); font-size: 10px; font-weight: 700;
   letter-spacing: 3px; text-transform: uppercase;
@@ -178,14 +357,10 @@ img { max-width: 100%; }
 
 /* ── SKELETON ── */
 .skeleton-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
-.skeleton-card {
-  background: var(--surface); border-radius: var(--radius-lg);
-  border: 1px solid var(--border); padding: 28px; overflow: hidden;
-}
+.skeleton-card { background: var(--surface); border-radius: var(--radius-lg); border: 1px solid var(--border); padding: 28px; }
 .skeleton-block {
   background: linear-gradient(90deg, var(--surface2) 25%, #e8ebf0 50%, var(--surface2) 75%);
-  background-size: 400% 100%;
-  border-radius: var(--radius-sm);
+  background-size: 400% 100%; border-radius: var(--radius-sm);
   animation: shimmer 1.4s infinite;
 }
 @keyframes shimmer { 0% { background-position: 100% 0; } 100% { background-position: -100% 0; } }
@@ -205,32 +380,17 @@ img { max-width: 100%; }
   display: flex; flex-direction: column;
   transition: box-shadow 0.25s, transform 0.25s, border-color 0.25s;
 }
-.event-card:hover {
-  box-shadow: var(--shadow-md);
-  transform: translateY(-2px);
-  border-color: #d0d5e0;
-}
-.event-card-logo {
-  padding: 20px 24px 0;
-  min-height: 80px;
-  display: flex; align-items: center;
-}
+.event-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); border-color: #d0d5e0; }
+.event-card-logo { padding: 20px 24px 0; min-height: 80px; display: flex; align-items: center; }
 .event-card-icon { font-size: 42px; line-height: 1; }
 .event-card-body { padding: 12px 24px 0; flex: 1; }
 .event-status-wrap { margin-bottom: 10px; }
 .status-badge {
-  display: inline-block;
-  font-family: var(--fh); font-size: 10px; font-weight: 700;
-  letter-spacing: 1.5px; text-transform: uppercase;
-  padding: 3px 10px; border-radius: 100px;
+  display: inline-block; font-family: var(--fh); font-size: 10px; font-weight: 700;
+  letter-spacing: 1.5px; text-transform: uppercase; padding: 3px 10px; border-radius: 100px;
 }
-.event-card-name {
-  font-family: var(--fh); font-size: 16px; font-weight: 800;
-  color: var(--text-primary); margin-bottom: 6px; line-height: 1.35;
-}
-.event-card-meta {
-  font-size: 12px; color: var(--text-secondary); margin-bottom: 5px; line-height: 1.5;
-}
+.event-card-name { font-family: var(--fh); font-size: 16px; font-weight: 800; color: var(--text-primary); margin-bottom: 6px; line-height: 1.35; }
+.event-card-meta { font-size: 12px; color: var(--text-secondary); margin-bottom: 5px; line-height: 1.5; }
 .event-card-footer { padding: 16px 24px 20px; }
 .event-cta-btn {
   width: 100%; padding: 10px 16px;
@@ -240,34 +400,22 @@ img { max-width: 100%; }
   transition: background 0.2s, opacity 0.2s;
 }
 .event-cta-btn:hover { background: #b82424; }
-.event-cta-btn.btn-disabled {
-  background: var(--surface2); color: var(--text-muted);
-  cursor: default;
-}
+.event-cta-btn.btn-disabled { background: var(--surface2); color: var(--text-muted); cursor: default; }
 .event-cta-btn.btn-disabled:hover { background: var(--surface2); }
 
 /* ── EMPTY STATE ── */
-.empty-state {
-  grid-column: 1 / -1;
-  text-align: center; padding: 60px 24px;
-  color: var(--text-secondary);
-}
+.empty-state { grid-column: 1 / -1; text-align: center; padding: 60px 24px; color: var(--text-secondary); }
 .empty-icon { font-size: 48px; margin-bottom: 16px; }
 .empty-state p { font-size: 15px; }
 
 /* ── EVENT DETAIL ── */
-#eventDetail {
-  max-width: 1100px; margin: 0 auto;
-  padding: 60px 40px;
-  display: none;
-}
+#eventDetail { max-width: 1100px; margin: 0 auto; padding: 60px 40px; display: none; }
 .back-btn {
   display: inline-flex; align-items: center; gap: 6px;
   font-family: var(--fb); font-size: 13px; font-weight: 600;
-  color: var(--text-secondary);
-  background: var(--surface); border: 1px solid var(--border);
-  padding: 8px 16px; border-radius: 100px; cursor: pointer;
-  transition: all 0.2s; margin-bottom: 32px;
+  color: var(--text-secondary); background: var(--surface);
+  border: 1px solid var(--border); padding: 8px 16px; border-radius: 100px;
+  cursor: pointer; transition: all 0.2s; margin-bottom: 32px;
   text-decoration: none; box-shadow: var(--shadow-sm);
 }
 .back-btn:hover { border-color: #c5cbd8; color: var(--text-primary); box-shadow: var(--shadow-md); }
@@ -285,119 +433,65 @@ img { max-width: 100%; }
 }
 .detail-dates {
   display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 0; background: var(--surface); border: 1px solid var(--border);
+  background: var(--surface); border: 1px solid var(--border);
   border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);
   overflow: hidden; margin-bottom: 24px;
 }
-.date-item {
-  padding: 18px 22px;
-  border-right: 1px solid var(--border);
-}
+.date-item { padding: 18px 22px; border-right: 1px solid var(--border); }
 .date-item:last-child { border-right: none; }
 .date-label {
   font-family: var(--fh); font-size: 9px; font-weight: 700;
-  letter-spacing: 2px; text-transform: uppercase;
-  color: var(--text-muted); margin-bottom: 5px;
+  letter-spacing: 2px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 5px;
 }
-.date-val {
-  font-family: var(--fh); font-size: 13px; font-weight: 800;
-  color: var(--text-primary);
-}
-.status-notice {
-  border-radius: var(--radius-md); padding: 14px 18px;
-  font-size: 14px; font-weight: 500; margin-bottom: 24px;
-  display: flex; align-items: center; gap: 10px;
-}
-.notice-yellow {
-  background: var(--accent-yellow-light);
-  border: 1px solid #fde68a;
-  color: #92400e;
-}
-.notice-grey {
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  color: var(--text-secondary);
-}
-.action-cards {
-  display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
-  gap: 16px; margin-top: 8px;
-}
+.date-val { font-family: var(--fh); font-size: 13px; font-weight: 800; color: var(--text-primary); }
+.status-notice { border-radius: var(--radius-md); padding: 14px 18px; font-size: 14px; font-weight: 500; margin-bottom: 24px; display: flex; align-items: center; gap: 10px; }
+.notice-yellow { background: var(--accent-yellow-light); border: 1px solid #fde68a; color: #92400e; }
+.notice-grey { background: var(--surface2); border: 1px solid var(--border); color: var(--text-secondary); }
+.action-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 16px; margin-top: 8px; }
 .action-card {
   background: var(--surface); border: 1px solid var(--border);
   border-radius: var(--radius-lg); padding: 28px 24px;
   text-decoration: none; display: flex; flex-direction: column;
   box-shadow: var(--shadow-sm); color: var(--text-primary);
-  transition: box-shadow 0.25s, transform 0.25s, border-color 0.25s;
+  transition: box-shadow 0.25s, transform 0.25s, border-color 0.25s; cursor: pointer;
 }
-.action-card:hover {
-  box-shadow: var(--shadow-md); transform: translateY(-2px); border-color: #d0d5e0;
-}
-.action-card-disabled {
-  opacity: 0.5; pointer-events: none;
-}
+.action-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); border-color: #d0d5e0; }
+.action-card-disabled { opacity: 0.5; pointer-events: none; }
 .action-icon { font-size: 32px; margin-bottom: 14px; }
-.action-title {
-  font-family: var(--fh); font-size: 15px; font-weight: 800;
-  color: var(--text-primary); margin-bottom: 6px;
-}
+.action-title { font-family: var(--fh); font-size: 15px; font-weight: 800; color: var(--text-primary); margin-bottom: 6px; }
 .action-sub { font-size: 13px; color: var(--text-secondary); line-height: 1.55; flex: 1; }
 
 /* ── TOPICS SECTION ── */
-.topics-section {
-  background: var(--surface2);
-  border-top: 1px solid var(--border);
-  border-bottom: 1px solid var(--border);
-  padding: 60px 40px;
-}
+.topics-section { background: var(--surface2); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); padding: 60px 40px; }
 .topics-inner { max-width: 1100px; margin: 0 auto; }
-.topics-grid {
-  display: grid; grid-template-columns: repeat(2, 1fr);
-  gap: 12px; margin-top: 32px;
-}
+.topics-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 32px; }
 .topic-item {
   background: var(--surface); border: 1px solid var(--border);
   border-radius: var(--radius-md); padding: 14px 18px;
-  display: flex; align-items: flex-start; gap: 12px;
-  box-shadow: var(--shadow-sm);
+  display: flex; align-items: flex-start; gap: 12px; box-shadow: var(--shadow-sm);
 }
-.topic-check {
-  color: var(--accent-yellow); font-size: 15px; font-weight: 800;
-  flex-shrink: 0; margin-top: 1px;
-}
+.topic-check { color: var(--accent-yellow); font-size: 15px; font-weight: 800; flex-shrink: 0; margin-top: 1px; }
 .topic-name { font-size: 13px; color: var(--text-secondary); line-height: 1.45; font-weight: 500; }
 
 /* ── FOOTER ── */
-.site-footer {
-  background: var(--text-primary);
-  padding: 40px 40px;
-  color: rgba(255,255,255,0.5);
-}
+.site-footer { background: var(--text-primary); padding: 40px; color: rgba(255,255,255,0.5); }
 .footer-inner {
   max-width: 1100px; margin: 0 auto;
   display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;
 }
 .footer-left { display: flex; align-items: center; gap: 14px; }
-.footer-logo {
-  height: 32px; width: auto; object-fit: contain;
-  display: none; filter: brightness(0) invert(1) opacity(0.6);
-}
-.footer-logo-text {
-  font-family: var(--fh); font-size: 14px; font-weight: 900;
-  color: rgba(255,255,255,0.55);
-}
+.footer-logo { height: 32px; width: auto; object-fit: contain; display: none; filter: brightness(0) invert(1) opacity(0.6); }
+.footer-logo-text { font-family: var(--fh); font-size: 14px; font-weight: 900; color: rgba(255,255,255,0.55); }
 .footer-copy { font-size: 12px; color: rgba(255,255,255,0.3); margin-top: 2px; }
 .footer-right { display: flex; align-items: center; gap: 20px; }
-.footer-link {
-  font-size: 13px; color: rgba(255,255,255,0.4);
-  text-decoration: none; font-weight: 500;
-  transition: color 0.2s;
-}
+.footer-link { font-size: 13px; color: rgba(255,255,255,0.4); text-decoration: none; font-weight: 500; transition: color 0.2s; }
 .footer-link:hover { color: rgba(255,255,255,0.75); }
 
 /* ── RESPONSIVE ── */
 @media (max-width: 900px) {
   .site-nav { padding: 0 20px; }
   #hero { padding: 90px 24px 70px; }
+  #hero { padding: 80px 24px 70px; }
   .info-strip-inner { grid-template-columns: 1fr 1fr; }
   .info-item:nth-child(2) { border-right: none; }
   .info-item { padding: 20px 16px; }
@@ -416,6 +510,8 @@ img { max-width: 100%; }
   .detail-dates { grid-template-columns: 1fr; }
   .date-item { border-right: none !important; border-bottom: 1px solid var(--border); }
   .date-item:last-child { border-bottom: none; }
+  #hero { padding: 80px 20px 60px; }
+  .hero-badge { font-size: 10px; }
 }
 </style>
 </head>
@@ -424,23 +520,68 @@ img { max-width: 100%; }
 <!-- ── NAV ── -->
 <nav class="site-nav">
   <a class="nav-logo-wrap" href="/">
-    <img class="site-logo" src="" alt="IMPI"/>
-    <span class="nav-logo-fallback">IMPI</span>
+    <img class="site-logo" id="navLogo" src="" alt="IMPI"/>
+    <span class="nav-logo-fallback" id="navLogoFallback">IMPI</span>
   </a>
-  <a class="nav-verify-btn" href="/verify.html">🔍 Verify Certificate</a>
+  <a class="nav-verify-btn" href="/verify.html">
+    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    Verify Certificate
+  </a>
 </nav>
 
 <!-- ── HERO ── -->
 <section id="hero">
-  <div class="hero-inner">
-    <img id="heroLogo" src="" alt="IMPI"/>
+  <!-- Layer 1: Background image -->
+  <div class="hero-bg-img" id="heroBgImg"></div>
+
+  <!-- Layer 2: Ambient gradient -->
+  <div class="hero-ambient" aria-hidden="true"></div>
+
+  <!-- Layer 3: Floating pill shapes -->
+  <div class="hero-shape hero-shape-1" aria-hidden="true"></div>
+  <div class="hero-shape hero-shape-2" aria-hidden="true"></div>
+  <div class="hero-shape hero-shape-3" aria-hidden="true"></div>
+  <div class="hero-shape hero-shape-4" aria-hidden="true"></div>
+  <div class="hero-shape hero-shape-5" aria-hidden="true"></div>
+
+  <!-- Layer 4: Overlays -->
+  <div class="hero-fade-top"></div>
+  <div class="hero-fade-bottom"></div>
+
+  <!-- Layer 5: Content -->
+  <div class="hero-content">
+    <img id="heroLogo" src="" alt="IMPI" style="display:none"/>
     <div class="hero-logo-fallback" id="heroLogoFallback">IMPI</div>
-    <h1 id="heroTitle">IMPI Safety Induction Portal</h1>
+
+    <div class="hero-badge">
+      <span class="hero-badge-dot"></span>
+      OHSA &amp; POPIA Compliant · Verified Certificates
+    </div>
+
+    <h1 id="heroTitle">
+      <span class="hero-title-l1" id="heroTitleL1">IMPI Safety</span>
+      <span class="hero-title-l2" id="heroTitleL2">Induction Portal</span>
+    </h1>
+
     <p id="heroSubtitle">Complete your mandatory safety induction and receive your verifiable certificate instantly.</p>
+
+    <div class="hero-ctas">
+      <a href="#events-section" class="cta-primary"
+         onclick="document.getElementById('events-section').scrollIntoView({behavior:'smooth'});return false;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M5 3l14 9-14 9V3z"/></svg>
+        Start Induction
+      </a>
+      <a href="/verify.html" class="cta-ghost">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+        Verify Certificate
+      </a>
+    </div>
   </div>
-  <div class="hero-scroll-hint">
-    <div class="hero-scroll-arrow"></div>
-    Scroll to begin
+
+  <!-- Scroll indicator -->
+  <div class="hero-scroll-hint" onclick="document.getElementById('events-section').scrollIntoView({behavior:'smooth'})">
+    Scroll
+    <div class="scroll-chevron"></div>
   </div>
 </section>
 
@@ -459,7 +600,7 @@ img { max-width: 100%; }
       <div class="info-icon">📋</div>
       <div>
         <div class="info-label">Topics</div>
-        <div class="info-value">7 Safety Topics</div>
+        <div class="info-value">13 Safety Topics</div>
         <div class="info-note">Safety &amp; compliance</div>
       </div>
     </div>
@@ -484,11 +625,10 @@ img { max-width: 100%; }
 
 <!-- ── EVENTS SECTION ── -->
 <section id="eventsSection">
-  <div class="events-wrap">
+  <div class="events-wrap" id="events-section">
     <div class="section-eyebrow">Available Events</div>
     <h2 class="section-title">Select Your Event</h2>
     <p class="section-sub">Choose the event you are attending to begin your safety induction.</p>
-    <!-- Skeleton (shown while loading) -->
     <div class="skeleton-grid" id="eventsLoading">
       <div class="skeleton-card">
         <div class="skeleton-block sk-logo"></div>
@@ -515,7 +655,6 @@ img { max-width: 100%; }
         <div class="skeleton-block sk-btn"></div>
       </div>
     </div>
-    <!-- Actual grid (populated by JS) -->
     <div class="events-grid" id="eventsGrid" style="display:none"></div>
   </div>
 </section>
@@ -530,16 +669,21 @@ img { max-width: 100%; }
   <div class="topics-inner">
     <div class="section-eyebrow">Safety Programme</div>
     <h2 class="section-title">What You'll Learn</h2>
-    <p class="section-sub">The induction covers 8 essential safety topics required for all contractors, exhibitors and suppliers on site.</p>
+    <p class="section-sub">The induction covers 13 essential safety topics required for all contractors, exhibitors and suppliers on site.</p>
     <div class="topics-grid">
-      <div class="topic-item"><span class="topic-check">✓</span><span class="topic-name">Safety File &amp; Accreditation Requirements</span></div>
+      <div class="topic-item"><span class="topic-check">✓</span><span class="topic-name">Safety Files &amp; Documentation</span></div>
+      <div class="topic-item"><span class="topic-check">✓</span><span class="topic-name">Site Access &amp; Accreditation</span></div>
+      <div class="topic-item"><span class="topic-check">✓</span><span class="topic-name">Emergency Evacuation &amp; Procedures</span></div>
       <div class="topic-item"><span class="topic-check">✓</span><span class="topic-name">Personal Protective Equipment (PPE)</span></div>
-      <div class="topic-item"><span class="topic-check">✓</span><span class="topic-name">Emergency Procedures &amp; Evacuation Routes</span></div>
-      <div class="topic-item"><span class="topic-check">✓</span><span class="topic-name">Fire Safety &amp; Prevention</span></div>
-      <div class="topic-item"><span class="topic-check">✓</span><span class="topic-name">Working at Heights Regulations</span></div>
-      <div class="topic-item"><span class="topic-check">✓</span><span class="topic-name">Electrical Safety Standards</span></div>
+      <div class="topic-item"><span class="topic-check">✓</span><span class="topic-name">Fire Safety</span></div>
+      <div class="topic-item"><span class="topic-check">✓</span><span class="topic-name">Working at Heights</span></div>
+      <div class="topic-item"><span class="topic-check">✓</span><span class="topic-name">Hazard Identification &amp; Reporting</span></div>
+      <div class="topic-item"><span class="topic-check">✓</span><span class="topic-name">Manual Handling &amp; Ergonomics</span></div>
+      <div class="topic-item"><span class="topic-check">✓</span><span class="topic-name">First Aid &amp; Medical Emergencies</span></div>
+      <div class="topic-item"><span class="topic-check">✓</span><span class="topic-name">Electrical Safety</span></div>
       <div class="topic-item"><span class="topic-check">✓</span><span class="topic-name">Housekeeping &amp; Waste Management</span></div>
-      <div class="topic-item"><span class="topic-check">✓</span><span class="topic-name">Incident Reporting Procedures</span></div>
+      <div class="topic-item"><span class="topic-check">✓</span><span class="topic-name">Hot Works &amp; Cutting</span></div>
+      <div class="topic-item"><span class="topic-check">✓</span><span class="topic-name">Ladder Safety &amp; Use</span></div>
     </div>
   </div>
 </section>
@@ -548,40 +692,38 @@ img { max-width: 100%; }
 <footer class="site-footer">
   <div class="footer-inner">
     <div class="footer-left">
-      <img class="footer-logo" src="" alt="IMPI"/>
+      <img class="footer-logo" id="footerLogo" src="" alt="IMPI"/>
       <div>
-        <div class="footer-logo-text">IMPI</div>
-        <div class="footer-copy">© 2026 IMPI Safety Services International. All rights reserved.</div>
+        <div class="footer-logo-text" id="footerLogoText">IMPI</div>
+        <div class="footer-copy">&copy; 2026 IMPI Safety Services International. All rights reserved.</div>
       </div>
     </div>
     <div class="footer-right">
-      <a class="footer-link" href="/verify.html">🔍 Verify Certificate</a>
+      <a class="footer-link" href="/verify.html">Verify Certificate</a>
     </div>
   </div>
 </footer>
 
 <script>
-let allEvents = [];
-let designSettings = {};
+var allEvents = [];
+var designSettings = {};
 
 async function init() {
-  // Load design settings
   try {
-    const res = await fetch('/api/design');
+    var res = await fetch('/api/design');
     designSettings = await res.json();
     applyDesignSettings(designSettings);
   } catch (e) {
-    console.warn('Design settings unavailable:', e.message);
+    console.warn('[design]', e.message);
   }
 
-  // Load events
   try {
-    const res = await fetch('/api/events');
-    const events = await res.json();
+    var res2 = await fetch('/api/events');
+    var events = await res2.json();
     allEvents = Array.isArray(events) ? events : [];
     renderEvents(allEvents.filter(function(e) { return e.status !== 'archived'; }));
   } catch (e) {
-    console.error('Events load error:', e);
+    console.error('[events]', e);
     document.getElementById('eventsLoading').style.display = 'none';
     document.getElementById('eventsGrid').style.display = 'grid';
     document.getElementById('eventsGrid').innerHTML = '<div class="empty-state"><div class="empty-icon">⚠️</div><p>Events could not be loaded. Please refresh the page.</p></div>';
@@ -592,55 +734,46 @@ function applyDesignSettings(d) {
   var logoUrl = d.impi_logo_url;
   var size = parseInt(d.logo_size) || 120;
 
-  // Nav logos (.site-logo elements)
-  document.querySelectorAll('.site-logo').forEach(function(el) {
-    if (logoUrl) {
+  if (logoUrl) {
+    document.querySelectorAll('.site-logo').forEach(function(el) {
       el.src = logoUrl;
       el.style.display = 'block';
-    }
-    el.style.height = Math.min(size, 80) + 'px';
-  });
-
-  // Hide fallback text in nav if logo is set
-  if (logoUrl) {
+      el.style.height = Math.min(size, 44) + 'px';
+    });
     document.querySelectorAll('.nav-logo-fallback').forEach(function(el) {
       el.style.display = 'none';
     });
-  }
-
-  // Hero logo
-  var heroLogo = document.getElementById('heroLogo');
-  var heroFallback = document.getElementById('heroLogoFallback');
-  if (heroLogo) {
-    if (logoUrl) {
+    var heroLogo = document.getElementById('heroLogo');
+    if (heroLogo) {
       heroLogo.src = logoUrl;
+      heroLogo.style.height = Math.min(Math.round(size * 1.5), 180) + 'px';
       heroLogo.style.display = 'block';
-      if (heroFallback) heroFallback.style.display = 'none';
+      var hf = document.getElementById('heroLogoFallback');
+      if (hf) hf.style.display = 'none';
     }
-    heroLogo.style.height = size + 'px';
+    var footerLogo = document.getElementById('footerLogo');
+    if (footerLogo) {
+      footerLogo.src = logoUrl;
+      footerLogo.style.display = 'block';
+      var ft = document.getElementById('footerLogoText');
+      if (ft) ft.style.display = 'none';
+    }
   }
 
-  // Footer logo
-  var footerLogo = document.querySelector('.footer-logo');
-  if (footerLogo && logoUrl) {
-    footerLogo.src = logoUrl;
-    footerLogo.style.display = 'block';
-    var footerText = document.querySelector('.footer-logo-text');
-    if (footerText) footerText.style.display = 'none';
+  if (d.heading_text) {
+    var words = d.heading_text.trim().split(' ');
+    var mid = Math.ceil(words.length / 2);
+    document.getElementById('heroTitleL1').textContent = words.slice(0, mid).join(' ');
+    document.getElementById('heroTitleL2').textContent = words.slice(mid).join(' ');
   }
-
-  // Hero background image
-  if (d.hero_image_url) {
-    var hero = document.getElementById('hero');
-    hero.style.backgroundImage = "linear-gradient(rgba(0,0,0,0.55),rgba(0,0,0,0.55)), url('" + d.hero_image_url + "')";
-  }
-
-  // Hero text
-  if (d.heading_text) document.getElementById('heroTitle').textContent = d.heading_text;
   if (d.subtitle_text) document.getElementById('heroSubtitle').textContent = d.subtitle_text;
-
-  // Primary color
-  if (d.primary_color) document.documentElement.style.setProperty('--accent-red', d.primary_color);
+  if (d.hero_image_url) {
+    var bg = document.getElementById('heroBgImg');
+    if (bg) bg.style.backgroundImage = "url('" + d.hero_image_url + "')";
+  }
+  if (d.primary_color) {
+    document.documentElement.style.setProperty('--accent-red', d.primary_color);
+  }
 }
 
 function renderEvents(events) {
@@ -693,7 +826,7 @@ function showEventDetail(id) {
   var detail = document.getElementById('eventDetail');
   detail.style.display = 'block';
   renderEventDetail(ev);
-  detail.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  window.scrollTo({ top: detail.offsetTop - 70, behavior: 'smooth' });
 }
 
 function showEventsList() {
@@ -706,25 +839,21 @@ function renderEventDetail(ev) {
   var isDraft = ev.status === 'draft';
   var isCompleted = ev.status === 'completed';
 
-  // Split event name: first word in accent colour
   var words = ev.name ? ev.name.split(' ') : ['Event'];
   var nameHtml = words.length > 1
     ? '<span style="color:var(--accent-red)">' + escHtml(words[0]) + '</span> ' + escHtml(words.slice(1).join(' '))
     : '<span style="color:var(--accent-red)">' + escHtml(ev.name) + '</span>';
 
-  // Build date strip items
   var datesHtml = '';
   if (ev.bu_start) datesHtml += '<div class="date-item"><div class="date-label">Build-Up</div><div class="date-val">' + formatDate(ev.bu_start) + (ev.bu_end ? ' – ' + formatDate(ev.bu_end) : '') + '</div></div>';
   if (ev.ev_start) datesHtml += '<div class="date-item"><div class="date-label">Event</div><div class="date-val">' + formatDate(ev.ev_start) + (ev.ev_end ? ' – ' + formatDate(ev.ev_end) : '') + '</div></div>';
   if (ev.bd_start) datesHtml += '<div class="date-item"><div class="date-label">Breakdown</div><div class="date-val">' + formatDate(ev.bd_start) + (ev.bd_end ? ' – ' + formatDate(ev.bd_end) : '') + '</div></div>';
   if (ev.organiser) datesHtml += '<div class="date-item"><div class="date-label">Organiser</div><div class="date-val">' + escHtml(ev.organiser) + '</div></div>';
 
-  // Notice block
   var noticeHtml = '';
   if (isDraft) noticeHtml = '<div class="status-notice notice-yellow">🕐 Coming Soon — induction is not yet open for this event.</div>';
   if (isCompleted) noticeHtml = '<div class="status-notice notice-grey">✅ This event has closed. No further inductions are being accepted.</div>';
 
-  // Action cards
   var actionsHtml =
     '<a href="' + (isActive ? '/induction.html?event=' + ev.id : '#') + '" class="action-card' + (!isActive ? ' action-card-disabled' : '') + '">' +
       '<div class="action-icon">📱</div>' +
@@ -759,21 +888,18 @@ function renderEventDetail(ev) {
 
 function formatDate(dateStr) {
   if (!dateStr) return '';
-  try {
-    return new Date(dateStr + 'T00:00:00').toLocaleDateString('en-ZA', { day: '2-digit', month: 'short', year: 'numeric' });
-  } catch(e) { return dateStr; }
+  try { return new Date(dateStr + 'T00:00:00').toLocaleDateString('en-ZA', { day: '2-digit', month: 'short', year: 'numeric' }); }
+  catch(e) { return dateStr; }
 }
 
 function escHtml(str) {
   if (!str) return '';
-  return String(str)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-document.addEventListener('DOMContentLoaded', init);
+document.addEventListener('DOMContentLoaded', function() {
+  init();
+});
 </script>
 </body>
 </html>

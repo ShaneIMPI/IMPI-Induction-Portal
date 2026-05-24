@@ -9,7 +9,8 @@ const DEFAULTS = {
   heading_text: 'IMPI Safety Induction Portal',
   subtitle_text: 'Complete your safety induction before accessing the event.',
   impi_logo_url: '',
-  hero_image_url: ''
+  hero_image_url: '',
+  induction_banner_url: ''
 };
 
 exports.handler = async (event) => {

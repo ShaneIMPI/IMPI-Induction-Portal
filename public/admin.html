@@ -337,8 +337,6 @@ input[type=color]{width:44px;height:36px;border:1px solid var(--border);border-r
                   <div class="form-group"><label>Safety Manager Number</label><input type="text" id="evSafetyMgrNum"></div>
                   <div class="form-group"><label>Security Manager Name</label><input type="text" id="evSecMgrName"></div>
                   <div class="form-group"><label>Security Manager Number</label><input type="text" id="evSecMgrNum"></div>
-                  <div class="form-group"><label>HSS Contact Name</label><input type="text" id="evHssName"></div>
-                  <div class="form-group"><label>HSS Contact Number</label><input type="text" id="evHssNum"></div>
                   <div class="form-group"><label>Ambulance / Emergency</label><input type="text" id="evAmbulance"></div>
                   <div class="form-group"><label>Event Organiser Contact</label><input type="text" id="evOrgContact"></div>
                 </div>
@@ -469,6 +467,13 @@ input[type=color]{width:44px;height:36px;border:1px solid var(--border);border-r
             </div>
           </div>
           <div class="form-group">
+            <label>Induction Banner Background</label>
+            <div class="upload-zone" id="inductionBannerZone">
+              <span>Click or drag image here</span>
+              <img id="inductionBannerPreview" class="upload-preview" alt="Induction Banner" style="max-height:60px">
+            </div>
+          </div>
+          <div class="form-group">
             <label>Logo Size: <span id="logoSizeVal">120px</span></label>
             <input type="range" id="logoSizeSlider" min="40" max="220" step="5" value="120" style="width:100%;accent-color:var(--primary)">
           </div>
@@ -529,8 +534,23 @@ input[type=color]{width:44px;height:36px;border:1px solid var(--border);border-r
           <div class="form-group"><label>Subtitle</label><input type="text" id="subtitleText" placeholder="Complete your safety induction to receive your certificate"></div>
         </div>
 
+        <div class="section-card">
+          <div class="section-title">Live Preview</div>
+          <div id="designPreview" style="border-radius:8px;overflow:hidden;border:1px solid var(--border)">
+            <div id="pvNav" style="background:#fff;border-bottom:1px solid #e5e7eb;padding:10px 16px;display:flex;align-items:center;gap:10px">
+              <img id="pvLogo" style="height:28px;object-fit:contain;display:none" alt="Logo"/>
+              <span id="pvLogoText" style="font-weight:800;font-size:14px;color:#D42B2B">IMPI</span>
+            </div>
+            <div id="pvHero" style="background:#030303;padding:40px 24px;text-align:center;min-height:160px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px">
+              <div id="pvTitle" style="font-size:20px;font-weight:900;color:#fff;font-family:'Montserrat',sans-serif">IMPI Safety Induction Portal</div>
+              <div id="pvSub" style="font-size:12px;color:rgba(255,255,255,0.55)">Complete your mandatory safety induction</div>
+              <div id="pvBtn" style="margin-top:4px;background:#D42B2B;color:#fff;padding:8px 20px;border-radius:8px;font-size:12px;font-weight:700;display:inline-block">Start Induction →</div>
+            </div>
+          </div>
+        </div>
+
         <div style="display:flex;justify-content:flex-end">
-          <button class="btn-primary" onclick="saveDesignSettings()">Save Design Settings</button>
+          <button class="btn-primary" onclick="saveDesignSettings()">💾 Save &amp; Go Live</button>
         </div>
       </div>
 
@@ -619,7 +639,7 @@ async function login(){
       sessionStorage.setItem('impi_admin_name',data.name||data.email||'Admin');
       initApp();
     } else {
-      errEl.textContent=data.error||'Invalid credentials';
+      errEl.textContent=data.message||data.error||'Invalid credentials';
       errEl.style.display='block';
     }
   }catch(e){
@@ -717,7 +737,7 @@ async function loadEvents(){
     syncColor('evText','evTextHex');
     setupEventUploadZone('logoZone','logoPreview','client_logo');
     setupEventUploadZone('orgLogoZone','orgLogoPreview','organiser_logo');
-    setupEventUploadZone('manualZone','manualFile','safety_manual');
+    setupEventUploadZone('manualZone','manualFile','manual');
   }
 }
 
@@ -765,28 +785,28 @@ function fillEditor(ev){
   setFieldValue('evVenue',ev.venue);
   setFieldValue('evOrganiser',ev.organiser);
   setStatus(ev.status||'draft');
-  setFieldValue('evBuildupStart',ev.buildup_start?.split('T')[0]);
-  setFieldValue('evBuildupEnd',ev.buildup_end?.split('T')[0]);
-  setFieldValue('evEventStart',ev.event_start?.split('T')[0]);
-  setFieldValue('evEventEnd',ev.event_end?.split('T')[0]);
-  setFieldValue('evBreakdownStart',ev.breakdown_start?.split('T')[0]);
-  setFieldValue('evBreakdownEnd',ev.breakdown_end?.split('T')[0]);
-  const c=ev.safety_contacts||{};
-  setFieldValue('evSafetyMgrName',c.safety_manager_name);
-  setFieldValue('evSafetyMgrNum',c.safety_manager_number);
-  setFieldValue('evSecMgrName',c.security_manager_name);
-  setFieldValue('evSecMgrNum',c.security_manager_number);
-  setFieldValue('evHssName',c.hss_contact_name);
-  setFieldValue('evHssNum',c.hss_contact_number);
-  setFieldValue('evAmbulance',c.ambulance_number);
-  setFieldValue('evOrgContact',c.organiser_contact);
-  const col=ev.colors||{};
-  setColorPair('evPrimary','evPrimaryHex',col.primary||'#D42B2B');
-  setColorPair('evAccent','evAccentHex',col.accent||'#F5C800');
-  setColorPair('evText','evTextHex',col.text||'#FFFFFF');
-  showUploadPreview('logoPreview',ev.client_logo);
-  showUploadPreview('orgLogoPreview',ev.organiser_logo);
-  showManualFile('manualFile',ev.safety_manual);
+  // Date fields — DB columns: bu_start, bu_end, ev_start, ev_end, bd_start, bd_end
+  setFieldValue('evBuildupStart',(ev.bu_start||'').split('T')[0]);
+  setFieldValue('evBuildupEnd',(ev.bu_end||'').split('T')[0]);
+  setFieldValue('evEventStart',(ev.ev_start||'').split('T')[0]);
+  setFieldValue('evEventEnd',(ev.ev_end||'').split('T')[0]);
+  setFieldValue('evBreakdownStart',(ev.bd_start||'').split('T')[0]);
+  setFieldValue('evBreakdownEnd',(ev.bd_end||'').split('T')[0]);
+  // Safety contacts — flat DB columns
+  setFieldValue('evSafetyMgrName',ev.safety_mgr);
+  setFieldValue('evSafetyMgrNum',ev.safety_num);
+  setFieldValue('evSecMgrName',ev.sec_mgr);
+  setFieldValue('evSecMgrNum',ev.sec_num);
+  setFieldValue('evAmbulance',ev.amb_num);
+  setFieldValue('evOrgContact',ev.ev_org_contact);
+  // Colors — flat DB columns
+  setColorPair('evPrimary','evPrimaryHex',ev.color_primary||'#D42B2B');
+  setColorPair('evAccent','evAccentHex',ev.color_accent||'#F5C800');
+  setColorPair('evText','evTextHex',ev.color_text||'#FFFFFF');
+  // File previews — DB columns: client_logo_url, organiser_logo_url, manual_url
+  showUploadPreview('logoPreview',ev.client_logo_url);
+  showUploadPreview('orgLogoPreview',ev.organiser_logo_url);
+  showManualFile('manualFile',ev.manual_url);
 }
 
 function setFieldValue(id,val){const el=document.getElementById(id);if(el) el.value=val||'';}
@@ -836,7 +856,7 @@ function setupEventUploadZone(zoneId,previewId,field){
   zone.addEventListener('click',()=>{
     const input=document.createElement('input');
     input.type='file';
-    input.accept=field==='safety_manual'?'.pdf':'image/*';
+    input.accept=field==='manual'?'.pdf':'image/*';
     input.onchange=async()=>{if(input.files[0]) await uploadEventFile(input.files[0],field,previewId);};
     input.click();
   });
@@ -844,63 +864,62 @@ function setupEventUploadZone(zoneId,previewId,field){
 
 async function uploadEventFile(file,field,previewId){
   if(!currentEventId){showToast('Save event first before uploading files','error');return;}
+  // Map internal field name to upload.js expected type values
+  const typeMap={client_logo:'client_logo',organiser_logo:'organiser_logo',manual:'manual'};
+  const uploadType=typeMap[field]||field;
   const formData=new FormData();
   formData.append('file',file);
-  formData.append('type',field==='safety_manual'?'manual':'logo');
+  formData.append('type',uploadType);
   formData.append('eventId',currentEventId);
+  showToast('Uploading...');
   const res=await fetch('/api/upload',{method:'POST',headers:authHeaders(),body:formData});
   const data=await res.json();
   if(data.url){
     const ev=eventsData.find(e=>e.id===currentEventId);
     if(ev){
-      ev[field]=data.url;
-      const payload={id:currentEventId};payload[field]=data.url;
-      await fetch('/api/events',{method:'POST',headers:{'Content-Type':'application/json',...authHeaders()},body:JSON.stringify(payload)});
+      // Update local cache with the correct DB column name
+      const dbColMap={client_logo:'client_logo_url',organiser_logo:'organiser_logo_url',manual:'manual_url'};
+      const dbCol=dbColMap[field]||field;
+      ev[dbCol]=data.url;
     }
-    if(field==='safety_manual') showManualFile(previewId,data.url);
+    if(field==='manual') showManualFile(previewId,data.url);
     else showUploadPreview(previewId,data.url);
-    showToast('File uploaded!');
+    showToast('File uploaded!','success');
   }else showToast('Upload failed: '+(data.error||'Unknown'),'error');
 }
 
 async function saveEvent(){
   const name=document.getElementById('evName').value.trim();
   if(!name){showToast('Event name is required','error');return;}
-  const contacts={
-    safety_manager_name:document.getElementById('evSafetyMgrName').value,
-    safety_manager_number:document.getElementById('evSafetyMgrNum').value,
-    security_manager_name:document.getElementById('evSecMgrName').value,
-    security_manager_number:document.getElementById('evSecMgrNum').value,
-    hss_contact_name:document.getElementById('evHssName').value,
-    hss_contact_number:document.getElementById('evHssNum').value,
-    ambulance_number:document.getElementById('evAmbulance').value,
-    organiser_contact:document.getElementById('evOrgContact').value
-  };
-  const colors={
-    primary:document.getElementById('evPrimaryHex').value||'#D42B2B',
-    accent:document.getElementById('evAccentHex').value||'#F5C800',
-    text:document.getElementById('evTextHex').value||'#FFFFFF'
-  };
+  // Use flat DB column names exactly as in the events table schema
   const payload={
     name,
     venue:document.getElementById('evVenue').value,
     organiser:document.getElementById('evOrganiser').value,
     status:currentStatus,
-    buildup_start:document.getElementById('evBuildupStart').value||null,
-    buildup_end:document.getElementById('evBuildupEnd').value||null,
-    event_start:document.getElementById('evEventStart').value||null,
-    event_end:document.getElementById('evEventEnd').value||null,
-    breakdown_start:document.getElementById('evBreakdownStart').value||null,
-    breakdown_end:document.getElementById('evBreakdownEnd').value||null,
-    safety_contacts:contacts,
-    colors
+    bu_start:document.getElementById('evBuildupStart').value||null,
+    bu_end:document.getElementById('evBuildupEnd').value||null,
+    ev_start:document.getElementById('evEventStart').value||null,
+    ev_end:document.getElementById('evEventEnd').value||null,
+    bd_start:document.getElementById('evBreakdownStart').value||null,
+    bd_end:document.getElementById('evBreakdownEnd').value||null,
+    safety_mgr:document.getElementById('evSafetyMgrName').value,
+    safety_num:document.getElementById('evSafetyMgrNum').value,
+    sec_mgr:document.getElementById('evSecMgrName').value,
+    sec_num:document.getElementById('evSecMgrNum').value,
+    amb_num:document.getElementById('evAmbulance').value,
+    ev_org_contact:document.getElementById('evOrgContact').value,
+    color_primary:document.getElementById('evPrimaryHex').value||'#D42B2B',
+    color_accent:document.getElementById('evAccentHex').value||'#F5C800',
+    color_text:document.getElementById('evTextHex').value||'#FFFFFF'
   };
   if(currentEventId) payload.id=currentEventId;
   try{
-    const res=await fetch('/api/events',{method:'POST',headers:{'Content-Type':'application/json',...authHeaders()},body:JSON.stringify(payload)});
+    const method=currentEventId?'PUT':'POST';
+    const res=await fetch('/api/events',{method,headers:{'Content-Type':'application/json',...authHeaders()},body:JSON.stringify(payload)});
     const data=await res.json();
     if(data.id||data.success){
-      showToast('Event saved!');
+      showToast('Event saved!','success');
       if(!currentEventId&&data.id) currentEventId=data.id;
       document.getElementById('editorTitle').textContent=name;
       const showDel=!!currentEventId&&sessionStorage.getItem('impi_admin_role')==='admin';
@@ -1064,6 +1083,24 @@ function renderTopics(){
         <label style="color:#dc2626">✗ Wrong Answer</label>
         <input type="text" value="${escHtml(t.wrong_answer||'')}" oninput="updateTopic(${i},'wrong_answer',this.value)">
       </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:4px">
+        <div>
+          <label style="font-size:11px;font-weight:700;color:#16a34a;text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:6px">✓ Correct Card Image</label>
+          ${t.correct_img_url?`<img src="${escHtml(t.correct_img_url)}" style="width:100%;height:72px;object-fit:cover;border-radius:6px;margin-bottom:6px;display:block">`:''}
+          <div style="display:flex;gap:6px">
+            <button class="btn-sm" onclick="triggerTopicImg(${i},'correct')">Upload</button>
+            ${t.correct_img_url?`<button class="btn-danger-sm" onclick="clearTopicImg(${i},'correct')">Remove</button>`:''}
+          </div>
+        </div>
+        <div>
+          <label style="font-size:11px;font-weight:700;color:#dc2626;text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:6px">✗ Wrong Card Image</label>
+          ${t.wrong_img_url?`<img src="${escHtml(t.wrong_img_url)}" style="width:100%;height:72px;object-fit:cover;border-radius:6px;margin-bottom:6px;display:block">`:''}
+          <div style="display:flex;gap:6px">
+            <button class="btn-sm" onclick="triggerTopicImg(${i},'wrong')">Upload</button>
+            ${t.wrong_img_url?`<button class="btn-danger-sm" onclick="clearTopicImg(${i},'wrong')">Remove</button>`:''}
+          </div>
+        </div>
+      </div>
     </div>
   `).join('')||'<div style="text-align:center;color:var(--text-muted);padding:32px">No topics — click "+ Add Topic" to begin.</div>';
 }
@@ -1080,9 +1117,38 @@ function moveTopic(idx,dir){
 function deleteTopic(idx){topicsData.splice(idx,1);renderTopics();}
 
 function addTopic(){
-  topicsData.push({title:'',description:'',correct_answer:'',wrong_answer:''});
+  topicsData.push({title:'',description:'',correct_answer:'',wrong_answer:'',correct_img_url:'',wrong_img_url:''});
   renderTopics();
   document.getElementById(`topic-${topicsData.length-1}`)?.scrollIntoView({behavior:'smooth'});
+}
+
+function triggerTopicImg(idx,type){
+  const input=document.createElement('input');
+  input.type='file';input.accept='image/*';
+  input.onchange=async()=>{if(input.files[0]) await uploadTopicImg(idx,type,input.files[0]);};
+  input.click();
+}
+
+async function uploadTopicImg(idx,type,file){
+  const topic=topicsData[idx];
+  const topicId=topic.id||('new_'+idx);
+  const settingKey=`topic_${type}_img_${topicId}`;
+  const formData=new FormData();
+  formData.append('file',file);
+  formData.append('type','topic_image');
+  formData.append('settingKey',settingKey);
+  const res=await fetch('/api/upload',{method:'POST',headers:authHeaders(),body:formData});
+  const data=await res.json();
+  if(data.url){
+    topicsData[idx][type==='correct'?'correct_img_url':'wrong_img_url']=data.url;
+    renderTopics();
+    showToast('Image uploaded!');
+  }else showToast('Upload failed: '+(data.error||'Unknown'),'error');
+}
+
+function clearTopicImg(idx,type){
+  topicsData[idx][type==='correct'?'correct_img_url':'wrong_img_url']='';
+  renderTopics();
 }
 
 async function saveTopics(){
@@ -1119,7 +1185,15 @@ async function loadDesign(){
   setFieldValue('subtitleText',d.subtitle_text);
   setDesignPreview('impiLogoPreview',d.impi_logo_url);
   setDesignPreview('heroPreview',d.hero_image_url);
+  setDesignPreview('inductionBannerPreview',d.induction_banner_url);
+  if(d.impi_logo_url){
+    const pvLogo=document.getElementById('pvLogo');
+    if(pvLogo){pvLogo.src=d.impi_logo_url;pvLogo.style.display='block';}
+    const pvLogoText=document.getElementById('pvLogoText');
+    if(pvLogoText) pvLogoText.style.display='none';
+  }
   dirtySettings={};
+  updateLivePreview();
 }
 
 function setDesignPreview(id,url){
@@ -1138,15 +1212,51 @@ function selectStyle(el){
 }
 
 function initDesignTab(){
-  document.getElementById('primaryColor').addEventListener('input',()=>{document.getElementById('primaryHex').value=document.getElementById('primaryColor').value;});
-  document.getElementById('primaryHex').addEventListener('input',()=>{const v=document.getElementById('primaryHex').value;if(/^#[0-9a-f]{6}$/i.test(v)) document.getElementById('primaryColor').value=v;});
-  document.getElementById('accentColor').addEventListener('input',()=>{document.getElementById('accentHex').value=document.getElementById('accentColor').value;});
-  document.getElementById('accentHex').addEventListener('input',()=>{const v=document.getElementById('accentHex').value;if(/^#[0-9a-f]{6}$/i.test(v)) document.getElementById('accentColor').value=v;});
-  document.getElementById('textColor').addEventListener('input',()=>{document.getElementById('textHex').value=document.getElementById('textColor').value;});
-  document.getElementById('textHex').addEventListener('input',()=>{const v=document.getElementById('textHex').value;if(/^#[0-9a-f]{6}$/i.test(v)) document.getElementById('textColor').value=v;});
-  document.getElementById('logoSizeSlider').addEventListener('input',function(){document.getElementById('logoSizeVal').textContent=this.value+'px';});
+  const syncPicker=(colorId,hexId)=>{
+    document.getElementById(colorId).addEventListener('input',()=>{document.getElementById(hexId).value=document.getElementById(colorId).value;updateLivePreview();});
+    document.getElementById(hexId).addEventListener('input',()=>{const v=document.getElementById(hexId).value;if(/^#[0-9a-f]{6}$/i.test(v)){document.getElementById(colorId).value=v;updateLivePreview();}});
+  };
+  syncPicker('primaryColor','primaryHex');
+  syncPicker('accentColor','accentHex');
+  syncPicker('textColor','textHex');
+  document.getElementById('logoSizeSlider').addEventListener('input',function(){document.getElementById('logoSizeVal').textContent=this.value+'px';updateLivePreview();});
+  document.getElementById('headingText').addEventListener('input',updateLivePreview);
+  document.getElementById('subtitleText').addEventListener('input',updateLivePreview);
+  document.querySelectorAll('.style-opt').forEach(el=>el.addEventListener('click',updateLivePreview));
   setupDesignUploadZone('impiLogoZone','impi_logo_url');
   setupDesignUploadZone('heroZone','hero_image_url');
+  setupDesignUploadZone('inductionBannerZone','induction_banner_url');
+}
+
+function updateLivePreview(){
+  const primary=document.getElementById('primaryHex').value||'#D42B2B';
+  const accent=document.getElementById('accentHex').value||'#F5C800';
+  const heading=document.getElementById('headingText').value||'IMPI Safety Induction Portal';
+  const subtitle=document.getElementById('subtitleText').value||'Complete your mandatory safety induction';
+  const style=document.querySelector('.style-opt.selected')?.dataset.style||'rounded';
+  const logoSize=document.getElementById('logoSizeSlider')?.value||120;
+  const pvTitle=document.getElementById('pvTitle');
+  const pvSub=document.getElementById('pvSub');
+  const pvBtn=document.getElementById('pvBtn');
+  const pvLogo=document.getElementById('pvLogo');
+  const pvLogoText=document.getElementById('pvLogoText');
+  const pvNav=document.getElementById('pvNav');
+  if(pvTitle) pvTitle.textContent=heading;
+  if(pvSub) pvSub.textContent=subtitle;
+  if(pvBtn){
+    pvBtn.style.background=primary;
+    const r={rounded:'8px',pill:'100px',square:'0'}[style]||'8px';
+    pvBtn.style.borderRadius=r;
+  }
+  if(pvNav) pvNav.style.borderBottom=`2px solid ${primary}`;
+  const logoUrl=dirtySettings['impi_logo_url']||(pvLogo?.src&&pvLogo.style.display!=='none'?pvLogo.src:'');
+  if(pvLogo&&logoUrl&&!logoUrl.includes('undefined')){
+    pvLogo.src=logoUrl;pvLogo.style.display='block';pvLogo.style.height=Math.min(28,Math.round(logoSize*28/120))+'px';
+    if(pvLogoText) pvLogoText.style.display='none';
+  }else{
+    if(pvLogo) pvLogo.style.display='none';
+    if(pvLogoText){pvLogoText.style.display='';pvLogoText.style.color=primary;}
+  }
 }
 
 function setupDesignUploadZone(zoneId,settingKey){
@@ -1175,10 +1285,11 @@ async function uploadDesignAsset(file,settingKey){
   const res=await fetch('/api/upload',{method:'POST',headers:authHeaders(),body:formData});
   const data=await res.json();
   if(data.url){
-    const prevId=settingKey==='impi_logo_url'?'impiLogoPreview':'heroPreview';
+    const prevId=settingKey==='impi_logo_url'?'impiLogoPreview':settingKey==='induction_banner_url'?'inductionBannerPreview':'heroPreview';
     setDesignPreview(prevId,data.url);
     dirtySettings[settingKey]=data.url;
     showToast('Image uploaded!');
+    updateLivePreview();
   }else showToast('Upload failed: '+(data.error||'Unknown'),'error');
 }
 
@@ -1195,7 +1306,7 @@ async function saveDesignSettings(){
   };
   const res=await fetch('/api/design',{method:'POST',headers:{'Content-Type':'application/json',...authHeaders()},body:JSON.stringify(settings)});
   const data=await res.json();
-  if(data.success){showToast('Design settings saved!');dirtySettings={};}
+  if(data.success){showToast('✓ Design saved and live','success');dirtySettings={};}
   else showToast('Save failed: '+(data.error||'Unknown'),'error');
 }
 
@@ -1210,7 +1321,7 @@ async function loadSettings(){
 async function loadTeamUsers(){
   let users=[];
   try{
-    const res=await fetch('/api/settings',{method:'POST',headers:{'Content-Type':'application/json',...authHeaders()},body:JSON.stringify({action:'listUsers'})});
+    const res=await fetch('/api/settings?action=listUsers',{headers:authHeaders()});
     const data=await res.json();
     users=data.users||[];
   }catch(e){console.error('[loadTeamUsers]',e);showToast('Failed to load users','error');}

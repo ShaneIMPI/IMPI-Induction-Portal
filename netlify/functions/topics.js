@@ -54,7 +54,9 @@ exports.handler = async (event) => {
         title: t.title,
         description: t.description,
         correct_answer: t.correct_answer,
-        wrong_answer: t.wrong_answer
+        wrong_answer: t.wrong_answer,
+        correct_img_url: t.correct_img_url || null,
+        wrong_img_url: t.wrong_img_url || null
       }));
       const { error } = await supabase.from('induction_topics').insert(rows);
       if (error) { console.error('[topics POST]', error); return err(error.message); }

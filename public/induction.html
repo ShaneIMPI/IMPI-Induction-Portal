@@ -56,8 +56,11 @@ body{background:var(--bg);font-family:var(--fb);min-height:100vh;color:var(--tex
 .lang-flag{font-size:17px;width:22px;text-align:center;}
 
 /* ── BANNER ── */
-.banner{background:linear-gradient(135deg,var(--event-primary) 0%,color-mix(in srgb,var(--event-primary) 70%,#000) 100%);padding:24px 20px 22px;position:relative;overflow:hidden;}
-.banner::after{content:'';position:absolute;bottom:0;left:0;right:0;height:4px;background:var(--accent-yellow);}
+.banner{background:transparent;padding:24px 20px 22px;position:relative;overflow:hidden;}
+.banner-bg{position:absolute;inset:0;z-index:0;background-size:cover;background-position:center;opacity:0.4;display:none;}
+.banner-overlay{position:absolute;inset:0;z-index:1;background:linear-gradient(135deg,var(--event-primary) 0%,color-mix(in srgb,var(--event-primary) 70%,#000) 100%);}
+.ban-content{position:relative;z-index:2;}
+.banner::after{content:'';position:absolute;bottom:0;left:0;right:0;height:4px;background:var(--accent-yellow);z-index:4;}
 .ban-top{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap;}
 .ban-impi-logo{height:40px;width:auto;object-fit:contain;max-width:140px;background:rgba(255,255,255,0.15);padding:5px 10px;border-radius:var(--radius-sm);}
 .ban-client-logo{height:40px;width:auto;object-fit:contain;max-width:130px;background:rgba(255,255,255,0.92);padding:5px 10px;border-radius:var(--radius-sm);margin-left:auto;display:none;}
@@ -125,21 +128,44 @@ body{background:var(--bg);font-family:var(--fb);min-height:100vh;color:var(--tex
 .topic-desc{font-size:14px;line-height:1.8;color:var(--text-secondary);margin-bottom:14px;}
 .topic-warning{font-size:13px;color:#DC2626;font-weight:600;margin-bottom:12px;}
 
-/* ── QUIZ OPTIONS ── */
-.quiz-opts{display:flex;flex-direction:column;gap:8px;margin-top:12px;}
-.quiz-opt{display:flex;align-items:center;gap:10px;padding:13px 16px;border:1.5px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;font-size:14px;transition:all .2s;background:var(--surface);color:var(--text-primary);}
-.quiz-opt:hover{border-color:var(--event-primary);background:var(--accent-red-light);}
-.quiz-opt.correct{border-color:var(--green)!important;background:var(--green-light)!important;color:#166534;}
-.quiz-opt.wrong{border-color:#EF4444!important;background:#FEF2F2!important;color:#991B1B;animation:shake .4s ease;}
-.quiz-icon{font-size:16px;flex-shrink:0;}
+/* ── QUIZ CARDS ── */
+.quiz-cards{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px;}
+.quiz-card{background:#FFFFFF;border:1.5px solid #E2E6EE;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.06);cursor:pointer;transition:all .2s ease;overflow:hidden;text-align:left;font-family:var(--fb);padding:0;position:relative;}
+.quiz-card:not(:disabled):hover{border-color:#D42B2B;box-shadow:0 4px 16px rgba(212,43,43,0.12);transform:translateY(-2px);}
+.quiz-card-img-wrap{position:relative;height:180px;background:#F0F2F6;overflow:hidden;}
+.quiz-card-img{width:100%;height:100%;object-fit:cover;display:block;opacity:0;transition:opacity .35s ease;}
+.quiz-card-img.loaded{opacity:1;}
+.quiz-card-overlay{position:absolute;inset:0;opacity:0;pointer-events:none;transition:opacity .2s ease;}
+.quiz-card-badge{position:absolute;top:8px;right:8px;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:900;color:#fff;opacity:0;transform:scale(0);transition:all .2s ease;}
+.quiz-card-text{padding:16px;font-size:.9rem;font-weight:500;color:#0F1623;line-height:1.5;}
+/* correct state */
+.quiz-card.correct{border:2px solid #16A34A;box-shadow:0 0 0 3px rgba(22,163,74,0.15);}
+.quiz-card.correct .quiz-card-overlay{background:rgba(22,163,74,0.15);opacity:1;}
+.quiz-card.correct .quiz-card-badge{background:#16A34A;opacity:1;transform:scale(1);}
+.quiz-card.correct .quiz-card-text{background:rgba(22,163,74,0.06);color:#15803D;}
+/* wrong state */
+.quiz-card.wrong{border:2px solid #DC2626;}
+.quiz-card.wrong .quiz-card-overlay{background:rgba(220,38,38,0.15);opacity:1;}
+.quiz-card.wrong .quiz-card-badge{background:#DC2626;opacity:1;transform:scale(1);}
+.quiz-card.wrong .quiz-card-text{background:rgba(220,38,38,0.06);color:#DC2626;}
+/* shake */
+.answer-shake{animation:shake 0.5s ease;}
+/* mobile */
+@media(max-width:639px){
+  .quiz-cards{grid-template-columns:1fr;gap:12px;}
+  .quiz-card-img-wrap{height:140px;}
+  .quiz-card-text{padding:12px;min-height:44px;}
+}
 
 /* ── SHAKE ANIMATION ── */
 @keyframes shake {
-  0%,100%{transform:translateX(0)}
-  20%{transform:translateX(-8px)}
-  40%{transform:translateX(8px)}
-  60%{transform:translateX(-6px)}
-  80%{transform:translateX(6px)}
+  0%,100%{transform:translateX(0);}
+  15%{transform:translateX(-8px);}
+  30%{transform:translateX(8px);}
+  45%{transform:translateX(-6px);}
+  60%{transform:translateX(6px);}
+  75%{transform:translateX(-3px);}
+  90%{transform:translateX(3px);}
 }
 
 /* ── LEGAL STEP ── */
@@ -298,16 +324,20 @@ body{background:var(--bg);font-family:var(--fb);min-height:100vh;color:var(--tex
 
 <!-- BANNER -->
 <div class="banner">
-  <div class="ban-top">
-    <img class="ban-impi-logo" id="banImpiLogo" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 30'%3E%3Crect width='80' height='30' fill='rgba(255,255,255,0.2)'/%3E%3Ctext x='40' y='21' text-anchor='middle' fill='white' font-size='14' font-weight='bold' font-family='Arial'%3EIMPI%3C/text%3E%3C/svg%3E" alt="IMPI"/>
-    <span class="ban-type">Safety Induction Questionnaire</span>
-    <img class="ban-client-logo" id="banClientLogo" src="" alt=""/>
-  </div>
-  <div class="ban-title" id="banTitle">EVENT</div>
-  <div class="ban-meta">
-    <div class="bm"><div class="bm-lbl">Venue</div><div class="bm-val" id="banVenue">—</div></div>
-    <div class="bm"><div class="bm-lbl">Event Dates</div><div class="bm-val" id="banDates">—</div></div>
-    <div class="bm"><div class="bm-lbl">Organiser</div><div class="bm-val" id="banOrg">—</div></div>
+  <div class="banner-bg" id="bannerBgImg"></div>
+  <div class="banner-overlay" id="bannerOverlay"></div>
+  <div class="ban-content">
+    <div class="ban-top">
+      <img class="ban-impi-logo" id="banImpiLogo" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 30'%3E%3Crect width='80' height='30' fill='rgba(255,255,255,0.2)'/%3E%3Ctext x='40' y='21' text-anchor='middle' fill='white' font-size='14' font-weight='bold' font-family='Arial'%3EIMPI%3C/text%3E%3C/svg%3E" alt="IMPI"/>
+      <span class="ban-type">Safety Induction Questionnaire</span>
+      <img class="ban-client-logo" id="banClientLogo" src="" alt=""/>
+    </div>
+    <div class="ban-title" id="banTitle">EVENT</div>
+    <div class="ban-meta">
+      <div class="bm"><div class="bm-lbl">Venue</div><div class="bm-val" id="banVenue">—</div></div>
+      <div class="bm"><div class="bm-lbl">Event Dates</div><div class="bm-val" id="banDates">—</div></div>
+      <div class="bm"><div class="bm-lbl">Organiser</div><div class="bm-val" id="banOrg">—</div></div>
+    </div>
   </div>
 </div>
 
@@ -594,7 +624,7 @@ const LANGS = {
     emergency_contacts:'Emergency Contacts',
     safety_mgr:'Safety Manager',
     security:'Security Manager',
-    hss_contact:'HSS Contact',
+
     ambulance:'Ambulance / Emergency'
   }},
   AF: { name:'Afrikaans', flag:'🇿🇦', t:{
@@ -636,7 +666,6 @@ const LANGS = {
     emergency_contacts:'Noodkontakte',
     safety_mgr:'Veiligheidsbestuurder',
     security:'Sekuriteitsbestuurder',
-    hss_contact:'HSS-kontak',
     ambulance:'Ambulans / Noodgeval'
   }},
   ZU: { name:'isiZulu', flag:'🇿🇦', t:{
@@ -678,7 +707,6 @@ const LANGS = {
     emergency_contacts:'Oxhumana Nabo Ezimweni Zesimo',
     safety_mgr:'Umphathi Wokuphepha',
     security:'Umphathi Wezokuphepha',
-    hss_contact:'Oxhumana Nabo We-HSS',
     ambulance:'Ambulensi / Isimo Esiphuthumayo'
   }},
   SW: { name:'Swahili', flag:'🇹🇿', t:{
@@ -720,7 +748,6 @@ const LANGS = {
     emergency_contacts:'Mawasiliano ya Dharura',
     safety_mgr:'Meneja wa Usalama',
     security:'Meneja wa Ulinzi',
-    hss_contact:'Mawasiliano ya HSS',
     ambulance:'Ambulensi / Dharura'
   }},
   FR: { name:'Français', flag:'🇫🇷', t:{
@@ -762,7 +789,6 @@ const LANGS = {
     emergency_contacts:"Contacts d'Urgence",
     safety_mgr:'Responsable de Sécurité',
     security:'Responsable de la Sûreté',
-    hss_contact:'Contact HSS',
     ambulance:'Ambulance / Urgence'
   }},
   PT: { name:'Português', flag:'🇵🇹', t:{
@@ -804,7 +830,6 @@ const LANGS = {
     emergency_contacts:'Contactos de Emergência',
     safety_mgr:'Gestor de Segurança',
     security:'Gestor de Proteção',
-    hss_contact:'Contacto HSS',
     ambulance:'Ambulância / Emergência'
   }},
   HA: { name:'Hausa', flag:'🇳🇬', t:{
@@ -846,7 +871,6 @@ const LANGS = {
     emergency_contacts:'Lambobin Gaggawa',
     safety_mgr:'Manajan Aminci',
     security:'Manajan Tsaro',
-    hss_contact:'Tuntuɓar HSS',
     ambulance:'Motar Gaggawa / Gaggawa'
   }},
   YO: { name:'Yorùbá', flag:'🇳🇬', t:{
@@ -888,7 +912,6 @@ const LANGS = {
     emergency_contacts:'Awọn Olubasọrọ Pajawiri',
     safety_mgr:'Alakoso Aabo',
     security:'Alakoso Ẹṣọ',
-    hss_contact:'Olubasọrọ HSS',
     ambulance:'Ambulance / Pajawiri'
   }}
 };
@@ -1107,30 +1130,65 @@ function nextFromInfo() {
 }
 
 // ═══════════════════════════════════════════════════════
+// TOPIC IMAGE MAP — fallback stock images per topic order
+// ═══════════════════════════════════════════════════════
+const TOPIC_IMAGES = {
+  1:  { correct:'https://images.unsplash.com/photo-1568219656418-15c329312bf1?w=600', wrong:'https://images.unsplash.com/photo-1606326608606-aa0b62935f2b?w=600' },
+  2:  { correct:'https://images.unsplash.com/photo-1614064641938-3bbee52942c7?w=600', wrong:'https://images.unsplash.com/photo-1573165231977-3f0e27806045?w=600' },
+  3:  { correct:'https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=600', wrong:'https://images.unsplash.com/photo-1541888946425-d81bb19240f5?w=600' },
+  4:  { correct:'https://images.unsplash.com/photo-1587293852726-70cdb56c2866?w=600', wrong:'https://images.unsplash.com/photo-1607619056574-7b8d3ee536b2?w=600' },
+  5:  { correct:'https://images.unsplash.com/photo-1518173946687-a4c8892bbd9f?w=600', wrong:'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=600' },
+  6:  { correct:'https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=600', wrong:'https://images.unsplash.com/photo-1590859808308-3d2d9c515b1a?w=600' },
+  7:  { correct:'https://images.unsplash.com/photo-1609188076864-c35269136adb?w=600', wrong:'https://images.unsplash.com/photo-1563453392212-326f5e854473?w=600' },
+  8:  { correct:'https://images.unsplash.com/photo-1603796846097-bee99e4a601f?w=600', wrong:'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=600' },
+  9:  { correct:'https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=600', wrong:'https://images.unsplash.com/photo-1583324113626-70df0f4deaab?w=600' },
+  10: { correct:'https://images.unsplash.com/photo-1558618047-f4e60cee2ac3?w=600', wrong:'https://images.unsplash.com/photo-1621905251918-48416bd8575a?w=600' },
+  11: { correct:'https://images.unsplash.com/photo-1591955506264-3f5a6834570a?w=600', wrong:'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=600' },
+  12: { correct:'https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?w=600', wrong:'https://images.unsplash.com/photo-1581094651181-35942459ef62?w=600' },
+  13: { correct:'https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=600', wrong:'https://images.unsplash.com/photo-1590859808308-3d2d9c515b1a?w=600' }
+};
+
+// ═══════════════════════════════════════════════════════
 // TOPIC STEPS (dynamic)
 // ═══════════════════════════════════════════════════════
+function makeQuizCard(topicIdx, isCorrect, imgUrl, text) {
+  const id    = `qopt_${topicIdx}_${isCorrect ? 'correct' : 'wrong'}`;
+  const badge = isCorrect ? '✓' : '✗';
+  const imgHtml = imgUrl
+    ? `<img class="quiz-card-img" src="${imgUrl}" alt="" loading="lazy" onload="this.classList.add('loaded')">`
+    : '';
+  return `<button class="quiz-card" id="${id}" onclick="answerQuiz(${topicIdx},this,${isCorrect})">
+  <div class="quiz-card-img-wrap">
+    ${imgHtml}
+    <div class="quiz-card-overlay"></div>
+    <div class="quiz-card-badge">${badge}</div>
+  </div>
+  <div class="quiz-card-text">${text}</div>
+</button>`;
+}
+
 function renderTopicSteps() {
   const container = document.getElementById('dynamicSteps');
   container.innerHTML = topics.map((topic, i) => {
-    const stepN = i + 2;
+    const stepN    = i + 2;
     const prevStep = i === 0 ? 1 : stepN - 1;
     const nextStep = stepN + 1;
-    const correctText = escHtml(topic.quiz_correct || topic.answer_correct || '✓ Correct answer');
-    const wrongText   = escHtml(topic.quiz_wrong   || topic.answer_wrong   || '✗ Incorrect answer');
-    const warning = topic.warning ? `<div class="topic-warning">${escHtml(topic.warning)}</div>` : '';
+    const correctText = escHtml(topic.correct_answer || topic.quiz_correct || 'Correct answer');
+    const wrongText   = escHtml(topic.wrong_answer   || topic.quiz_wrong   || 'Incorrect answer');
+    const warning     = topic.warning ? `<div class="topic-warning">${escHtml(topic.warning)}</div>` : '';
+    const order       = topic.topic_order || (i + 1);
+    const imgs        = TOPIC_IMAGES[order] || {};
+    const correctImg  = topic.correct_img_url || imgs.correct || '';
+    const wrongImg    = topic.wrong_img_url   || imgs.wrong   || '';
+    const correctFirst = Math.random() < 0.5;
+    const cardA = correctFirst ? makeQuizCard(i, true,  correctImg, correctText) : makeQuizCard(i, false, wrongImg, wrongText);
+    const cardB = correctFirst ? makeQuizCard(i, false, wrongImg,   wrongText)   : makeQuizCard(i, true,  correctImg, correctText);
     return `<div class="step-content" id="topicStep_${i}">
-  <div class="topic-hdr">${escHtml(topic.title || 'Topic ' + (i+1))}</div>
+  <div class="topic-hdr">${escHtml(topic.title || 'Topic ' + (i + 1))}</div>
   <div class="topic-body">
     <div class="topic-desc">${escHtml(topic.body || topic.description || '')}</div>
     ${warning}
-    <div class="quiz-opts">
-      <div class="quiz-opt" id="qopt_${i}_correct" onclick="answerQuiz(${i}, this, true)">
-        <span class="quiz-icon">✓</span>${correctText}
-      </div>
-      <div class="quiz-opt" id="qopt_${i}_wrong" onclick="answerQuiz(${i}, this, false)">
-        <span class="quiz-icon">✗</span>${wrongText}
-      </div>
-    </div>
+    <div class="quiz-cards">${cardA}${cardB}</div>
   </div>
   <div class="step-actions">
     <button class="btn btn-ghost" onclick="showStep(${prevStep})" data-i18n="back">Back</button>
@@ -1141,16 +1199,23 @@ function renderTopicSteps() {
 }
 
 function answerQuiz(topicIdx, el, correct) {
-  const qOpts = el.closest('.quiz-opts');
-  qOpts.querySelectorAll('.quiz-opt').forEach(o => o.classList.remove('correct', 'wrong'));
+  const qCards = el.closest('.quiz-cards');
+  if (qCards.dataset.locked) return;
+  qCards.dataset.locked = '1';
+  qCards.querySelectorAll('.quiz-card').forEach(o => { o.disabled = true; });
   if (correct) {
     el.classList.add('correct');
     quizAnswered[topicIdx] = true;
-    document.getElementById('btnTopicNext_' + topicIdx).disabled = false;
+    setTimeout(() => {
+      document.getElementById('btnTopicNext_' + topicIdx).disabled = false;
+    }, 600);
   } else {
-    el.classList.add('wrong');
+    el.classList.add('wrong', 'answer-shake');
+    setTimeout(() => el.classList.remove('answer-shake'), 500);
     setTimeout(() => {
       el.classList.remove('wrong');
+      qCards.querySelectorAll('.quiz-card').forEach(o => { o.disabled = false; });
+      delete qCards.dataset.locked;
     }, 1500);
   }
 }
@@ -1564,6 +1629,18 @@ function showToast(msg, type) {
 // ═══════════════════════════════════════════════════════
 // APPLY DESIGN SETTINGS
 // ═══════════════════════════════════════════════════════
+function hexToRgb(hex) {
+  const h = hex.replace('#','');
+  return [parseInt(h.slice(0,2),16), parseInt(h.slice(2,4),16), parseInt(h.slice(4,6),16)];
+}
+
+function updateBannerOverlay(hex) {
+  const el = document.getElementById('bannerOverlay');
+  if (!el || !hex) return;
+  const [r,g,b] = hexToRgb(hex);
+  el.style.background = `linear-gradient(135deg,rgba(${r},${g},${b},0.9) 0%,rgba(${Math.round(r*0.7)},${Math.round(g*0.7)},${Math.round(b*0.7)},0.95) 100%)`;
+}
+
 function applyDesign(ds) {
   if (!ds) return;
   if (ds.impi_logo_url) {
@@ -1573,9 +1650,14 @@ function applyDesign(ds) {
   if (ds.primary_color) {
     document.documentElement.style.setProperty('--accent-red', ds.primary_color);
     document.documentElement.style.setProperty('--event-primary', ds.primary_color);
+    updateBannerOverlay(ds.primary_color);
   }
   if (ds.accent_color) {
     document.documentElement.style.setProperty('--accent-yellow', ds.accent_color);
+  }
+  if (ds.induction_banner_url) {
+    const bg = document.getElementById('bannerBgImg');
+    if (bg) { bg.style.backgroundImage = `url('${ds.induction_banner_url}')`; bg.style.display = 'block'; }
   }
 }
 
@@ -1590,9 +1672,7 @@ function renderEmergencyContacts(ev) {
   if (ev.sec_mgr || ev.sec_num) {
     rows.push({ label: t('security') + ': ' + (ev.sec_mgr || '—'), phone: ev.sec_num });
   }
-  if (ev.hss_contact || ev.hss_num) {
-    rows.push({ label: t('hss_contact'), phone: ev.hss_num || ev.hss_contact });
-  }
+
   if (ev.amb_num) {
     rows.push({ label: t('ambulance'), phone: ev.amb_num });
   }
@@ -1620,53 +1700,83 @@ function escHtml(s) {
 // ═══════════════════════════════════════════════════════
 const DEFAULT_TOPICS = [
   {
-    title: 'Topic 1 — Safety File & Accreditation',
-    body: 'Your company must have a valid safety file available on site at all times during Build-Up, Event, and Breakdown. This file must include: company registration, tax clearance, public liability insurance, letter of good standing (COID), and all relevant compliance documents.',
-    warning: '',
-    quiz_correct: '✓ I confirm my company safety file is complete and available on site',
-    quiz_wrong: 'I am not sure about the safety file requirements'
+    title: 'Safety Files & Documentation',
+    description: 'All contractors, exhibitors, and service providers are required to have a valid and compliant Safety File on site before commencing any work. Your Safety File must include your company Health & Safety policy, relevant training certificates, risk assessments, and method statements applicable to your scope of work. IMPI Safety Services conducts random Safety File audits throughout build-up and breakdown. Non-compliance may result in work being stopped and personnel being removed from site until the file meets the required standard.',
+    correct_answer: 'Every contractor and service provider must have a valid Safety File on site before work begins. It must be available for inspection at any time upon request by the Safety Manager or appointed HSE representative.',
+    wrong_answer: 'Safety Files only need to be submitted to the organiser before the event. Once approved you do not need to keep a copy on site during build-up or breakdown.'
   },
   {
-    title: 'Topic 2 — Personal Protective Equipment (PPE)',
-    body: 'All contractors, exhibitors and suppliers must wear appropriate PPE at all times during Build-Up and Breakdown. Minimum requirements include: safety boots (steel toe-capped), hard hat/helmet, high-visibility vest, and any additional PPE required for your specific trade.',
-    warning: '⚠ Access to the venue will be denied without proper PPE.',
-    quiz_correct: '✓ I understand PPE requirements and will comply at all times',
-    quiz_wrong: 'PPE is only required in certain areas'
+    title: 'Site Access & Accreditation',
+    description: 'All persons on site must display their accreditation badge visibly at all times. Access to specific zones — including the build-up floor, back of house, and restricted areas — is controlled by your accreditation level. Tailgating through access points without scanning your own badge is a serious security violation and may result in immediate removal from site. If your badge is lost or damaged, report it immediately to the accreditation desk and the IMPI Security Manager. Do not attempt to access any zone your badge does not permit.',
+    correct_answer: 'Direct your colleague to the accreditation desk immediately to obtain a replacement or temporary access pass. No person may enter any site zone without valid, visible accreditation — regardless of who accompanies them.',
+    wrong_answer: 'Sign your colleague in under your details and accompany them throughout the day. As long as you remain with them and take responsibility, this is an acceptable temporary arrangement.'
   },
   {
-    title: 'Topic 3 — Housekeeping & Waste Management',
-    body: 'All contractors and exhibitors are responsible for maintaining a clean and safe working environment. This includes: removing all waste daily, keeping walkways and emergency exits clear at all times, disposing of hazardous materials correctly, and ensuring no trip or slip hazards are left unattended.',
-    warning: '',
-    quiz_correct: '✓ I will maintain a clean working area and dispose of waste correctly',
-    quiz_wrong: "Waste removal is the venue's responsibility"
+    title: 'Emergency Evacuation & Procedures',
+    description: 'Familiarise yourself with all emergency exits, assembly points, and evacuation routes before commencing work on site. In the event of an emergency evacuation: remain calm, cease all work immediately, leave tools and equipment behind, and proceed to the nearest designated assembly point. Do not run. Follow the instructions of marshals and safety personnel at all times. Do not re-enter the building or site until the all-clear has been given by the Safety Manager or emergency services.',
+    correct_answer: 'Stop all work immediately, leave your tools and belongings where they are, and proceed calmly to the nearest emergency exit. Follow marshal instructions and make your way to the designated assembly point without delay.',
+    wrong_answer: 'Complete the task you are busy with, secure your tools and valuable equipment, and then make your way to the exit when it is safe and convenient to do so.'
   },
   {
-    title: 'Topic 4 — Emergency Procedures',
-    body: 'In the event of an emergency: immediately stop all work, raise the alarm, evacuate to the designated assembly point, do not use lifts, do not re-enter the building until cleared by emergency services, and report all incidents to the Safety Manager immediately.',
-    warning: 'Assembly Point: As indicated on site signage',
-    quiz_correct: '✓ I understand emergency procedures and know my assembly point',
-    quiz_wrong: 'I should continue working until told to stop'
+    title: 'Personal Protective Equipment (PPE)',
+    description: 'Appropriate PPE must be worn at all times in designated areas. Hard hats, reflective vests, safety boots, and gloves are required in build-up and breakdown zones. Your employer is responsible for providing the correct PPE for your scope of work. Inspect your PPE before each use and replace any damaged or worn equipment immediately. Do not enter any designated PPE zone without the required protective equipment — you will be turned away.',
+    correct_answer: 'I will wear the required PPE in all designated areas and inspect it before each use. I understand that access will be denied if I am not correctly equipped.',
+    wrong_answer: 'PPE is optional and only worn when I personally feel it is necessary or when I expect to be observed by safety personnel.',
+    warning: '⚠ Access to the venue will be denied without proper PPE.'
   },
   {
-    title: 'Topic 5 — Power Tools & Equipment',
-    body: 'All power tools and electrical equipment must be tested and tagged before use. Operators must be trained and competent. Extension cords must not present trip hazards. No tools may be left unattended while powered. Generators require prior written approval.',
-    warning: '',
-    quiz_correct: '✓ Only trained, competent operators may use power tools and all equipment must be tested and tagged',
-    quiz_wrong: 'Any person may use power tools without training'
+    title: 'Fire Safety',
+    description: 'No open flames, naked flames, or unauthorised heat sources are permitted anywhere on the event site without prior written approval from the Safety Manager. Familiarise yourself with the locations of all fire extinguishers, fire hose reels, and break-glass points in your working area. Never obstruct fire extinguishers, hose reels, fire exits, or evacuation routes — even temporarily. If you discover a fire, raise the alarm immediately before attempting to use any firefighting equipment.',
+    correct_answer: 'Raise the alarm immediately by activating the nearest break-glass point or alerting a marshal. Only attempt to use a fire extinguisher if you have been trained to do so, the fire is small and contained, and your escape route is clear.',
+    wrong_answer: 'Grab the nearest fire extinguisher and attempt to put the fire out yourself before raising the alarm — acting quickly before it spreads is the most important priority.'
   },
   {
-    title: 'Topic 6 — Vehicles & Material Handling',
-    body: 'Vehicle access to the venue is restricted to designated times and areas only. Speed limit on site is 10km/h. Forklifts and pallet jacks require a valid operator certificate. All loading and unloading must be supervised. Pedestrians have right of way at all times.',
-    warning: '',
-    quiz_correct: '✓ I will comply with all vehicle and material handling regulations on site',
-    quiz_wrong: 'I can park and drive anywhere on the venue property'
+    title: 'Working at Heights',
+    description: 'Any work conducted above 1.5 metres is classified as working at heights and requires appropriate fall protection measures to be in place. All scaffolding, elevated platforms, and access equipment must be inspected and signed off by a competent person before use. You must never work at heights without an approved safety harness correctly fitted and anchored to a suitable anchor point. Unauthorised climbing on structures, stands, rigging, or any unrated elevated surface is strictly prohibited and will result in immediate removal from site.',
+    correct_answer: 'Confirm that the scaffolding has been inspected and signed off by a competent person. Fit and correctly anchor your approved safety harness before ascending, and ensure your anchor point is rated for fall arrest.',
+    wrong_answer: 'The scaffolding looks stable and has been used by other contractors already. As long as you are careful and work quickly, you can proceed without a harness for a task at that height.'
   },
   {
-    title: 'Topic 7 — Fire Safety',
-    body: 'No open flames are permitted in the venue without written approval from the Safety Manager. All hot work requires a hot work permit. Fire extinguishers must not be obstructed. Smoking is only permitted in designated areas. Report any fire hazards immediately.',
-    warning: '',
-    quiz_correct: '✓ I understand fire safety rules and will only smoke in designated areas',
-    quiz_wrong: 'I can smoke anywhere in the venue'
+    title: 'Hazard Identification & Reporting',
+    description: 'All persons on site are responsible for identifying and reporting hazards. If you observe an unsafe condition — including structural instability, trip hazards, chemical spills, damaged equipment, or unsafe behaviour — report it immediately to the on-site Safety Manager or nearest safety officer. Do not attempt to resolve a hazardous situation on your own unless you are trained and authorised to do so. All reported hazards will be recorded in the site incident register and actioned without delay.',
+    correct_answer: 'Report the hazard immediately to the Safety Manager or nearest safety officer without attempting to resolve it yourself. All hazards must be recorded in the site incident register.',
+    wrong_answer: 'Attempt to fix the hazard yourself to save time, and only report it if you cannot resolve it — reporting minor hazards wastes the safety team\'s time.'
+  },
+  {
+    title: 'Manual Handling & Ergonomics',
+    description: 'Always use correct manual handling techniques when lifting or moving items on site. Bend your knees, keep your back straight, and hold loads close to your body. Do not attempt to lift loads that exceed safe weight limits — use a trolley, pallet jack, or request a team lift for heavy or bulky items. Plan your route before lifting and ensure your path is clear of obstacles. Back injuries are one of the most common and preventable workplace injuries on event sites.',
+    correct_answer: 'I will use correct lifting techniques at all times and use mechanical aids or team lifts for heavy or bulky loads. I will plan my route before lifting to avoid obstacles and injury.',
+    wrong_answer: 'Speed is more important than technique when moving items on a busy site — minor strains from poor lifting technique heal on their own and do not need to be reported.'
+  },
+  {
+    title: 'First Aid & Medical Emergencies',
+    description: 'First aid kits and trained first aiders are available on site at all times during build-up, the event, and breakdown. In the event of an injury or medical emergency, do not move the injured person unless they are in immediate danger. Call for the on-site first aider or emergency services immediately and keep the area clear of bystanders. All injuries — no matter how minor — must be reported to the Safety Manager and recorded in the site incident register on the day they occur.',
+    correct_answer: 'Call for the on-site first aider immediately, keep the injured person still, and ensure the incident is reported to the Safety Manager and recorded in the incident register on the same day.',
+    wrong_answer: 'Minor injuries do not need to be reported. I will treat them myself with personal supplies and only escalate if the situation becomes more serious over the following days.'
+  },
+  {
+    title: 'Electrical Safety',
+    description: 'All electrical installations, connections, and modifications on this event site must be carried out exclusively by qualified and registered electricians. Do not overload power boards, extension leads, or distribution boards — each circuit has a rated capacity that must not be exceeded. If you discover exposed wiring, damaged equipment, sparking, burning smells, or any electrical irregularity, do not touch it. Isolate the area immediately and report it without delay to the on-site Safety Officer or IMPI Safety Manager.',
+    correct_answer: 'Do not touch the board or attempt to investigate it yourself. Immediately isolate the surrounding area to keep others away, and report the fault directly to the Safety Officer or IMPI Safety Manager so a qualified electrician can attend.',
+    wrong_answer: 'Check whether a plug or cable is loose and tighten it if possible — sparking from distribution boards is common on busy event sites and usually just means a connection needs to be secured.'
+  },
+  {
+    title: 'Housekeeping & Waste Management',
+    description: 'A clean and organised workspace is a safe workspace. All contractors and exhibitors are responsible for maintaining their work area in a neat and tidy condition throughout build-up, the event, and breakdown. Waste must be correctly sorted and deposited in the designated waste collection areas — do not leave offcuts, packaging, or debris on the floor or in passageways. All emergency routes, fire exits, and pedestrian walkways must remain completely unobstructed at all times. Failure to maintain acceptable housekeeping standards may result in a formal non-compliance notice being issued.',
+    correct_answer: 'Sort your waste correctly and transport it to the designated waste collection area. Keep your workspace and surrounding passageways clear at all times — do not allow waste to accumulate on the floor or obstruct any walkway or exit route.',
+    wrong_answer: 'Stack the waste neatly against the back wall of your stand until breakdown, when you can dispose of everything at once. As long as it is tidy and out of the way, it does not pose a safety concern during the event.'
+  },
+  {
+    title: 'Hot Works & Cutting',
+    description: 'Hot works — including welding, angle grinding, cutting, soldering, and the use of open-flame equipment — are strictly controlled on all IMPI-managed event sites. A Hot Work Permit must be obtained from the Safety Manager before any hot work commences. A trained fire watcher must be stationed in the immediate area for the full duration of all hot works and for a minimum of 30 minutes after completion to monitor for smouldering or delayed ignition. All flammable materials must be removed or shielded from the work area. Failure to comply will result in immediate work stoppage.',
+    correct_answer: 'Obtain a valid Hot Work Permit from the Safety Manager before starting. Ensure a trained fire watcher is present throughout the work and for at least 30 minutes after completion. Remove all flammable materials from the area beforehand.',
+    wrong_answer: 'Quick angle grinding does not require a permit — you only need authorisation for welding or open-flame work. As long as you work quickly and keep a bucket of water nearby, you can proceed without a fire watcher.'
+  },
+  {
+    title: 'Ladder Safety & Use',
+    description: 'All ladders used on site must be inspected before each use for damage, missing rungs, or defective locking mechanisms. Ladders must extend at least 1 metre above the intended working level or landing point. Always maintain three points of contact when climbing or descending. Ladders must be secured at the top and footed or tied at the base to prevent movement — a second person must hold the base if the ladder cannot be secured. Never overreach or lean sideways from a ladder. Do not use a ladder as a working platform for tasks exceeding 30 minutes — use an appropriate elevated work platform instead.',
+    correct_answer: 'Inspect the ladder before use, ensure it extends at least 1 metre above the working level, secure it at the top and have someone foot it at the base. Maintain three points of contact at all times and never overreach.',
+    wrong_answer: 'If the ladder looks undamaged and is the right height, you can proceed without securing it — as long as you are careful and keep your movements slow, it will be stable enough for a short task.'
   }
 ];
 
@@ -1699,6 +1809,7 @@ async function init() {
     if (eventRes.color_primary) {
       document.documentElement.style.setProperty('--event-primary', eventRes.color_primary);
       document.documentElement.style.setProperty('--accent-red', eventRes.color_primary);
+      updateBannerOverlay(eventRes.color_primary);
     }
     if (eventRes.color_accent) {
       document.documentElement.style.setProperty('--accent-yellow', eventRes.color_accent);

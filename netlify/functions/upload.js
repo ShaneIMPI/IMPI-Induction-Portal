@@ -55,6 +55,18 @@ exports.handler = async (event) => {
     return ok({ url: publicUrl, name: file.filename });
   }
 
+  // Topic image → storage only, URL returned for saving via topics API
+  if (type === 'topic_image') {
+    if (!settingKey) return err('settingKey required for topic images');
+    const path = `topic-images/${settingKey}-${ts}-${file.filename}`;
+    const { error: uploadErr } = await supabase.storage
+      .from('event-files')
+      .upload(path, file.data, { contentType: mime, upsert: true });
+    if (uploadErr) { console.error('[upload topic img]', uploadErr); return err('Storage upload failed: ' + uploadErr.message); }
+    const { data: { publicUrl } } = supabase.storage.from('event-files').getPublicUrl(path);
+    return ok({ url: publicUrl, name: file.filename });
+  }
+
   // Event file (logo or PDF)
   if (!eventId) return err('eventId required');
   const fieldMap = { client_logo: 'client_logo_url', organiser_logo: 'organiser_logo_url', manual: 'manual_url' };
