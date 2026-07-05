@@ -64,7 +64,10 @@ exports.handler = async (event) => {
     return err('Failed to save completion: ' + saveResult.error.message);
   }
 
-  // Save group members (non-blocking — main cert is already saved)
+  // Save group members (kept for backward compatibility with any future
+  // caller that sends is_group/group_members in one payload — the current
+  // induction.html flow submits each person as a separate /api/complete
+  // call instead, so this path is not on the hot path today).
   if (is_group && group_members.length > 0) {
     const memberRecords = group_members.map(m => ({
       full_name: m.full_name || m.fullName,
@@ -84,7 +87,8 @@ exports.handler = async (event) => {
     for (const mr of memberRecords) {
       const { data: existingMember } = await supabase.from('completions').select('cert_code').eq('cert_code', mr.cert_code).maybeSingle();
       if (!existingMember) {
-        retry(() => supabase.from('completions').insert([mr])).catch(e => console.error('[complete group member]', e.message));
+        const memberResult = await retry(() => supabase.from('completions').insert([mr]));
+        if (memberResult.error) console.error('[complete group member]', memberResult.error.message);
       }
     }
   }
