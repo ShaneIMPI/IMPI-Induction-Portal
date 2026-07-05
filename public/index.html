@@ -75,11 +75,11 @@ img { max-width: 100%; }
   color: #fff;
 }
 
-/* Layer 1 — background image (0.18 opacity) */
+/* Layer 1 — background image (0.38 opacity) */
 .hero-bg-img {
   position: absolute; inset: 0; z-index: 0;
   background-size: cover; background-position: center;
-  opacity: 0.18;
+  opacity: 0.38;
   pointer-events: none;
 }
 
@@ -91,77 +91,6 @@ img { max-width: 100%; }
     radial-gradient(ellipse 80% 60% at 20% 40%, rgba(212,43,43,0.07), transparent 60%),
     radial-gradient(ellipse 60% 50% at 80% 70%, rgba(245,200,0,0.05), transparent 60%);
   filter: blur(40px);
-}
-
-/* Layer 3 — floating pill shapes */
-@keyframes shapeEntrance {
-  from { opacity: 0; transform: translateY(-120px) rotate(var(--rotate)); }
-  to   { opacity: 1; transform: translateY(0) rotate(var(--rotate)); }
-}
-@keyframes shapeFloat {
-  0%, 100% { transform: translateY(0) rotate(var(--rotate)); }
-  50%       { transform: translateY(-15px) rotate(var(--rotate)); }
-}
-
-.hero-shape {
-  position: absolute;
-  border-radius: 9999px;
-  border: 2px solid rgba(255,255,255,0.12);
-  backdrop-filter: blur(2px);
-  z-index: 2;
-  will-change: transform;
-}
-.hero-shape::after {
-  content: '';
-  position: absolute; inset: 0;
-  border-radius: 9999px;
-  background: radial-gradient(circle at 50% 50%, rgba(255,255,255,0.2), transparent 70%);
-}
-
-.hero-shape-1 {
-  width: 600px; height: 140px;
-  --rotate: 12deg;
-  left: -5%; top: 20%;
-  background: linear-gradient(to right, rgba(212,43,43,0.18), transparent);
-  animation:
-    shapeEntrance 2.4s cubic-bezier(0.23,0.86,0.39,0.96) 0.3s both,
-    shapeFloat 12s ease-in-out 0.3s infinite;
-}
-.hero-shape-2 {
-  width: 500px; height: 120px;
-  --rotate: -15deg;
-  right: 0%; top: 72%;
-  background: linear-gradient(to right, rgba(245,200,0,0.15), transparent);
-  animation:
-    shapeEntrance 2.4s cubic-bezier(0.23,0.86,0.39,0.96) 0.5s both,
-    shapeFloat 15s ease-in-out 0.5s infinite;
-}
-.hero-shape-3 {
-  width: 300px; height: 80px;
-  --rotate: -8deg;
-  left: 10%; bottom: 10%;
-  background: linear-gradient(to right, rgba(139,92,246,0.15), transparent);
-  animation:
-    shapeEntrance 2.4s cubic-bezier(0.23,0.86,0.39,0.96) 0.4s both,
-    shapeFloat 10s ease-in-out 0.4s infinite;
-}
-.hero-shape-4 {
-  width: 200px; height: 60px;
-  --rotate: 20deg;
-  right: 22%; top: 14%;
-  background: linear-gradient(to right, rgba(245,200,0,0.18), transparent);
-  animation:
-    shapeEntrance 2.4s cubic-bezier(0.23,0.86,0.39,0.96) 0.6s both,
-    shapeFloat 14s ease-in-out 0.6s infinite;
-}
-.hero-shape-5 {
-  width: 150px; height: 40px;
-  --rotate: -25deg;
-  left: 28%; top: 8%;
-  background: linear-gradient(to right, rgba(6,182,212,0.15), transparent);
-  animation:
-    shapeEntrance 2.4s cubic-bezier(0.23,0.86,0.39,0.96) 0.7s both,
-    shapeFloat 11s ease-in-out 0.7s infinite;
 }
 
 /* Layer 4 — overlays */
@@ -536,13 +465,6 @@ img { max-width: 100%; }
 
   <!-- Layer 2: Ambient gradient -->
   <div class="hero-ambient" aria-hidden="true"></div>
-
-  <!-- Layer 3: Floating pill shapes -->
-  <div class="hero-shape hero-shape-1" aria-hidden="true"></div>
-  <div class="hero-shape hero-shape-2" aria-hidden="true"></div>
-  <div class="hero-shape hero-shape-3" aria-hidden="true"></div>
-  <div class="hero-shape hero-shape-4" aria-hidden="true"></div>
-  <div class="hero-shape hero-shape-5" aria-hidden="true"></div>
 
   <!-- Layer 4: Overlays -->
   <div class="hero-fade-top"></div>
