@@ -491,6 +491,9 @@ body{background:var(--bg);font-family:var(--fb);min-height:100vh;color:var(--tex
       <div class="gen-spinner"></div>
       <div class="gen-text" id="genProgressText">Generating certificate...</div>
     </div>
+    <div style="text-align:center;margin-top:12px;padding:10px 16px;background:#FFFBEB;border:1px solid #F5C800;border-radius:10px;font-size:13px;color:#4B5563;">
+      ⚠️ Please keep this screen open and unlocked until every certificate has been generated.
+    </div>
   </div>
 
   <!-- Done state (shown after generation) -->
@@ -1313,6 +1316,58 @@ function updateGeneratingProgress(msg) {
   document.getElementById('genProgressText').textContent = msg;
 }
 
+// Simple stable fingerprint for a batch of people, used as a resume key.
+// Not cryptographic — just needs to be stable for the same submitted data.
+function fingerprint(str) {
+  let h = 0;
+  for (let i = 0; i < str.length; i++) h = Math.imul(31, h) + str.charCodeAt(i) | 0;
+  return Math.abs(h).toString(36);
+}
+
+function progressKey(eventId, people) {
+  const fp = people.map(function(p){ return (p.full_name||'') + '|' + (p.surname||'') + '|' + (p.id_number||''); }).join(';');
+  return 'impi_progress_' + eventId + '_' + fingerprint(fp);
+}
+
+function saveProgress(key, people, results) {
+  try {
+    sessionStorage.setItem(key, JSON.stringify({ people: people, results: results, ts: Date.now() }));
+  } catch(e) { /* storage unavailable/full — not fatal, just no resume safety net */ }
+}
+
+function clearProgress(key) {
+  try { sessionStorage.removeItem(key); } catch(e) {}
+}
+
+function loadProgress(key) {
+  try {
+    const raw = sessionStorage.getItem(key);
+    return raw ? JSON.parse(raw) : null;
+  } catch(e) { return null; }
+}
+
+// Screen Wake Lock — actively stops the phone from locking mid-generation.
+// This is the main defence against a locked/backgrounded phone silently
+// killing the process partway through a group submission.
+let wakeLockRef = null;
+async function acquireWakeLock() {
+  try {
+    if ('wakeLock' in navigator) {
+      wakeLockRef = await navigator.wakeLock.request('screen');
+    }
+  } catch(e) { /* not supported / permission denied — degrade silently */ }
+}
+function releaseWakeLock() {
+  try { if (wakeLockRef) { wakeLockRef.release(); wakeLockRef = null; } } catch(e) {}
+}
+// Re-acquire if the tab regains visibility mid-generation (the lock is
+// automatically released by the browser when the tab is hidden).
+document.addEventListener('visibilitychange', function() {
+  if (document.visibilityState === 'visible' && window.__impiGenerating) {
+    acquireWakeLock();
+  }
+});
+
 async function startGeneration() {
   showStep(certStepIndex());
   showGeneratingProgress('Starting...');
@@ -1321,12 +1376,29 @@ async function startGeneration() {
 
 async function generateCertificates() {
   const people = buildPeopleList();
-  certResults = [];
+  const eventId = eventData?.id || '';
+  const key = progressKey(eventId, people);
+
+  // Resume support: if this exact batch was interrupted before (page reload,
+  // browser kill, etc.), pick up from the results already saved rather than
+  // starting the whole group over.
+  const saved = loadProgress(key);
+  certResults = (saved && Array.isArray(saved.results)) ? saved.results.slice() : [];
+  const doneKeys = new Set(certResults.map(function(r){ return (r.full_name||'')+'|'+(r.surname||'')+'|'+(r.id_number||''); }));
+
   const total = people.length;
+  window.__impiGenerating = true;
+  await acquireWakeLock();
+
+  // Show whatever progress already exists immediately, in case the rest fails too.
+  if (certResults.length > 0) showCertificates(certResults);
 
   for (let i = 0; i < total; i++) {
     const person = people[i];
-    updateGeneratingProgress('Generating certificate ' + (i + 1) + ' of ' + total + '...');
+    const personKey = (person.full_name||'')+'|'+(person.surname||'')+'|'+(person.id_number||'');
+    if (doneKeys.has(personKey)) continue; // Already completed in a previous attempt at this batch.
+
+    updateGeneratingProgress('Generating certificate ' + (certResults.length + 1) + ' of ' + total + '...');
 
     // 1. Duplicate check
     let dupRes = { isDuplicate: false, alreadyCompleted: false };
@@ -1337,7 +1409,7 @@ async function generateCertificates() {
         body: JSON.stringify({
           fullName:  person.full_name,
           surname:   person.surname,
-          eventId:   eventData?.id || '',
+          eventId:   eventId,
           idNumber:  person.id_number
         })
       });
@@ -1346,11 +1418,15 @@ async function generateCertificates() {
 
     if (dupRes.alreadyCompleted) {
       certResults.push({ ...person, cert_code: dupRes.existingCode, skipped: true });
+      saveProgress(key, people, certResults);
+      showCertificates(certResults);
       continue;
     }
     if (dupRes.isDuplicate) {
       // Stop entire process
       document.getElementById('genProgressWrap').style.display = 'none';
+      window.__impiGenerating = false;
+      releaseWakeLock();
       showDuplicateModal(
         'A record for ' + person.full_name + ' ' + person.surname +
         ' already exists with a different ID. Please verify identity or contact the Safety Manager.'
@@ -1362,7 +1438,7 @@ async function generateCertificates() {
     const certCode = makeCertCode(person.full_name, person.id_number);
 
     // 3. Save with retry (3 attempts)
-    let saved = false;
+    let personSaved = false;
     for (let attempt = 0; attempt < 3; attempt++) {
       try {
         const res = await fetch('/api/complete', {
@@ -1379,14 +1455,16 @@ async function generateCertificates() {
             trade:        person.trade,
             role:         person.role,
             cert_code:    certCode,
-            event_id:     eventData?.id || '',
+            event_id:     eventId,
             completed_at: new Date().toISOString()
           })
         });
         const data = await res.json();
         if (data.success || data.cert_code) {
-          saved = true;
+          personSaved = true;
           certResults.push({ ...person, cert_code: certCode });
+          saveProgress(key, people, certResults);
+          showCertificates(certResults); // Show it immediately — don't wait for the rest of the group.
           break;
         }
       } catch(e) { /* retry */ }
@@ -1395,17 +1473,23 @@ async function generateCertificates() {
       }
     }
 
-    if (!saved) {
+    if (!personSaved) {
+      window.__impiGenerating = false;
+      releaseWakeLock();
       document.getElementById('genProgressWrap').style.display = 'none';
       showDuplicateModal(
         'Failed to save certificate for ' + person.full_name + ' ' + person.surname +
-        ' after multiple attempts. Please try again or contact support.'
+        ' after multiple attempts. The certificates already generated above are safe — ' +
+        'please retry to continue with the rest of the group, or contact support.'
       );
       return;
     }
   }
 
-  // All done — render certificates
+  // All done — clear the resume checkpoint and do a final render.
+  window.__impiGenerating = false;
+  releaseWakeLock();
+  clearProgress(key);
   showCertificates(certResults);
 }
 
