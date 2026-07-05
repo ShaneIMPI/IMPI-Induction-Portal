@@ -6,6 +6,8 @@
 <title>IMPI Safety Induction Portal</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
+<link rel="preload" as="image" href="https://rizcweifbwcnvxgakzfi.supabase.co/storage/v1/object/public/event-files/portal/hero_image_url-1779647955077-Designer.png"/>
+<link rel="preload" as="image" href="https://rizcweifbwcnvxgakzfi.supabase.co/storage/v1/object/public/event-files/portal/impi_logo_url-1777975787784-1b51aac7-bb8f-4d85-9b19-7023318323d6%20-%20Edited.png"/>
 <style>
 :root {
   --bg: #F7F8FA;
@@ -461,8 +463,8 @@ img { max-width: 100%; }
 <!-- ── NAV ── -->
 <nav class="site-nav">
   <a class="nav-logo-wrap" href="/">
-    <img class="site-logo" id="navLogo" src="" alt="IMPI"/>
-    <span class="nav-logo-fallback" id="navLogoFallback">IMPI</span>
+    <img class="site-logo" id="navLogo" src="https://rizcweifbwcnvxgakzfi.supabase.co/storage/v1/object/public/event-files/portal/impi_logo_url-1777975787784-1b51aac7-bb8f-4d85-9b19-7023318323d6%20-%20Edited.png" alt="IMPI" style="display:block" onerror="this.style.display='none';document.getElementById('navLogoFallback').style.display='block'"/>
+    <span class="nav-logo-fallback" id="navLogoFallback" style="display:none">IMPI</span>
   </a>
   <a class="nav-verify-btn" href="/verify.html">
     <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
@@ -473,7 +475,7 @@ img { max-width: 100%; }
 <!-- ── HERO ── -->
 <section id="hero">
   <!-- Layer 1: Background image -->
-  <div class="hero-bg-img" id="heroBgImg"></div>
+  <div class="hero-bg-img" id="heroBgImg" style="background-image:url('https://rizcweifbwcnvxgakzfi.supabase.co/storage/v1/object/public/event-files/portal/hero_image_url-1779647955077-Designer.png')"></div>
 
   <!-- Layer 1b: Animated shader (blends over the photo) -->
   <canvas id="heroShaderCanvas" class="hero-shader-canvas" aria-hidden="true"></canvas>
@@ -487,8 +489,8 @@ img { max-width: 100%; }
 
   <!-- Layer 5: Content -->
   <div class="hero-content">
-    <img id="heroLogo" src="" alt="IMPI" style="display:none"/>
-    <div class="hero-logo-fallback" id="heroLogoFallback">IMPI</div>
+    <img id="heroLogo" src="https://rizcweifbwcnvxgakzfi.supabase.co/storage/v1/object/public/event-files/portal/impi_logo_url-1777975787784-1b51aac7-bb8f-4d85-9b19-7023318323d6%20-%20Edited.png" alt="IMPI" style="display:block" onerror="this.style.display='none';document.getElementById('heroLogoFallback').style.display='block'"/>
+    <div class="hero-logo-fallback" id="heroLogoFallback" style="display:none">IMPI</div>
 
     <div class="hero-badge">
       <span class="hero-badge-dot"></span>
@@ -629,9 +631,9 @@ img { max-width: 100%; }
 <footer class="site-footer">
   <div class="footer-inner">
     <div class="footer-left">
-      <img class="footer-logo" id="footerLogo" src="" alt="IMPI"/>
+      <img class="footer-logo" id="footerLogo" src="https://rizcweifbwcnvxgakzfi.supabase.co/storage/v1/object/public/event-files/portal/impi_logo_url-1777975787784-1b51aac7-bb8f-4d85-9b19-7023318323d6%20-%20Edited.png" alt="IMPI" style="display:block" onerror="this.style.display='none';document.getElementById('footerLogoText').style.display='block'"/>
       <div>
-        <div class="footer-logo-text" id="footerLogoText">IMPI</div>
+        <div class="footer-logo-text" id="footerLogoText" style="display:none">IMPI</div>
         <div class="footer-copy">&copy; 2026 IMPI Safety Services International. All rights reserved.</div>
       </div>
     </div>
