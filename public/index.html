@@ -311,6 +311,14 @@ img { max-width: 100%; }
   transition: box-shadow 0.25s, transform 0.25s, border-color 0.25s;
 }
 .event-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); border-color: #d0d5e0; }
+.event-card-disabled { cursor: default; opacity: 0.55; }
+.event-card-disabled:hover { box-shadow: var(--shadow-sm); transform: none; border-color: var(--border); }
+.event-manual-link {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 12px; font-weight: 600; color: var(--accent-red);
+  text-decoration: none;
+}
+.event-manual-link:hover { text-decoration: underline; }
 .event-card-logo { padding: 20px 24px 0; min-height: 80px; display: flex; align-items: center; }
 .event-card-icon { font-size: 42px; line-height: 1; }
 .event-card-body { padding: 12px 24px 0; flex: 1; }
@@ -425,7 +433,7 @@ img { max-width: 100%; }
   .info-strip-inner { grid-template-columns: 1fr 1fr; }
   .info-item:nth-child(2) { border-right: none; }
   .info-item { padding: 20px 16px; }
-  .events-wrap, #eventDetail { padding: 40px 24px; }
+  .events-wrap { padding: 40px 24px; }
   .detail-dates { grid-template-columns: 1fr 1fr; }
   .date-item:nth-child(2) { border-right: none; }
   .topics-section { padding: 40px 24px; }
@@ -582,11 +590,6 @@ img { max-width: 100%; }
   </div>
 </section>
 
-<!-- ── EVENT DETAIL ── -->
-<section id="eventDetail">
-  <div id="detailContent"></div>
-</section>
-
 <!-- ── TOPICS SECTION ── -->
 <section class="topics-section">
   <div class="topics-inner">
@@ -632,25 +635,53 @@ var allEvents = [];
 var designSettings = {};
 
 async function init() {
-  try {
-    var res = await fetch('/api/design');
-    designSettings = await res.json();
-    applyDesignSettings(designSettings);
-  } catch (e) {
-    console.warn('[design]', e.message);
+  const [designResult, eventsResult] = await Promise.allSettled([
+    fetchWithTimeout('/api/design'),
+    fetchWithTimeout('/api/events')
+  ]);
+
+  if (designResult.status === 'fulfilled') {
+    try {
+      designSettings = await designResult.value.json();
+      applyDesignSettings(designSettings);
+    } catch (e) { console.warn('[design]', e.message); }
+  } else {
+    console.warn('[design]', designResult.reason?.message);
   }
 
-  try {
-    var res2 = await fetch('/api/events');
-    var events = await res2.json();
-    allEvents = Array.isArray(events) ? events : [];
-    renderEvents(allEvents.filter(function(e) { return e.status !== 'archived'; }));
-  } catch (e) {
-    console.error('[events]', e);
+  if (eventsResult.status === 'fulfilled') {
+    try {
+      const events = await eventsResult.value.json();
+      allEvents = Array.isArray(events) ? events : [];
+      renderEvents(allEvents.filter(function(e) { return e.status !== 'archived'; }));
+      // Cache for instant branding on the induction page — avoids a second
+      // network round-trip (and the visible "flash to generic, then swap"
+      // it causes) when someone clicks through from this event grid.
+      try {
+        sessionStorage.setItem('impi_events_cache', JSON.stringify({ ts: Date.now(), events: allEvents }));
+      } catch (e) { /* storage unavailable — not fatal, induction page just falls back to its own fetch */ }
+    } catch (e) {
+      console.error('[events]', e);
+      document.getElementById('eventsLoading').style.display = 'none';
+      document.getElementById('eventsGrid').style.display = 'grid';
+      document.getElementById('eventsGrid').innerHTML = '<div class="empty-state"><div class="empty-icon">⚠️</div><p>Events could not be loaded. Please refresh the page.</p></div>';
+    }
+  } else {
+    console.error('[events]', eventsResult.reason?.message);
     document.getElementById('eventsLoading').style.display = 'none';
     document.getElementById('eventsGrid').style.display = 'grid';
     document.getElementById('eventsGrid').innerHTML = '<div class="empty-state"><div class="empty-icon">⚠️</div><p>Events could not be loaded. Please refresh the page.</p></div>';
   }
+}
+
+// Wraps fetch with a timeout so a poor connection fails fast and
+// predictably instead of leaving the page hanging indefinitely.
+function fetchWithTimeout(url, options, timeoutMs) {
+  timeoutMs = timeoutMs || 8000;
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), timeoutMs);
+  return fetch(url, Object.assign({}, options, { signal: controller.signal }))
+    .finally(() => clearTimeout(id));
 }
 
 function applyDesignSettings(d) {
@@ -711,7 +742,9 @@ function renderEvents(events) {
   }
 
   grid.innerHTML = events.map(function(ev) {
-    return '<div class="event-card" onclick="showEventDetail(\'' + ev.id + '\')">' +
+    var isActive = ev.status === 'active';
+    return '<div class="event-card' + (isActive ? '' : ' event-card-disabled') + '"' +
+      (isActive ? ' onclick="location.href=\'/induction.html?event=' + ev.id + '\'"' : '') + '>' +
       '<div class="event-card-logo">' +
         (ev.client_logo_url
           ? '<img src="' + escHtml(ev.client_logo_url) + '" alt="' + escHtml(ev.name) + '" style="height:60px;max-width:140px;object-fit:contain">'
@@ -723,11 +756,9 @@ function renderEvents(events) {
         (ev.venue ? '<div class="event-card-meta">📍 ' + escHtml(ev.venue) + '</div>' : '') +
         (ev.ev_start ? '<div class="event-card-meta">📅 ' + formatDate(ev.ev_start) + '</div>' : '') +
       '</div>' +
-      '<div class="event-card-footer">' +
-        '<button class="event-cta-btn' + (ev.status !== 'active' ? ' btn-disabled' : '') + '">' +
-          (ev.status === 'active' ? 'Start Induction →' : ev.status === 'draft' ? 'Coming Soon' : 'Event Closed') +
-        '</button>' +
-      '</div>' +
+      (ev.manual_url
+        ? '<div class="event-card-footer"><a href="' + escHtml(ev.manual_url) + '" target="_blank" rel="noopener" class="event-manual-link" onclick="event.stopPropagation()">📄 ' + escHtml(ev.manual_name || 'Download Manual') + '</a></div>'
+        : '') +
     '</div>';
   }).join('');
 }
@@ -736,77 +767,10 @@ function statusBadge(status) {
   var map = {
     draft:     ['var(--blue-light)', 'var(--blue)', 'Draft'],
     active:    ['var(--green-light)', 'var(--green)', 'Active'],
-    completed: ['var(--surface2)', 'var(--text-muted)', 'Completed']
+    completed: ['var(--surface2)', 'var(--text-muted)', 'Closed']
   };
   var cfg = map[status] || ['var(--surface2)', 'var(--text-muted)', status || ''];
   return '<span class="status-badge" style="background:' + cfg[0] + ';color:' + cfg[1] + '">' + cfg[2] + '</span>';
-}
-
-function showEventDetail(id) {
-  var ev = allEvents.find(function(e) { return e.id === id; });
-  if (!ev) return;
-  document.getElementById('eventsSection').style.display = 'none';
-  var detail = document.getElementById('eventDetail');
-  detail.style.display = 'block';
-  renderEventDetail(ev);
-  window.scrollTo({ top: detail.offsetTop - 70, behavior: 'smooth' });
-}
-
-function showEventsList() {
-  document.getElementById('eventDetail').style.display = 'none';
-  document.getElementById('eventsSection').style.display = 'block';
-}
-
-function renderEventDetail(ev) {
-  var isActive = ev.status === 'active';
-  var isDraft = ev.status === 'draft';
-  var isCompleted = ev.status === 'completed';
-
-  var words = ev.name ? ev.name.split(' ') : ['Event'];
-  var nameHtml = words.length > 1
-    ? '<span style="color:var(--accent-red)">' + escHtml(words[0]) + '</span> ' + escHtml(words.slice(1).join(' '))
-    : '<span style="color:var(--accent-red)">' + escHtml(ev.name) + '</span>';
-
-  var datesHtml = '';
-  if (ev.bu_start) datesHtml += '<div class="date-item"><div class="date-label">Build-Up</div><div class="date-val">' + formatDate(ev.bu_start) + (ev.bu_end ? ' – ' + formatDate(ev.bu_end) : '') + '</div></div>';
-  if (ev.ev_start) datesHtml += '<div class="date-item"><div class="date-label">Event</div><div class="date-val">' + formatDate(ev.ev_start) + (ev.ev_end ? ' – ' + formatDate(ev.ev_end) : '') + '</div></div>';
-  if (ev.bd_start) datesHtml += '<div class="date-item"><div class="date-label">Breakdown</div><div class="date-val">' + formatDate(ev.bd_start) + (ev.bd_end ? ' – ' + formatDate(ev.bd_end) : '') + '</div></div>';
-  if (ev.organiser) datesHtml += '<div class="date-item"><div class="date-label">Organiser</div><div class="date-val">' + escHtml(ev.organiser) + '</div></div>';
-
-  var noticeHtml = '';
-  if (isDraft) noticeHtml = '<div class="status-notice notice-yellow">🕐 Coming Soon — induction is not yet open for this event.</div>';
-  if (isCompleted) noticeHtml = '<div class="status-notice notice-grey">✅ This event has closed. No further inductions are being accepted.</div>';
-
-  var actionsHtml =
-    '<a href="' + (isActive ? '/induction.html?event=' + ev.id : '#') + '" class="action-card' + (!isActive ? ' action-card-disabled' : '') + '">' +
-      '<div class="action-icon">📱</div>' +
-      '<div class="action-title">Online Induction</div>' +
-      '<div class="action-sub">' + (isActive ? 'Start your safety induction now' : 'Not currently available') + '</div>' +
-    '</a>';
-
-  if (ev.manual_url) {
-    actionsHtml +=
-      '<a href="' + escHtml(ev.manual_url) + '" target="_blank" rel="noopener" class="action-card">' +
-        '<div class="action-icon">📄</div>' +
-        '<div class="action-title">Download Manual</div>' +
-        '<div class="action-sub">' + escHtml(ev.manual_name || 'Induction Manual') + '</div>' +
-      '</a>';
-  }
-
-  actionsHtml +=
-    '<a href="/verify.html" class="action-card">' +
-      '<div class="action-icon">🔍</div>' +
-      '<div class="action-title">Verify Certificate</div>' +
-      '<div class="action-sub">Check a certificate is valid</div>' +
-    '</a>';
-
-  document.getElementById('detailContent').innerHTML =
-    '<button class="back-btn" onclick="showEventsList()">← Back to Events</button>' +
-    '<h2 class="detail-title">' + nameHtml + '</h2>' +
-    (ev.venue ? '<div class="detail-venue">📍 ' + escHtml(ev.venue) + '</div>' : '') +
-    (datesHtml ? '<div class="detail-dates">' + datesHtml + '</div>' : '') +
-    noticeHtml +
-    '<div class="action-cards">' + actionsHtml + '</div>';
 }
 
 function formatDate(dateStr) {
