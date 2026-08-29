@@ -1786,84 +1786,40 @@ function getEventLogoPngDataUrl(ev) {
   });
 }
 
-// Primary method: fetch a ready-made QR PNG from a public QR image API
-// instead of generating one locally via canvas. The two canvas-based
-// approaches (reusing the on-screen canvas, and regenerating fresh) both
-// failed consistently on real devices — this sidesteps canvas entirely,
-// which removes whatever browser-specific quirk was causing that.
-async function fetchQrPngDataUrl(data) {
+// Draws a QR code directly onto the PDF as filled squares — no image, no
+// canvas, no network request of any kind. Every previous approach (canvas
+// reuse, fresh canvas generation, external image API) hit some browser
+// security restriction (tainted canvas, CORB) on real devices. This reads
+// the QR library's raw black/white grid data and draws each cell as a
+// simple vector rectangle — the exact same primitive already used for the
+// certificate's colored header bar, which has never had any issue.
+function drawQrOnDoc(doc, data, x, y, sizeMm) {
   try {
-    const url = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&margin=10&data=' + encodeURIComponent(data);
-    const res = await fetch(url);
-    if (!res.ok) { console.warn('[cert-pdf] QR API responded with', res.status); return null; }
-    const blob = await res.blob();
-    return await new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onloadend = () => resolve(reader.result);
-      reader.onerror = () => reject(reader.error);
-      reader.readAsDataURL(blob);
-    });
-  } catch (e) { console.error('[cert-pdf] QR API fetch failed:', e); return null; }
-}
-
-// Fallback 1: pull the PNG straight from the QR canvas already rendered on
-// screen (used only if the API call above fails, e.g. no network).
-function canvasToPngDataUrl(canvasId) {
-  try {
-    const canvas = document.getElementById(canvasId);
-    if (!canvas) { console.warn('[cert-pdf] QR canvas not found:', canvasId); return null; }
-    const url = canvas.toDataURL('image/png');
-    if (!url || url.length < 200) { console.warn('[cert-pdf] QR canvas produced an unexpectedly small image:', canvasId, url && url.length); return null; }
-    return url;
-  } catch (e) { console.error('[cert-pdf] reading on-screen QR canvas failed:', canvasId, e); return null; }
-}
-
-// Fallback 2: regenerate the QR fresh into an attached-but-hidden canvas.
-function generateQrPngDataUrl(person, ev) {
-  return new Promise((resolve) => {
-    try {
-      const canvas = document.createElement('canvas');
-      canvas.style.position = 'fixed';
-      canvas.style.left = '-9999px';
-      canvas.style.top = '0';
-      document.body.appendChild(canvas);
-      const data = 'IMPIVERT:' + person.cert_code + ':' + person.full_name + ':' + (ev?.id || '');
-      QRCode.toCanvas(canvas, data, { width: 240, margin: 1 }, function(qrErr) {
-        let result = null;
-        if (qrErr) {
-          console.error('[cert-pdf] fallback QR generation failed:', qrErr);
-        } else {
-          try { result = canvas.toDataURL('image/png'); }
-          catch (e) { console.error('[cert-pdf] fallback QR toDataURL failed:', e); }
+    const qr = QRCode.create(data, { errorCorrectionLevel: 'M' });
+    const count = qr.modules.size;
+    const cell = sizeMm / count;
+    doc.setFillColor(255, 255, 255);
+    doc.rect(x, y, sizeMm, sizeMm, 'F');
+    doc.setFillColor(0, 0, 0);
+    for (let row = 0; row < count; row++) {
+      for (let col = 0; col < count; col++) {
+        if (qr.modules.get(row, col)) {
+          doc.rect(x + col * cell, y + row * cell, cell, cell, 'F');
         }
-        document.body.removeChild(canvas);
-        resolve(result);
-      });
-    } catch (e) {
-      console.error('[cert-pdf] fallback QR setup failed:', e);
-      resolve(null);
+      }
     }
-  });
-}
-
-// Tries the QR API first (most reliable), then the on-screen canvas, then
-// a fresh local generation — in that order — before giving up.
-async function getQrForPdf(canvasId, person, ev) {
-  const data = 'IMPIVERT:' + person.cert_code + ':' + person.full_name + ':' + (ev?.id || '');
-  const viaApi = await fetchQrPngDataUrl(data);
-  if (viaApi) return viaApi;
-  console.warn('[cert-pdf] QR API unavailable, trying on-screen canvas for', canvasId);
-  const fromScreen = canvasToPngDataUrl(canvasId);
-  if (fromScreen) return fromScreen;
-  console.warn('[cert-pdf] falling back to fresh local QR generation for', canvasId);
-  return await generateQrPngDataUrl(person, ev);
+    return true;
+  } catch (e) {
+    console.error('[cert-pdf] QR vector draw failed:', e);
+    return false;
+  }
 }
 
 // Draws one certificate starting at startY on the given jsPDF doc.
 // Uses the event's own brand color (falls back to IMPI red) and includes
 // both the IMPI logo and the event/client logo, matching the on-screen
 // certificate design.
-async function drawCertificateOnDoc(doc, person, ev, logoDataUrl, eventLogoDataUrl, qrDataUrl, startY) {
+function drawCertificateOnDoc(doc, person, ev, logoDataUrl, eventLogoDataUrl, startY) {
   const pageW = doc.internal.pageSize.getWidth();
   const themeHex = (ev && ev.color_primary) || '#D42B2B';
   const [tr, tg, tb] = hexToRgb(themeHex);
@@ -1901,8 +1857,9 @@ async function drawCertificateOnDoc(doc, person, ev, logoDataUrl, eventLogoDataU
   doc.setTextColor(tr, tg, tb);
   doc.text(person.cert_code || '\u2014', 15, y);
 
-  if (qrDataUrl) {
-    try { doc.addImage(qrDataUrl, 'PNG', pageW - 55, startY + 46, 40, 40); } catch (e) {}
+  const qrData = 'IMPIVERT:' + (person.cert_code || '') + ':' + (person.full_name || '') + ':' + (ev?.id || '');
+  const qrDrawn = drawQrOnDoc(doc, qrData, pageW - 55, startY + 46, 40);
+  if (qrDrawn) {
     doc.setFontSize(8);
     doc.setTextColor(140, 140, 140);
     doc.setFont('helvetica', 'normal');
@@ -1954,8 +1911,7 @@ async function downloadCertificate() {
     const logoDataUrl = await getLogoPngDataUrl();
     const eventLogoDataUrl = await getEventLogoPngDataUrl(eventData);
     const person = (certResults && certResults[0]) || {};
-    const qrDataUrl = await getQrForPdf('certQrCanvas', person, eventData);
-    await drawCertificateOnDoc(doc, person, eventData, logoDataUrl, eventLogoDataUrl, qrDataUrl, 0);
+    drawCertificateOnDoc(doc, person, eventData, logoDataUrl, eventLogoDataUrl, 0);
     doc.save('IMPI-Certificate-' + code + '.pdf');
   } catch (e) {
     showToast('Could not generate PDF: ' + e.message, 'error');
@@ -1972,8 +1928,7 @@ async function downloadAllCertificates() {
     const eventLogoDataUrl = await getEventLogoPngDataUrl(eventData);
     for (let i = 0; i < certResults.length; i++) {
       if (i > 0) doc.addPage();
-      const qrDataUrl = await getQrForPdf('groupQr_' + i, certResults[i], eventData);
-      await drawCertificateOnDoc(doc, certResults[i], eventData, logoDataUrl, eventLogoDataUrl, qrDataUrl, 0);
+      drawCertificateOnDoc(doc, certResults[i], eventData, logoDataUrl, eventLogoDataUrl, 0);
     }
     const safeName = (eventData?.name || 'Group').replace(/[^a-z0-9]+/gi, '-');
     doc.save('IMPI-Certificates-' + safeName + '.pdf');
