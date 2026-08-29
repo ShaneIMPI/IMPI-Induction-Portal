@@ -10,11 +10,30 @@ exports.handler = async (event) => {
 
   if (event.httpMethod === 'GET') {
     const eventId = event.queryStringParameters?.eventId;
-    let query = supabase.from('completions').select('*').order('completed_at', { ascending: false });
-    if (eventId) query = query.eq('event_id', eventId);
-    const result = await retry(() => query);
-    if (result.error) { console.error('[completions GET]', result.error); return err(result.error.message); }
-    return ok(result.data || []);
+
+    // Supabase/PostgREST caps any single request at 1000 rows by default.
+    // Page through in batches of 1000 until we've read everything, rather
+    // than silently truncating once the table passes 1000 completions.
+    const PAGE_SIZE = 1000;
+    let allRows = [];
+    let from = 0;
+    while (true) {
+      let query = supabase.from('completions')
+        .select('*')
+        .order('completed_at', { ascending: false })
+        .range(from, from + PAGE_SIZE - 1);
+      if (eventId) query = query.eq('event_id', eventId);
+
+      const result = await retry(() => query);
+      if (result.error) { console.error('[completions GET]', result.error); return err(result.error.message); }
+
+      const page = result.data || [];
+      allRows = allRows.concat(page);
+      if (page.length < PAGE_SIZE) break; // Last page reached.
+      from += PAGE_SIZE;
+    }
+
+    return ok(allRows);
   }
 
   if (event.httpMethod === 'DELETE') {
