@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
 <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 <style>
 :root {
   --bg: #F7F8FA;
@@ -65,6 +66,8 @@ body{background:var(--bg);font-family:var(--fb);min-height:100vh;color:var(--tex
 .ban-impi-logo{height:40px;width:auto;object-fit:contain;max-width:140px;background:rgba(255,255,255,0.15);padding:5px 10px;border-radius:var(--radius-sm);}
 .ban-client-logo{height:40px;width:auto;object-fit:contain;max-width:130px;background:rgba(255,255,255,0.92);padding:5px 10px;border-radius:var(--radius-sm);margin-left:auto;display:none;}
 .ban-type{font-family:var(--fh);font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.6);}
+.ban-change-event{font-size:12px;font-weight:600;color:rgba(255,255,255,0.85);text-decoration:none;padding:4px 10px;border:1px solid rgba(255,255,255,0.3);border-radius:999px;transition:all .15s;}
+.ban-change-event:hover{background:rgba(255,255,255,0.12);border-color:rgba(255,255,255,0.5);}
 .ban-title{font-family:var(--fh);font-weight:900;font-size:clamp(26px,5vw,42px);color:#fff;line-height:1.1;margin-bottom:14px;}
 .ban-meta{display:flex;gap:20px;flex-wrap:wrap;}
 .bm{display:flex;flex-direction:column;gap:2px;}
@@ -330,6 +333,7 @@ body{background:var(--bg);font-family:var(--fb);min-height:100vh;color:var(--tex
     <div class="ban-top">
       <img class="ban-impi-logo" id="banImpiLogo" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 30'%3E%3Crect width='80' height='30' fill='rgba(255,255,255,0.2)'/%3E%3Ctext x='40' y='21' text-anchor='middle' fill='white' font-size='14' font-weight='bold' font-family='Arial'%3EIMPI%3C/text%3E%3C/svg%3E" alt="IMPI"/>
       <span class="ban-type">Safety Induction Questionnaire</span>
+      <a href="/" class="ban-change-event" data-i18n="change_event">&larr; Change Event</a>
       <img class="ban-client-logo" id="banClientLogo" src="" alt=""/>
     </div>
     <div class="ban-title" id="banTitle">EVENT</div>
@@ -384,7 +388,7 @@ body{background:var(--bg);font-family:var(--fb);min-height:100vh;color:var(--tex
 <!-- STEP 1: PERSONAL INFO -->
 <div class="step-content" id="stepInfo">
   <div class="step-title" data-i18n="step_info">Personal Information</div>
-  <div class="step-sub">Please enter your details. Your email will receive proof of completion.</div>
+  <div class="step-sub">Please enter your details.</div>
 
   <div class="popia">
     <div class="popia-title" data-i18n="popia">Privacy Notice</div>
@@ -552,8 +556,8 @@ body{background:var(--bg);font-family:var(--fb);min-height:100vh;color:var(--tex
       <div class="cert-actions">
         <button class="btn btn-ghost" onclick="copyCertCode()" data-i18n="copy_code">📋 Copy Code</button>
         <button class="btn btn-ghost" onclick="shareCert()" data-i18n="share">📤 Share</button>
-        <button class="btn btn-ghost" onclick="resendEmail()" data-i18n="resend_email">📧 Resend Email</button>
-        <button class="btn btn-primary" onclick="window.print()" data-i18n="print">🖨️ Print</button>
+        <button class="btn btn-primary" onclick="downloadCertificate()" data-i18n="download_cert">📥 Download Certificate</button>
+        <button class="btn btn-ghost" onclick="window.print()" data-i18n="print">🖨️ Print</button>
       </div>
     </div>
 
@@ -561,7 +565,8 @@ body{background:var(--bg);font-family:var(--fb);min-height:100vh;color:var(--tex
     <div id="certGroupWrap" style="display:none;">
       <div class="multi-cert-list" id="certGroupList"></div>
       <div class="cert-actions" style="margin-top:24px;">
-        <button class="btn btn-primary" onclick="window.print()">🖨️ <span data-i18n="print">Print All</span></button>
+        <button class="btn btn-primary" onclick="downloadAllCertificates()">📥 Download All Certificates</button>
+        <button class="btn btn-ghost" onclick="window.print()">🖨️ <span data-i18n="print">Print All</span></button>
       </div>
     </div>
   </div>
@@ -612,7 +617,8 @@ const LANGS = {
     cert_title:'Your Certificate',
     copy_code:'Copy Code',
     share:'Share',
-    resend_email:'Resend Email',
+    download_cert:'Download Certificate',
+    change_event:'← Change Event',
     print:'Print',
     verified:'Verified & Active',
     completed_on:'Completed on',
@@ -654,7 +660,8 @@ const LANGS = {
     cert_title:'U Sertifikaat',
     copy_code:'Kopieer Kode',
     share:'Deel',
-    resend_email:'Herstuur E-pos',
+    download_cert:'Laai Sertifikaat af',
+    change_event:'← Verander Gebeurtenis',
     print:'Druk',
     verified:'Geverifieer & Aktief',
     completed_on:'Voltooi op',
@@ -695,7 +702,8 @@ const LANGS = {
     cert_title:'Isitifiketi Sakho',
     copy_code:'Kopisha Ikhodi',
     share:'Yabelana',
-    resend_email:'Thumela I-imeyili Futhi',
+    download_cert:'Layisha Isitifiketi',
+    change_event:'← Shintsha Umcimbi',
     print:'Printa',
     verified:'Kuqinisekisiwe & Kuyasebenza',
     completed_on:'Kwaphothulwa',
@@ -736,7 +744,8 @@ const LANGS = {
     cert_title:'Cheti Chako',
     copy_code:'Nakili Nambari',
     share:'Shiriki',
-    resend_email:'Tuma Tena Barua Pepe',
+    download_cert:'Pakua Cheti',
+    change_event:'← Badilisha Tukio',
     print:'Chapisha',
     verified:'Imethibitishwa & Inafanya Kazi',
     completed_on:'Imekamilika',
@@ -777,7 +786,8 @@ const LANGS = {
     cert_title:'Votre Certificat',
     copy_code:'Copier le Code',
     share:'Partager',
-    resend_email:"Renvoyer l'E-mail",
+    download_cert:'Télécharger le Certificat',
+    change_event:'← Changer d\'Événement',
     print:'Imprimer',
     verified:'Vérifié et Actif',
     completed_on:'Complété le',
@@ -818,7 +828,8 @@ const LANGS = {
     cert_title:'O Seu Certificado',
     copy_code:'Copiar Código',
     share:'Partilhar',
-    resend_email:'Reenviar E-mail',
+    download_cert:'Baixar Certificado',
+    change_event:'← Mudar Evento',
     print:'Imprimir',
     verified:'Verificado e Ativo',
     completed_on:'Concluído em',
@@ -859,7 +870,8 @@ const LANGS = {
     cert_title:'Takardar Shaida Naka',
     copy_code:'Kwafi Lambar',
     share:'Raba',
-    resend_email:'Sake Aika Imel',
+    download_cert:'Sauke Takardar Shaida',
+    change_event:'← Canza Taron',
     print:'Buga',
     verified:'An Tabbatar & Yana Aiki',
     completed_on:'An Kammala a',
@@ -900,7 +912,8 @@ const LANGS = {
     cert_title:'Iwe-ẹri Rẹ',
     copy_code:'Daakọ Koodu',
     share:'Pin',
-    resend_email:'Tun Firanṣẹ Imeeli',
+    download_cert:'Gba Ijẹrisi',
+    change_event:'← Yi Iyipada Iṣẹlẹ',
     print:'Tẹ Jade',
     verified:'Ti jẹri & Ti n Ṣiṣẹ',
     completed_on:'Pari ni',
@@ -1679,24 +1692,155 @@ function shareCert() {
   }
 }
 
-async function resendEmail() {
+// ═══════════════════════════════════════════════════════
+// CERTIFICATE PDF DOWNLOAD
+// ═══════════════════════════════════════════════════════
+let _impiLogoPngCache = null;
+function getLogoPngDataUrl() {
+  return new Promise((resolve) => {
+    if (_impiLogoPngCache) { resolve(_impiLogoPngCache); return; }
+    try {
+      const img = new Image();
+      img.onload = function() {
+        try {
+          const c = document.createElement('canvas');
+          c.width = img.naturalWidth || 400;
+          c.height = img.naturalHeight || 400;
+          c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+          _impiLogoPngCache = c.toDataURL('image/png');
+          resolve(_impiLogoPngCache);
+        } catch (e) { resolve(null); }
+      };
+      img.onerror = function() { resolve(null); };
+      img.src = document.getElementById('impiLogo').src;
+    } catch (e) { resolve(null); }
+  });
+}
+
+function getQrPngDataUrl(person, ev) {
+  return new Promise((resolve) => {
+    try {
+      const canvas = document.createElement('canvas');
+      const data = 'IMPIVERT:' + person.cert_code + ':' + person.full_name + ':' + (ev?.id || '');
+      QRCode.toCanvas(canvas, data, { width: 240, margin: 1 }, function(qrErr) {
+        resolve(qrErr ? null : canvas.toDataURL('image/png'));
+      });
+    } catch (e) { resolve(null); }
+  });
+}
+
+// Draws one certificate starting at startY on the given jsPDF doc.
+// Returns the Y position immediately after it, so multiple certificates
+// can be stacked on one page if there's room, or a fresh page started.
+async function drawCertificateOnDoc(doc, person, ev, logoDataUrl, startY) {
+  const pageW = doc.internal.pageSize.getWidth();
+  const red = [212, 43, 43];
+  const dark = [35, 31, 32];
+
+  doc.setFillColor(red[0], red[1], red[2]);
+  doc.rect(0, startY, pageW, 38, 'F');
+  if (logoDataUrl) {
+    try { doc.addImage(logoDataUrl, 'PNG', 15, startY + 6, 26, 26); } catch (e) {}
+  }
+  doc.setTextColor(255, 255, 255);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(16);
+  doc.text('IMPI Safety Services International', 48, startY + 17);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(10);
+  doc.text('Safety Induction Certificate', 48, startY + 25);
+
+  let y = startY + 50;
+  doc.setTextColor(22, 163, 74);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(11);
+  doc.text('\u2713 VERIFIED & ACTIVE', 15, y);
+
+  y += 10;
+  doc.setFontSize(9);
+  doc.setTextColor(140, 140, 140);
+  doc.text('CERTIFICATE CODE', 15, y);
+  y += 9;
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(22);
+  doc.setTextColor(red[0], red[1], red[2]);
+  doc.text(person.cert_code || '\u2014', 15, y);
+
+  const qrDataUrl = await getQrPngDataUrl(person, ev);
+  if (qrDataUrl) {
+    try { doc.addImage(qrDataUrl, 'PNG', pageW - 55, startY + 46, 40, 40); } catch (e) {}
+    doc.setFontSize(8);
+    doc.setTextColor(140, 140, 140);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Scan to verify', pageW - 55, startY + 90);
+  }
+
+  y += 14;
+  const rows = [
+    ['Name', ((person.full_name || '') + ' ' + (person.surname || '')).trim() || '\u2014'],
+    ['ID Type', person.id_type || 'SA ID'],
+    ['Company', person.company || '\u2014'],
+    ['Role', person.role || '\u2014'],
+    ['Event', ev?.name || '\u2014'],
+    ['Venue', ev?.venue || '\u2014'],
+    ['Completed', person.completed_at ? new Date(person.completed_at).toLocaleDateString('en-ZA', { day: '2-digit', month: 'long', year: 'numeric' }) : '\u2014']
+  ];
+  doc.setFontSize(10);
+  rows.forEach(function(r) {
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(140, 140, 140);
+    doc.text(r[0].toUpperCase(), 15, y);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(dark[0], dark[1], dark[2]);
+    doc.text(String(r[1]), 60, y);
+    y += 8;
+  });
+
+  y += 6;
+  doc.setDrawColor(220, 220, 220);
+  doc.line(15, y, pageW - 15, y);
+  y += 8;
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8);
+  doc.setTextColor(160, 160, 160);
+  doc.text('This certificate was issued by IMPI Safety Services International.', 15, y);
+  y += 5;
+  doc.text('Verify at: impi-inductions.netlify.app/verify?code=' + (person.cert_code || ''), 15, y);
+
+  return y + 15;
+}
+
+async function downloadCertificate() {
   const code = document.getElementById('cCode').textContent;
-  if (!code || code === '—') { showToast('No certificate code found', 'error'); return; }
-  showToast('Sending...', 'success');
+  if (!code || code === '\u2014') { showToast('No certificate found', 'error'); return; }
+  showToast('Preparing download...', 'success');
   try {
-    const res = await fetch('/api/complete', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'resend', cert_code: code })
-    });
-    const data = await res.json();
-    if (data.success) {
-      showToast('Email sent successfully', 'success');
-    } else {
-      showToast('Could not send email — screenshot your code: ' + code, 'error');
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+    const logoDataUrl = await getLogoPngDataUrl();
+    const person = (certResults && certResults[0]) || {};
+    await drawCertificateOnDoc(doc, person, eventData, logoDataUrl, 0);
+    doc.save('IMPI-Certificate-' + code + '.pdf');
+  } catch (e) {
+    showToast('Could not generate PDF: ' + e.message, 'error');
+  }
+}
+
+async function downloadAllCertificates() {
+  if (!certResults || certResults.length === 0) { showToast('No certificates found', 'error'); return; }
+  showToast('Preparing download...', 'success');
+  try {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+    const logoDataUrl = await getLogoPngDataUrl();
+    for (let i = 0; i < certResults.length; i++) {
+      if (i > 0) doc.addPage();
+      await drawCertificateOnDoc(doc, certResults[i], eventData, logoDataUrl, 0);
     }
-  } catch(e) {
-    showToast('Error: ' + e.message, 'error');
+    const safeName = (eventData?.name || 'Group').replace(/[^a-z0-9]+/gi, '-');
+    doc.save('IMPI-Certificates-' + safeName + '.pdf');
+  } catch (e) {
+    showToast('Could not generate PDF: ' + e.message, 'error');
   }
 }
 
