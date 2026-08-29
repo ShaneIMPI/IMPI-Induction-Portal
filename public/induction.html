@@ -421,10 +421,9 @@ body{background:var(--bg);font-family:var(--fb);min-height:100vh;color:var(--tex
       </select>
     </div>
     <div id="groupMembersContainer"></div>
-  </div>
-
-  <div class="step-actions">
-    <button class="btn btn-primary" id="btnType" onclick="nextFromType()" disabled data-i18n="next">Next</button>
+    <div class="step-actions" id="groupContinueWrap" style="display:none;">
+      <button class="btn btn-primary" id="btnGroupContinue" onclick="nextFromType()" data-i18n="next">Next</button>
+    </div>
   </div>
 </div>
 
@@ -1104,17 +1103,20 @@ function selectType(type) {
   const gsw = document.getElementById('groupSizeWrap');
   gsw.style.display = type === 'group' ? 'block' : 'none';
   if (type === 'individual') {
-    document.getElementById('btnType').disabled = false;
+    // Nothing further to fill in — go straight to the next step.
+    document.getElementById('groupContinueWrap').style.display = 'none';
+    nextFromType();
   } else {
-    // Disable until size chosen
-    document.getElementById('btnType').disabled = !document.getElementById('groupSizeSelect').value;
+    // Continue button only appears once a group size has been chosen,
+    // since member details still need to be filled in first.
+    document.getElementById('groupContinueWrap').style.display = document.getElementById('groupSizeSelect').value ? 'flex' : 'none';
   }
 }
 
 function onGroupSizeChange() {
   const n = parseInt(document.getElementById('groupSizeSelect').value);
   groupSize = n || 0;
-  document.getElementById('btnType').disabled = !n;
+  document.getElementById('groupContinueWrap').style.display = n ? 'flex' : 'none';
   buildGroupMemberForms(n);
 }
 
@@ -1473,7 +1475,7 @@ async function generateCertificates() {
     } catch(e) { /* network error — proceed */ }
 
     if (dupRes.alreadyCompleted) {
-      certResults.push({ ...person, cert_code: dupRes.existingCode, skipped: true });
+      certResults.push({ ...person, cert_code: dupRes.existingCode, completed_at: dupRes.completedAt || new Date().toISOString(), skipped: true });
       saveProgress(key, people, certResults);
       showCertificates(certResults);
       continue;
@@ -1492,6 +1494,7 @@ async function generateCertificates() {
 
     // 2. Generate cert code
     const certCode = makeCertCode(person.full_name, person.id_number);
+    const completedAt = new Date().toISOString();
 
     // 3. Save with retry (3 attempts)
     let personSaved = false;
@@ -1512,13 +1515,13 @@ async function generateCertificates() {
             role:         person.role,
             cert_code:    certCode,
             event_id:     eventId,
-            completed_at: new Date().toISOString()
+            completed_at: completedAt
           })
         });
         const data = await res.json();
         if (data.success || data.cert_code) {
           personSaved = true;
-          certResults.push({ ...person, cert_code: certCode });
+          certResults.push({ ...person, cert_code: certCode, completed_at: completedAt });
           saveProgress(key, people, certResults);
           showCertificates(certResults); // Show it immediately — don't wait for the rest of the group.
           break;
@@ -1744,6 +1747,7 @@ function getLogoPngDataUrl() {
     if (_impiLogoPngCache) { resolve(_impiLogoPngCache); return; }
     try {
       const img = new Image();
+      img.crossOrigin = 'anonymous'; // required so canvas.toDataURL() doesn't throw on a remote (non-data-URI) logo URL
       img.onload = function() {
         try {
           const c = document.createElement('canvas');
@@ -1760,30 +1764,56 @@ function getLogoPngDataUrl() {
   });
 }
 
-function getQrPngDataUrl(person, ev) {
+function getEventLogoPngDataUrl(ev) {
   return new Promise((resolve) => {
+    if (!ev || !ev.client_logo_url) { resolve(null); return; }
     try {
-      const canvas = document.createElement('canvas');
-      const data = 'IMPIVERT:' + person.cert_code + ':' + person.full_name + ':' + (ev?.id || '');
-      QRCode.toCanvas(canvas, data, { width: 240, margin: 1 }, function(qrErr) {
-        resolve(qrErr ? null : canvas.toDataURL('image/png'));
-      });
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = function() {
+        try {
+          const c = document.createElement('canvas');
+          c.width = img.naturalWidth || 300;
+          c.height = img.naturalHeight || 300;
+          c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+          resolve(c.toDataURL('image/png'));
+        } catch (e) { resolve(null); }
+      };
+      img.onerror = function() { resolve(null); };
+      img.src = ev.client_logo_url;
     } catch (e) { resolve(null); }
   });
 }
 
+// Pulls the PNG straight from a QR canvas already rendered on screen —
+// far more reliable than regenerating a fresh detached QR code, since we
+// know these canvases already rendered correctly (they're visible to the
+// person right now).
+function canvasToPngDataUrl(canvasId) {
+  try {
+    const canvas = document.getElementById(canvasId);
+    if (!canvas) return null;
+    return canvas.toDataURL('image/png');
+  } catch (e) { return null; }
+}
+
 // Draws one certificate starting at startY on the given jsPDF doc.
-// Returns the Y position immediately after it, so multiple certificates
-// can be stacked on one page if there's room, or a fresh page started.
-async function drawCertificateOnDoc(doc, person, ev, logoDataUrl, startY) {
+// Uses the event's own brand color (falls back to IMPI red) and includes
+// both the IMPI logo and the event/client logo, matching the on-screen
+// certificate design.
+async function drawCertificateOnDoc(doc, person, ev, logoDataUrl, eventLogoDataUrl, qrDataUrl, startY) {
   const pageW = doc.internal.pageSize.getWidth();
-  const red = [212, 43, 43];
+  const themeHex = (ev && ev.color_primary) || '#D42B2B';
+  const [tr, tg, tb] = hexToRgb(themeHex);
   const dark = [35, 31, 32];
 
-  doc.setFillColor(red[0], red[1], red[2]);
+  doc.setFillColor(tr, tg, tb);
   doc.rect(0, startY, pageW, 38, 'F');
   if (logoDataUrl) {
     try { doc.addImage(logoDataUrl, 'PNG', 15, startY + 6, 26, 26); } catch (e) {}
+  }
+  if (eventLogoDataUrl) {
+    try { doc.addImage(eventLogoDataUrl, 'PNG', pageW - 41, startY + 6, 26, 26); } catch (e) {}
   }
   doc.setTextColor(255, 255, 255);
   doc.setFont('helvetica', 'bold');
@@ -1806,10 +1836,9 @@ async function drawCertificateOnDoc(doc, person, ev, logoDataUrl, startY) {
   y += 9;
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(22);
-  doc.setTextColor(red[0], red[1], red[2]);
+  doc.setTextColor(tr, tg, tb);
   doc.text(person.cert_code || '\u2014', 15, y);
 
-  const qrDataUrl = await getQrPngDataUrl(person, ev);
   if (qrDataUrl) {
     try { doc.addImage(qrDataUrl, 'PNG', pageW - 55, startY + 46, 40, 40); } catch (e) {}
     doc.setFontSize(8);
@@ -1861,8 +1890,10 @@ async function downloadCertificate() {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({ unit: 'mm', format: 'a4' });
     const logoDataUrl = await getLogoPngDataUrl();
+    const eventLogoDataUrl = await getEventLogoPngDataUrl(eventData);
+    const qrDataUrl = canvasToPngDataUrl('certQrCanvas');
     const person = (certResults && certResults[0]) || {};
-    await drawCertificateOnDoc(doc, person, eventData, logoDataUrl, 0);
+    await drawCertificateOnDoc(doc, person, eventData, logoDataUrl, eventLogoDataUrl, qrDataUrl, 0);
     doc.save('IMPI-Certificate-' + code + '.pdf');
   } catch (e) {
     showToast('Could not generate PDF: ' + e.message, 'error');
@@ -1876,9 +1907,11 @@ async function downloadAllCertificates() {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({ unit: 'mm', format: 'a4' });
     const logoDataUrl = await getLogoPngDataUrl();
+    const eventLogoDataUrl = await getEventLogoPngDataUrl(eventData);
     for (let i = 0; i < certResults.length; i++) {
       if (i > 0) doc.addPage();
-      await drawCertificateOnDoc(doc, certResults[i], eventData, logoDataUrl, 0);
+      const qrDataUrl = canvasToPngDataUrl('groupQr_' + i);
+      await drawCertificateOnDoc(doc, certResults[i], eventData, logoDataUrl, eventLogoDataUrl, qrDataUrl, 0);
     }
     const safeName = (eventData?.name || 'Group').replace(/[^a-z0-9]+/gi, '-');
     doc.save('IMPI-Certificates-' + safeName + '.pdf');
