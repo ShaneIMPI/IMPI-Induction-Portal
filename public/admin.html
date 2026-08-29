@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <meta name="robots" content="noindex,nofollow">
 <title>IMPI Admin</title>
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 <style>
 :root{
   --bg:#F7F8FA;--surface:#fff;--border:#E5E7EB;
@@ -95,6 +97,8 @@ textarea{resize:vertical;}
 .btn-sm:hover{background:#E5E7EB;}
 .btn-danger-sm{padding:4px 10px;font-size:12px;border-radius:4px;cursor:pointer;border:none;background:#FEE2E2;color:#DC2626;font-family:inherit;}
 .btn-danger-sm:hover{background:#FECACA;}
+.btn-secondary-sm{padding:4px 10px;font-size:12px;border-radius:4px;cursor:pointer;border:1px solid var(--border);background:var(--surface);color:var(--text);font-family:inherit;}
+.btn-secondary-sm:hover{background:var(--bg);}
 /* Status badges */
 .status-badge{font-size:11px;font-weight:600;padding:2px 8px;border-radius:100px;flex-shrink:0;}
 .status-badge.active{background:#DCFCE7;color:#16A34A;}
@@ -231,7 +235,7 @@ input[type=color]{width:44px;height:36px;border:1px solid var(--border);border-r
           <div class="stat-card"><div class="stat-value" id="statActive">—</div><div class="stat-label">Active Events</div></div>
           <div class="stat-card"><div class="stat-value" id="statTotal">—</div><div class="stat-label">Total Completions</div></div>
           <div class="stat-card"><div class="stat-value" id="statToday">—</div><div class="stat-label">Today's Completions</div></div>
-          <div class="stat-card"><div class="stat-value" id="statEmails">—</div><div class="stat-label">Emails Sent</div></div>
+          <div class="stat-card"><div class="stat-value" id="statWeek">—</div><div class="stat-label">This Week</div></div>
         </div>
         <div class="section-card">
           <div class="section-title">Recent Completions</div>
@@ -406,7 +410,10 @@ input[type=color]{width:44px;height:36px;border:1px solid var(--border);border-r
         <div class="section-card" style="margin-bottom:0">
           <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px;flex-wrap:wrap">
             <div class="section-title" style="margin:0">Completions</div>
-            <button class="btn-secondary" style="padding:8px 16px;font-size:13px" onclick="exportCSV()">⬇ Export CSV</button>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <button class="btn-danger-sm" id="deleteSelectedBtn" style="display:none;padding:8px 16px;font-size:13px" onclick="confirmDeleteSelected()">🗑 Delete Selected (<span id="selectedCount">0</span>)</button>
+              <button class="btn-secondary" style="padding:8px 16px;font-size:13px" onclick="exportCSV()">⬇ Export CSV</button>
+            </div>
           </div>
           <div class="filter-row">
             <select id="eventFilter" onchange="filterAndRender()" style="max-width:240px">
@@ -419,9 +426,10 @@ input[type=color]{width:44px;height:36px;border:1px solid var(--border);border-r
             <table class="data-table">
               <thead>
                 <tr>
+                  <th><input type="checkbox" id="selectAllComps" onchange="toggleSelectAllComps(this)"></th>
                   <th>#</th><th>Name</th><th>Surname</th><th>Company</th><th>Role</th>
                   <th>ID Type</th><th>ID Number</th><th>Email</th><th>Event</th>
-                  <th>Date</th><th>Sent</th><th>Code</th><th>Action</th>
+                  <th>Date</th><th>Code</th><th>Action</th>
                 </tr>
               </thead>
               <tbody id="compTbody"><tr><td colspan="13" style="text-align:center;color:var(--text-muted);padding:24px">Loading…</td></tr></tbody>
@@ -699,11 +707,12 @@ async function loadDashboard(){
     const activeCount=evArr.filter(e=>e.status==='active').length;
     const today=new Date().toISOString().split('T')[0];
     const todayCount=compArr.filter(c=>c.completed_at?.startsWith(today)).length;
-    const emailCount=compArr.filter(c=>c.email_sent).length;
+    const weekAgo=new Date(Date.now()-7*24*60*60*1000);
+    const weekCount=compArr.filter(c=>c.completed_at && new Date(c.completed_at)>=weekAgo).length;
     document.getElementById('statActive').textContent=activeCount;
     document.getElementById('statTotal').textContent=compArr.length;
     document.getElementById('statToday').textContent=todayCount;
-    document.getElementById('statEmails').textContent=emailCount;
+    document.getElementById('statWeek').textContent=weekCount;
     const evMap=Object.fromEntries(evArr.map(e=>[e.id,e.name]));
     const recent=compArr.slice(0,8);
     document.getElementById('recentTbody').innerHTML=recent.map(c=>`
@@ -946,7 +955,7 @@ async function deleteEvent(){
 }
 
 /* ── Completions ── */
-let allCompletions=[],allEventsMap={};
+let allCompletions=[],allEventsMap={},allEventsFull=[];
 
 async function loadCompletions(){
   document.getElementById('countDisplay').textContent='Loading…';
@@ -957,6 +966,7 @@ async function loadCompletions(){
     ]);
     allCompletions=Array.isArray(comps)?comps:[];
     const evArr=Array.isArray(evs)?evs:[];
+    allEventsFull=evArr;
     allEventsMap=Object.fromEntries(evArr.map(e=>[e.id,e.name]));
     const filter=document.getElementById('eventFilter');
     const curVal=filter.value;
@@ -982,6 +992,7 @@ function filterAndRender(){
   document.getElementById('countDisplay').textContent=`Showing ${filtered.length} of ${allCompletions.length} completions`;
   document.getElementById('compTbody').innerHTML=filtered.map((c,i)=>`
     <tr>
+      <td><input type="checkbox" class="comp-select" data-code="${escHtml(c.cert_code)}" onchange="updateSelectedCount()"></td>
       <td>${i+1}</td>
       <td>${escHtml(c.full_name)}</td>
       <td>${escHtml(c.surname||'')}</td>
@@ -992,11 +1003,50 @@ function filterAndRender(){
       <td>${escHtml(c.email||'—')}</td>
       <td>${escHtml(allEventsMap[c.event_id]||c.event_id||'—')}</td>
       <td>${c.completed_at?new Date(c.completed_at).toLocaleDateString('en-ZA'):'—'}</td>
-      <td>${c.email_sent?'✓':'—'}</td>
       <td><code>${escHtml(c.cert_code)}</code></td>
-      <td><button class="btn-danger-sm del-comp-btn" data-code="${escHtml(c.cert_code)}" data-name="${escHtml(c.full_name+' '+(c.surname||''))}">Delete</button></td>
+      <td style="white-space:nowrap">
+        <button class="btn-secondary-sm dl-comp-btn" data-code="${escHtml(c.cert_code)}" style="margin-right:6px">📥 Download</button>
+        <button class="btn-danger-sm del-comp-btn" data-code="${escHtml(c.cert_code)}" data-name="${escHtml(c.full_name+' '+(c.surname||''))}">Delete</button>
+      </td>
     </tr>
   `).join('')||'<tr><td colspan="13" style="text-align:center;color:var(--text-muted);padding:24px">No completions found</td></tr>';
+  document.getElementById('selectAllComps').checked=false;
+  updateSelectedCount();
+}
+
+function toggleSelectAllComps(checkbox){
+  document.querySelectorAll('.comp-select').forEach(cb=>{cb.checked=checkbox.checked;});
+  updateSelectedCount();
+}
+
+function updateSelectedCount(){
+  const n=document.querySelectorAll('.comp-select:checked').length;
+  document.getElementById('selectedCount').textContent=n;
+  document.getElementById('deleteSelectedBtn').style.display=n>0?'inline-block':'none';
+}
+
+function confirmDeleteSelected(){
+  const codes=Array.from(document.querySelectorAll('.comp-select:checked')).map(cb=>cb.dataset.code);
+  if(codes.length===0) return;
+  const modal=document.getElementById('deleteModal');
+  document.getElementById('deleteModalMsg').textContent=`Delete ${codes.length} selected completion(s)? Their certificates will no longer verify. This cannot be undone.`;
+  document.getElementById('deleteModalConfirm').onclick=()=>deleteSelectedCompletions(codes);
+  modal.classList.add('open');
+}
+
+async function deleteSelectedCompletions(codes){
+  document.getElementById('deleteModal').classList.remove('open');
+  showToast(`Deleting ${codes.length} completion(s)…`);
+  let failed=0;
+  for(const code of codes){
+    const res=await fetch('/api/completions',{method:'DELETE',headers:{'Content-Type':'application/json',...authHeaders()},body:JSON.stringify({cert_code:code})});
+    const data=await res.json();
+    if(!data.success) failed++;
+  }
+  allCompletions=allCompletions.filter(c=>!codes.includes(c.cert_code));
+  filterAndRender();
+  if(failed===0) showToast(`${codes.length} completion(s) deleted`);
+  else showToast(`Deleted ${codes.length-failed}, ${failed} failed`,'error');
 }
 
 function confirmDeleteCompletion(certCode,name){
@@ -1027,11 +1077,11 @@ function exportCSV(){
   );
   const eventName=eventFilter?(allEventsMap[eventFilter]||'all').replace(/\s+/g,'_'):'all';
   const date=new Date().toISOString().split('T')[0];
-  const headers=['Name','Surname','Company','Role','ID Type','ID Number','Email','Phone','Trade','Event','Completed','Email Sent','Cert Code'];
+  const headers=['Name','Surname','Company','Role','ID Type','ID Number','Email','Phone','Trade','Event','Completed','Cert Code'];
   const rows=filtered.map(c=>[
     c.full_name,c.surname,c.company,c.role,c.id_type,c.id_number,
     c.email,c.phone,c.trade,allEventsMap[c.event_id]||c.event_id,
-    c.completed_at,c.email_sent?'Yes':'No',c.cert_code
+    c.completed_at,c.cert_code
   ].map(v=>`"${(v||'').toString().replace(/"/g,'""')}"`).join(','));
   const csv=[headers.join(','),...rows].join('\n');
   const blob=new Blob([csv],{type:'text/csv'});
@@ -1040,6 +1090,120 @@ function exportCSV(){
   a.download=`completions_${eventName}_${date}.csv`;
   a.click();
 }
+
+/* ── Certificate PDF download (admin) ── */
+let _adminLogoPngCache=null,_adminDesignCache=null;
+
+async function getAdminLogoPngDataUrl(){
+  if(_adminLogoPngCache) return _adminLogoPngCache;
+  try{
+    if(!_adminDesignCache){
+      _adminDesignCache=await fetch('/api/design',{headers:authHeaders()}).then(r=>r.json()).catch(()=>({}));
+    }
+    const logoUrl=_adminDesignCache?.impi_logo_url;
+    if(!logoUrl) return null;
+    return await new Promise(resolve=>{
+      const img=new Image();
+      img.crossOrigin='anonymous';
+      img.onload=function(){
+        try{
+          const c=document.createElement('canvas');
+          c.width=img.naturalWidth||400;c.height=img.naturalHeight||400;
+          c.getContext('2d').drawImage(img,0,0,c.width,c.height);
+          _adminLogoPngCache=c.toDataURL('image/png');
+          resolve(_adminLogoPngCache);
+        }catch(e){resolve(null);}
+      };
+      img.onerror=function(){resolve(null);};
+      img.src=logoUrl;
+    });
+  }catch(e){return null;}
+}
+
+function getAdminQrPngDataUrl(person,ev){
+  return new Promise(resolve=>{
+    try{
+      const canvas=document.createElement('canvas');
+      const data='IMPIVERT:'+person.cert_code+':'+person.full_name+':'+(ev?.id||'');
+      QRCode.toCanvas(canvas,data,{width:240,margin:1},function(qrErr){
+        resolve(qrErr?null:canvas.toDataURL('image/png'));
+      });
+    }catch(e){resolve(null);}
+  });
+}
+
+async function drawCertificateOnDocAdmin(doc,person,ev,logoDataUrl){
+  const pageW=doc.internal.pageSize.getWidth();
+  const red=[212,43,43],dark=[35,31,32];
+
+  doc.setFillColor(red[0],red[1],red[2]);
+  doc.rect(0,0,pageW,38,'F');
+  if(logoDataUrl){try{doc.addImage(logoDataUrl,'PNG',15,6,26,26);}catch(e){}}
+  doc.setTextColor(255,255,255);
+  doc.setFont('helvetica','bold');doc.setFontSize(16);
+  doc.text('IMPI Safety Services International',48,17);
+  doc.setFont('helvetica','normal');doc.setFontSize(10);
+  doc.text('Safety Induction Certificate',48,25);
+
+  let y=50;
+  doc.setTextColor(22,163,74);doc.setFont('helvetica','bold');doc.setFontSize(11);
+  doc.text('\u2713 VERIFIED & ACTIVE',15,y);
+
+  y+=10;doc.setFontSize(9);doc.setTextColor(140,140,140);
+  doc.text('CERTIFICATE CODE',15,y);
+  y+=9;doc.setFont('helvetica','bold');doc.setFontSize(22);doc.setTextColor(red[0],red[1],red[2]);
+  doc.text(person.cert_code||'\u2014',15,y);
+
+  const qrDataUrl=await getAdminQrPngDataUrl(person,ev);
+  if(qrDataUrl){
+    try{doc.addImage(qrDataUrl,'PNG',pageW-55,46,40,40);}catch(e){}
+    doc.setFontSize(8);doc.setTextColor(140,140,140);doc.setFont('helvetica','normal');
+    doc.text('Scan to verify',pageW-55,90);
+  }
+
+  y+=14;
+  const rows=[
+    ['Name',((person.full_name||'')+' '+(person.surname||'')).trim()||'\u2014'],
+    ['ID Type',person.id_type||'SA ID'],
+    ['Company',person.company||'\u2014'],
+    ['Role',person.role||'\u2014'],
+    ['Event',ev?.name||'\u2014'],
+    ['Venue',ev?.venue||'\u2014'],
+    ['Completed',person.completed_at?new Date(person.completed_at).toLocaleDateString('en-ZA',{day:'2-digit',month:'long',year:'numeric'}):'\u2014']
+  ];
+  doc.setFontSize(10);
+  rows.forEach(function(r){
+    doc.setFont('helvetica','normal');doc.setTextColor(140,140,140);
+    doc.text(r[0].toUpperCase(),15,y);
+    doc.setFont('helvetica','bold');doc.setTextColor(dark[0],dark[1],dark[2]);
+    doc.text(String(r[1]),60,y);
+    y+=8;
+  });
+
+  y+=6;doc.setDrawColor(220,220,220);doc.line(15,y,pageW-15,y);
+  y+=8;doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(160,160,160);
+  doc.text('This certificate was issued by IMPI Safety Services International.',15,y);
+  y+=5;
+  doc.text('Verify at: impi-inductions.netlify.app/verify?code='+(person.cert_code||''),15,y);
+}
+
+async function downloadCertificateFromAdmin(certCode){
+  const person=allCompletions.find(c=>c.cert_code===certCode);
+  if(!person){showToast('Completion not found','error');return;}
+  const ev=allEventsFull.find(e=>e.id===person.event_id)||{};
+  showToast('Preparing download…');
+  try{
+    const {jsPDF}=window.jspdf;
+    const doc=new jsPDF({unit:'mm',format:'a4'});
+    const logoDataUrl=await getAdminLogoPngDataUrl();
+    await drawCertificateOnDocAdmin(doc,person,ev,logoDataUrl);
+    doc.save('IMPI-Certificate-'+certCode+'.pdf');
+  }catch(e){
+    showToast('Could not generate PDF: '+e.message,'error');
+  }
+}
+
+
 
 /* ── Topics ── */
 let topicsData=[],topicsEventId='global';
@@ -1414,6 +1578,8 @@ document.addEventListener('DOMContentLoaded',()=>{
   document.addEventListener('click',e=>{
     const comp=e.target.closest('.del-comp-btn');
     if(comp){confirmDeleteCompletion(comp.dataset.code,comp.dataset.name);return;}
+    const dl=e.target.closest('.dl-comp-btn');
+    if(dl){downloadCertificateFromAdmin(dl.dataset.code);return;}
     const roleBtn=e.target.closest('.user-role-btn');
     if(roleBtn){changeRole(roleBtn.dataset.uid,roleBtn.dataset.role);return;}
     const pwBtn=e.target.closest('.user-pw-btn');
