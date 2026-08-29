@@ -1233,7 +1233,6 @@ function renderTopicSteps() {
   container.innerHTML = topics.map((topic, i) => {
     const stepN    = i + 2;
     const prevStep = i === 0 ? 1 : stepN - 1;
-    const nextStep = stepN + 1;
     const correctText = escHtml(topic.correct_answer || topic.quiz_correct || 'Correct answer');
     const wrongText   = escHtml(topic.wrong_answer   || topic.quiz_wrong   || 'Incorrect answer');
     const warning     = topic.warning ? `<div class="topic-warning">${escHtml(topic.warning)}</div>` : '';
@@ -1253,7 +1252,6 @@ function renderTopicSteps() {
   </div>
   <div class="step-actions">
     <button class="btn btn-ghost" onclick="showStep(${prevStep})" data-i18n="back">Back</button>
-    <button class="btn btn-primary" id="btnTopicNext_${i}" onclick="showStep(${nextStep})" disabled data-i18n="next">Next</button>
   </div>
 </div>`;
   }).join('\n');
@@ -1267,9 +1265,12 @@ function answerQuiz(topicIdx, el, correct) {
   if (correct) {
     el.classList.add('correct');
     quizAnswered[topicIdx] = true;
+    // Auto-advance to the next topic — no Next button needed. The brief
+    // pause just lets the person see the green "correct" confirmation
+    // before the page moves on.
     setTimeout(() => {
-      document.getElementById('btnTopicNext_' + topicIdx).disabled = false;
-    }, 600);
+      showStep(topicIdx + 3);
+    }, 900);
   } else {
     el.classList.add('wrong', 'answer-shake');
     setTimeout(() => el.classList.remove('answer-shake'), 500);
@@ -1785,11 +1786,28 @@ function getEventLogoPngDataUrl(ev) {
   });
 }
 
-// Pulls the PNG straight from a QR canvas already rendered on screen —
-// far more reliable than regenerating a fresh detached QR code, since we
-// know these canvases already rendered correctly (they're visible to the
-// person right now). Logs to console if it fails, so we can diagnose
-// exactly what's going wrong if this still doesn't work on a real device.
+// Primary method: fetch a ready-made QR PNG from a public QR image API
+// instead of generating one locally via canvas. The two canvas-based
+// approaches (reusing the on-screen canvas, and regenerating fresh) both
+// failed consistently on real devices — this sidesteps canvas entirely,
+// which removes whatever browser-specific quirk was causing that.
+async function fetchQrPngDataUrl(data) {
+  try {
+    const url = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&margin=10&data=' + encodeURIComponent(data);
+    const res = await fetch(url);
+    if (!res.ok) { console.warn('[cert-pdf] QR API responded with', res.status); return null; }
+    const blob = await res.blob();
+    return await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result);
+      reader.onerror = () => reject(reader.error);
+      reader.readAsDataURL(blob);
+    });
+  } catch (e) { console.error('[cert-pdf] QR API fetch failed:', e); return null; }
+}
+
+// Fallback 1: pull the PNG straight from the QR canvas already rendered on
+// screen (used only if the API call above fails, e.g. no network).
 function canvasToPngDataUrl(canvasId) {
   try {
     const canvas = document.getElementById(canvasId);
@@ -1800,10 +1818,7 @@ function canvasToPngDataUrl(canvasId) {
   } catch (e) { console.error('[cert-pdf] reading on-screen QR canvas failed:', canvasId, e); return null; }
 }
 
-// Fallback: regenerate the QR fresh into a canvas that IS attached to the
-// document (just hidden off-screen), in case reading the visible canvas
-// failed for any reason — some mobile browsers behave inconsistently with
-// canvases that were never inserted into the page.
+// Fallback 2: regenerate the QR fresh into an attached-but-hidden canvas.
 function generateQrPngDataUrl(person, ev) {
   return new Promise((resolve) => {
     try {
@@ -1831,12 +1846,16 @@ function generateQrPngDataUrl(person, ev) {
   });
 }
 
-// Tries the fast path (reuse what's already on screen) first, falls back
-// to a fresh attached-canvas generation if that comes back empty.
+// Tries the QR API first (most reliable), then the on-screen canvas, then
+// a fresh local generation — in that order — before giving up.
 async function getQrForPdf(canvasId, person, ev) {
+  const data = 'IMPIVERT:' + person.cert_code + ':' + person.full_name + ':' + (ev?.id || '');
+  const viaApi = await fetchQrPngDataUrl(data);
+  if (viaApi) return viaApi;
+  console.warn('[cert-pdf] QR API unavailable, trying on-screen canvas for', canvasId);
   const fromScreen = canvasToPngDataUrl(canvasId);
   if (fromScreen) return fromScreen;
-  console.warn('[cert-pdf] falling back to fresh QR generation for', canvasId);
+  console.warn('[cert-pdf] falling back to fresh local QR generation for', canvasId);
   return await generateQrPngDataUrl(person, ev);
 }
 
