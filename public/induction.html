@@ -497,26 +497,26 @@ body{background:var(--bg);font-family:var(--fb);min-height:100vh;color:var(--tex
   <div class="step-title" data-i18n="legal_title">Legal Agreement</div>
   <div class="step-sub">Please read and confirm each statement before generating your certificate.</div>
 
-  <div class="legal-item" id="legal1" onclick="toggleLegal(1)">
-    <input type="checkbox" id="legal1cb" onclick="event.stopPropagation()"/>
+  <label class="legal-item" id="legal1" for="legal1cb">
+    <input type="checkbox" id="legal1cb" onchange="onLegalChange(1)"/>
     <span class="legal-text" data-i18n="legal_1">I confirm all provided information is accurate and truthful.</span>
-  </div>
-  <div class="legal-item" id="legal2" onclick="toggleLegal(2)">
-    <input type="checkbox" id="legal2cb" onclick="event.stopPropagation()"/>
+  </label>
+  <label class="legal-item" id="legal2" for="legal2cb">
+    <input type="checkbox" id="legal2cb" onchange="onLegalChange(2)"/>
     <span class="legal-text" data-i18n="legal_2">I agree to comply with all safety rules and regulations at this event.</span>
-  </div>
-  <div class="legal-item" id="legal3" onclick="toggleLegal(3)">
-    <input type="checkbox" id="legal3cb" onclick="event.stopPropagation()"/>
+  </label>
+  <label class="legal-item" id="legal3" for="legal3cb">
+    <input type="checkbox" id="legal3cb" onchange="onLegalChange(3)"/>
     <span class="legal-text" data-i18n="legal_3">I understand that non-compliance may result in removal from the premises.</span>
-  </div>
-  <div class="legal-item" id="legal4" onclick="toggleLegal(4)">
-    <input type="checkbox" id="legal4cb" onclick="event.stopPropagation()"/>
+  </label>
+  <label class="legal-item" id="legal4" for="legal4cb">
+    <input type="checkbox" id="legal4cb" onchange="onLegalChange(4)"/>
     <span class="legal-text" data-i18n="legal_4">I have read and understood all safety topics covered in this induction.</span>
-  </div>
-  <div class="legal-item" id="legal5" onclick="toggleLegal(5)">
-    <input type="checkbox" id="legal5cb" onclick="event.stopPropagation()"/>
+  </label>
+  <label class="legal-item" id="legal5" for="legal5cb">
+    <input type="checkbox" id="legal5cb" onchange="onLegalChange(5)"/>
     <span class="legal-text" data-i18n="legal_5">I acknowledge that my certificate will be verified at the venue entrance.</span>
-  </div>
+  </label>
 
   <div class="emergency-box" id="emergencyBox">
     <div class="emergency-title" data-i18n="emergency_contacts">Emergency Contacts</div>
@@ -1289,10 +1289,9 @@ function prevFromLegal() {
   showStep(legalStepIndex() - 1);
 }
 
-function toggleLegal(n) {
+function onLegalChange(n) {
   const cb = document.getElementById('legal' + n + 'cb');
   const item = document.getElementById('legal' + n);
-  cb.checked = !cb.checked;
   item.classList.toggle('checked', cb.checked);
   checkLegalComplete();
 }
