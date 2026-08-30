@@ -21,3 +21,32 @@
   from = "/induction"
   to = "/induction.html"
   status = 200
+
+# HTML pages must never be cached by the browser. Every fix that gets
+# published needs to reach every device on the very next load — no
+# stale copy of index.html/induction.html/admin.html should ever be
+# able to linger on someone's phone re-triggering an already-fixed bug.
+[[headers]]
+  for = "/*.html"
+  [headers.values]
+    Cache-Control = "no-cache, no-store, must-revalidate"
+
+[[headers]]
+  for = "/"
+  [headers.values]
+    Cache-Control = "no-cache, no-store, must-revalidate"
+
+[[headers]]
+  for = "/induction"
+  [headers.values]
+    Cache-Control = "no-cache, no-store, must-revalidate"
+
+[[headers]]
+  for = "/admin"
+  [headers.values]
+    Cache-Control = "no-cache, no-store, must-revalidate"
+
+[[headers]]
+  for = "/verify"
+  [headers.values]
+    Cache-Control = "no-cache, no-store, must-revalidate"
