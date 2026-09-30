@@ -212,6 +212,7 @@ input[type=color]{width:44px;height:36px;border:1px solid var(--border);border-r
       <button class="nav-item active" data-tab="dashboard" onclick="showTab('dashboard',this)">📊 Dashboard</button>
       <button class="nav-item" data-tab="events" onclick="showTab('events',this)">📅 Events</button>
       <button class="nav-item" data-tab="completions" onclick="showTab('completions',this)">🏆 Completions</button>
+      <button class="nav-item" data-tab="attendance" onclick="showTab('attendance',this)">📍 Attendance</button>
       <button class="nav-item" data-tab="topics" onclick="showTab('topics',this)">📝 Induction Content</button>
       <button class="nav-item" data-tab="design" onclick="showTab('design',this)">🎨 Design</button>
       <button class="nav-item" data-tab="settings" onclick="showTab('settings',this)">⚙️ Settings</button>
@@ -347,6 +348,22 @@ input[type=color]{width:44px;height:36px;border:1px solid var(--border);border-r
               </div>
 
               <div class="section-card">
+                <div class="section-title">Marshal Check-In</div>
+                <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.6">
+                  Marshals enter this PIN at <strong>/marshal.html</strong> to scan certificates and record daily arrivals for this event. Leave blank to keep marshal check-in switched off for this event.
+                </p>
+                <div class="form-grid">
+                  <div class="form-group">
+                    <label>Marshal PIN</label>
+                    <div style="display:flex;gap:8px">
+                      <input type="text" id="evMarshalPin" placeholder="e.g. 4821" style="flex:1">
+                      <button type="button" class="btn-secondary" style="padding:8px 14px;font-size:13px;white-space:nowrap" onclick="document.getElementById('evMarshalPin').value=String(Math.floor(1000+Math.random()*9000))">Generate</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="section-card">
                 <div class="section-title">Event Branding</div>
                 <div class="form-grid" style="margin-bottom:20px">
                   <div class="form-group">
@@ -433,6 +450,31 @@ input[type=color]{width:44px;height:36px;border:1px solid var(--border);border-r
                 </tr>
               </thead>
               <tbody id="compTbody"><tr><td colspan="13" style="text-align:center;color:var(--text-muted);padding:24px">Loading…</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div id="tab-attendance" class="tab-page">
+        <div class="section-card" style="margin-bottom:0">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px;flex-wrap:wrap">
+            <div class="section-title" style="margin:0">Daily Attendance</div>
+            <button class="btn-secondary" style="padding:8px 16px;font-size:13px" onclick="exportAttendanceCSV()">⬇ Export CSV</button>
+          </div>
+          <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.6">
+            Arrivals recorded by marshals scanning certificates each day at <strong>/marshal.html</strong>. Figures update once a marshal's phone has synced — offline scans upload automatically once that phone is back online.
+          </p>
+          <div class="filter-row">
+            <select id="attendanceEventSelect" onchange="loadAttendanceReport()" style="max-width:280px"></select>
+            <select id="attendanceCompanyFilter" onchange="renderAttendanceTable()" style="max-width:240px">
+              <option value="">All companies</option>
+            </select>
+          </div>
+          <div id="attendanceCount" class="count-display">Select an event to view attendance.</div>
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead id="attendanceThead"></thead>
+              <tbody id="attendanceTbody"></tbody>
             </table>
           </div>
         </div>
@@ -689,9 +731,9 @@ function showTab(tab,btn){
   document.querySelectorAll('.nav-item').forEach(el=>el.classList.remove('active'));
   document.getElementById('tab-'+tab).classList.add('active');
   if(btn) btn.classList.add('active');
-  const titles={dashboard:'Dashboard',events:'Events',completions:'Completions',topics:'Induction Content',design:'Design',settings:'Settings'};
+  const titles={dashboard:'Dashboard',events:'Events',completions:'Completions',attendance:'Attendance',topics:'Induction Content',design:'Design',settings:'Settings'};
   document.getElementById('pageTitle').textContent=titles[tab]||tab;
-  const loaders={dashboard:loadDashboard,events:loadEvents,completions:loadCompletions,topics:loadTopics,design:loadDesign,settings:loadSettings};
+  const loaders={dashboard:loadDashboard,events:loadEvents,completions:loadCompletions,attendance:loadAttendanceEvents,topics:loadTopics,design:loadDesign,settings:loadSettings};
   if(loaders[tab]) loaders[tab]();
 }
 
@@ -808,6 +850,7 @@ function fillEditor(ev){
   setFieldValue('evSecMgrNum',ev.sec_num);
   setFieldValue('evAmbulance',ev.amb_num);
   setFieldValue('evOrgContact',ev.ev_org_contact);
+  setFieldValue('evMarshalPin',ev.marshal_pin);
   // Colors — flat DB columns
   setColorPair('evPrimary','evPrimaryHex',ev.color_primary||'#D42B2B');
   setColorPair('evAccent','evAccentHex',ev.color_accent||'#F5C800');
@@ -918,6 +961,7 @@ async function saveEvent(){
     sec_num:document.getElementById('evSecMgrNum').value,
     amb_num:document.getElementById('evAmbulance').value,
     ev_org_contact:document.getElementById('evOrgContact').value,
+    marshal_pin:document.getElementById('evMarshalPin').value.trim()||null,
     color_primary:document.getElementById('evPrimaryHex').value||'#D42B2B',
     color_accent:document.getElementById('evAccentHex').value||'#F5C800',
     color_text:document.getElementById('evTextHex').value||'#FFFFFF'
@@ -1088,6 +1132,92 @@ function exportCSV(){
   const a=document.createElement('a');
   a.href=URL.createObjectURL(blob);
   a.download=`completions_${eventName}_${date}.csv`;
+  a.click();
+}
+
+/* ── Attendance ── */
+let lastAttendanceReport=null; // {eventId, completions, scans, days}
+
+async function loadAttendanceEvents(){
+  const sel=document.getElementById('attendanceEventSelect');
+  const curVal=sel.value;
+  try{
+    const evs=allEventsFull.length?allEventsFull:await fetch('/api/events',{headers:authHeaders()}).then(r=>r.json());
+    const evArr=Array.isArray(evs)?evs:[];
+    if(!allEventsFull.length){allEventsFull=evArr;allEventsMap=Object.fromEntries(evArr.map(e=>[e.id,e.name]));}
+    sel.innerHTML=evArr.map(e=>`<option value="${escHtml(e.id)}">${escHtml(e.name)}</option>`).join('');
+    if(curVal&&evArr.some(e=>e.id===curVal)) sel.value=curVal;
+    if(sel.value) await loadAttendanceReport();
+  }catch(e){
+    console.error('[loadAttendanceEvents]',e);
+    showToast('Failed to load events','error');
+  }
+}
+
+async function loadAttendanceReport(){
+  const eventId=document.getElementById('attendanceEventSelect').value;
+  const countEl=document.getElementById('attendanceCount');
+  if(!eventId){countEl.textContent='Select an event to view attendance.';return;}
+  countEl.textContent='Loading…';
+  try{
+    const res=await fetch('/api/attendance-report?eventId='+encodeURIComponent(eventId),{headers:authHeaders()});
+    const data=await res.json();
+    if(!res.ok) throw new Error(data.error||'Failed to load');
+    const days=[...new Set((data.scans||[]).map(s=>s.scan_date))].sort();
+    lastAttendanceReport={eventId,completions:data.completions||[],scans:data.scans||[],days};
+
+    const companySel=document.getElementById('attendanceCompanyFilter');
+    const curCompany=companySel.value;
+    const companies=[...new Set(lastAttendanceReport.completions.map(c=>c.company).filter(Boolean))].sort();
+    companySel.innerHTML='<option value="">All companies</option>'+companies.map(c=>`<option value="${escHtml(c)}">${escHtml(c)}</option>`).join('');
+    if(companies.includes(curCompany)) companySel.value=curCompany;
+
+    renderAttendanceTable();
+  }catch(e){
+    console.error('[loadAttendanceReport]',e);
+    countEl.textContent='Failed to load attendance';
+    showToast('Failed to load attendance report','error');
+  }
+}
+
+// Re-renders from already-fetched data — no network call — so the company
+// filter feels instant, same pattern as the Completions tab's search.
+function renderAttendanceTable(){
+  if(!lastAttendanceReport) return;
+  const {completions,scans,days}=lastAttendanceReport;
+  const company=document.getElementById('attendanceCompanyFilter').value;
+  const rows=company?completions.filter(c=>c.company===company):completions;
+
+  const scanByKey={};
+  scans.forEach(s=>{scanByKey[s.cert_code+'|'+s.scan_date]=new Date(s.scanned_at).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});});
+
+  const thead=document.getElementById('attendanceThead');
+  const tbody=document.getElementById('attendanceTbody');
+  thead.innerHTML=`<tr><th>Name</th><th>Surname</th><th>Company</th><th>Role</th><th>Code</th>${days.map(d=>`<th>${escHtml(d)}</th>`).join('')}</tr>`;
+  tbody.innerHTML=rows.map(r=>{
+    const cells=days.map(d=>`<td>${escHtml(scanByKey[r.cert_code+'|'+d]||'—')}</td>`).join('');
+    return `<tr><td>${escHtml(r.full_name)}</td><td>${escHtml(r.surname)}</td><td>${escHtml(r.company)}</td><td>${escHtml(r.role)}</td><td>${escHtml(r.cert_code)}</td>${cells}</tr>`;
+  }).join('')||`<tr><td colspan="${5+days.length}" style="text-align:center;color:var(--text-muted);padding:24px">No inductees for this event yet</td></tr>`;
+
+  document.getElementById('attendanceCount').textContent=`${rows.length} people shown`;
+}
+
+function exportAttendanceCSV(){
+  if(!lastAttendanceReport) return;
+  const {scans,days,eventId}=lastAttendanceReport;
+  const company=document.getElementById('attendanceCompanyFilter').value;
+  const rows=company?lastAttendanceReport.completions.filter(c=>c.company===company):lastAttendanceReport.completions;
+  const scanByKey={};
+  scans.forEach(s=>{scanByKey[s.cert_code+'|'+s.scan_date]=new Date(s.scanned_at).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});});
+  const headers=['Name','Surname','Company','Role','Cert Code',...days];
+  const csvRows=rows.map(r=>[r.full_name,r.surname,r.company,r.role,r.cert_code,...days.map(d=>scanByKey[r.cert_code+'|'+d]||'')]
+    .map(v=>`"${(v||'').toString().replace(/"/g,'""')}"`).join(','));
+  const csv=[headers.join(','),...csvRows].join('\n');
+  const blob=new Blob([csv],{type:'text/csv'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  const eventName=company?(allEventsMap[eventId]||eventId).replace(/\s+/g,'_')+'_'+company.replace(/[^a-z0-9]+/gi,'-'):(allEventsMap[eventId]||eventId).replace(/\s+/g,'_');
+  a.download=`attendance_${eventName}.csv`;
   a.click();
 }
 
