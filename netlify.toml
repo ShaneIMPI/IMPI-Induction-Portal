@@ -50,3 +50,13 @@
   for = "/verify"
   [headers.values]
     Cache-Control = "no-cache, no-store, must-revalidate"
+
+[[headers]]
+  for = "/marshal.html"
+  [headers.values]
+    Cache-Control = "no-cache, no-store, must-revalidate"
+
+[[headers]]
+  for = "/marshal-sw.js"
+  [headers.values]
+    Cache-Control = "no-cache, no-store, must-revalidate"
