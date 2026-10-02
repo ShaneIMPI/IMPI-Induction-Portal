@@ -115,18 +115,6 @@ body{background:var(--bg);font-family:var(--fb);min-height:100vh;color:var(--tex
 .popia-title{font-family:var(--fh);font-size:10px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--event-primary);margin-bottom:6px;}
 .popia p{font-size:13px;color:var(--text-secondary);line-height:1.6;}
 
-/* ── ATTENDEE PHOTO CAPTURE ── */
-.photo-cap{display:flex;align-items:center;gap:16px;margin-bottom:16px;}
-.photo-cap-preview{width:84px;height:84px;border-radius:50%;object-fit:cover;background:var(--surface2);border:2px solid var(--border);flex-shrink:0;}
-.photo-cap-placeholder{width:84px;height:84px;border-radius:50%;background:var(--surface2);border:2px dashed var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:28px;color:var(--text-secondary);}
-.photo-cap-actions{display:flex;flex-direction:column;gap:6px;}
-.photo-cap-actions input[type=file]{display:none;}
-.photo-cap-btn{display:inline-block;padding:9px 16px;border-radius:var(--radius-sm);border:1.5px solid var(--event-primary);color:var(--event-primary);font-family:var(--fh);font-size:12px;font-weight:700;letter-spacing:0.5px;text-align:center;cursor:pointer;background:transparent;}
-.photo-cap-btn:active{opacity:0.7;}
-.photo-cap-status{font-size:11px;color:var(--text-secondary);}
-.photo-cap-status.ok{color:#16a34a;font-weight:600;}
-.member-row .photo-cap-preview,.member-row .photo-cap-placeholder{width:64px;height:64px;}
-
 /* ── FORM FIELDS ── */
 .fg{margin-bottom:16px;}
 .fg label{display:block;font-family:var(--fh);font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-secondary);margin-bottom:6px;}
@@ -198,6 +186,12 @@ body{background:var(--bg);font-family:var(--fb);min-height:100vh;color:var(--tex
 .ec-label{font-weight:600;flex-shrink:0;}
 .ec-phone{color:var(--event-primary);font-weight:700;text-decoration:none;}
 .ec-phone:hover{text-decoration:underline;}
+
+/* ── INDUCTION VIDEO STEP ── */
+.video-wrap{position:relative;margin-bottom:8px;}
+.video-wrap video{width:100%;border-radius:10px;background:#000;display:block;max-height:70vh;}
+.video-error{display:none;margin-top:12px;padding:14px 16px;background:var(--accent-red-light);border:1.5px solid rgba(212,43,43,0.25);border-radius:var(--radius-md);font-size:13px;color:var(--text-secondary);line-height:1.6;}
+.video-error .btn{margin-top:10px;}
 
 /* ── STEP ACTION ROW ── */
 .step-actions{display:flex;gap:10px;margin-top:24px;justify-content:flex-end;}
@@ -446,19 +440,7 @@ body{background:var(--bg);font-family:var(--fb);min-height:100vh;color:var(--tex
 
   <div class="popia">
     <div class="popia-title" data-i18n="popia">Privacy Notice</div>
-    <p data-i18n="popia_text">Your personal information — including the photo below — is collected for safety and site-access verification purposes only.</p>
-  </div>
-
-  <div class="fg">
-    <label data-i18n="photo_label">Your Photo (for site access verification)</label>
-    <div class="photo-cap">
-      <div id="selfPhotoPreviewWrap"><div class="photo-cap-placeholder">📷</div></div>
-      <div class="photo-cap-actions">
-        <label class="photo-cap-btn" for="selfPhotoInput" id="selfPhotoBtnLabel" data-i18n="photo_take">Take Photo</label>
-        <input type="file" id="selfPhotoInput" accept="image/*" capture="user" onchange="onSelfPhotoSelected(event)"/>
-        <span class="photo-cap-status" id="selfPhotoStatus"></span>
-      </div>
-    </div>
+    <p data-i18n="popia_text">Your personal information is collected for safety compliance purposes only.</p>
   </div>
 
   <div class="fg">
@@ -510,6 +492,27 @@ body{background:var(--bg);font-family:var(--fb);min-height:100vh;color:var(--tex
   <div class="step-actions">
     <button class="btn btn-ghost" onclick="showStep(0)" data-i18n="back">Back</button>
     <button class="btn btn-primary" onclick="nextFromInfo()" data-i18n="next">Next</button>
+  </div>
+</div>
+
+<!-- INDUCTION VIDEO STEP — only shown when the event has a video configured
+     (Admin → Events → Induction Video). Sits outside the numbered steps so the
+     topic/legal/certificate step numbering is untouched. -->
+<div class="step-content" id="stepVideo">
+  <div class="step-title" data-i18n="video_title">Safety Induction Video</div>
+  <div class="step-sub" data-i18n="video_sub">Please watch the full video before continuing. The Next button unlocks when the video ends.</div>
+  <div class="video-wrap">
+    <video id="inductionVideo" controls controlsList="nodownload noplaybackrate noremoteplayback"
+           disablePictureInPicture playsinline webkit-playsinline preload="auto"
+           oncontextmenu="return false;"></video>
+    <div class="video-error" id="videoError">
+      <div data-i18n="video_error">The video could not be loaded. Please check your connection and try again.</div>
+      <button class="btn btn-primary" onclick="retryVideo()" data-i18n="video_retry">Try Again</button>
+    </div>
+  </div>
+  <div class="step-actions">
+    <button class="btn btn-ghost" onclick="showStep(1)" data-i18n="back">Back</button>
+    <button class="btn btn-primary" id="videoContinueBtn" disabled data-i18n="next">Next</button>
   </div>
 </div>
 
@@ -685,9 +688,10 @@ const LANGS = {
     share:'Share',
     download_cert:'Download Certificate',
     change_event:'← Change Event',
-    photo_label:"Your Photo (for site access verification)",
-    photo_take:"Take Photo",
-    photo_retake:"Retake Photo",
+    video_title:"Safety Induction Video",
+    video_sub:"Please watch the full video before continuing. The Next button unlocks when the video ends.",
+    video_error:"The video could not be loaded. Please check your connection and try again.",
+    video_retry:"Try Again",
     print:'Print',
     verified:'Verified & Active',
     completed_on:'Completed on',
@@ -731,9 +735,10 @@ const LANGS = {
     share:'Deel',
     download_cert:'Laai Sertifikaat af',
     change_event:'← Verander Gebeurtenis',
-    photo_label:"U Foto (vir toegangverifikasie by die terrein)",
-    photo_take:"Neem Foto",
-    photo_retake:"Neem Weer Foto",
+    video_title:"Veiligheidsinduksievideo",
+    video_sub:"Kyk asseblief die hele video voordat u voortgaan. Die Volgende-knoppie ontsluit wanneer die video eindig.",
+    video_error:"Die video kon nie gelaai word nie. Kontroleer asseblief u verbinding en probeer weer.",
+    video_retry:"Probeer Weer",
     print:'Druk',
     verified:'Geverifieer & Aktief',
     completed_on:'Voltooi op',
@@ -776,9 +781,10 @@ const LANGS = {
     share:'Yabelana',
     download_cert:'Layisha Isitifiketi',
     change_event:'← Shintsha Umcimbi',
-    photo_label:"Isithombe Sakho (sokuqinisekisa ukungena endaweni)",
-    photo_take:"Thatha Isithombe",
-    photo_retake:"Phinda Uthathe",
+    video_title:"Ividiyo Yokwethula Ukuphepha",
+    video_sub:"Sicela ubuke yonke ividiyo ngaphambi kokuqhubeka. Inkinobho Okulandelayo izovuleka lapho ividiyo iphela.",
+    video_error:"Ividiyo ayikwazanga ukulayishwa. Sicela ubheke uxhumano lwakho uzame futhi.",
+    video_retry:"Zama Futhi",
     print:'Printa',
     verified:'Kuqinisekisiwe & Kuyasebenza',
     completed_on:'Kwaphothulwa',
@@ -821,9 +827,10 @@ const LANGS = {
     share:'Shiriki',
     download_cert:'Pakua Cheti',
     change_event:'← Badilisha Tukio',
-    photo_label:"Picha Yako (kuthibitisha ufikiaji wa tovuti)",
-    photo_take:"Piga Picha",
-    photo_retake:"Piga Tena",
+    video_title:"Video ya Utangulizi wa Usalama",
+    video_sub:"Tafadhali tazama video nzima kabla ya kuendelea. Kitufe cha Inayofuata kitafunguka video ikiisha.",
+    video_error:"Video haikuweza kupakiwa. Tafadhali angalia muunganisho wako na ujaribu tena.",
+    video_retry:"Jaribu Tena",
     print:'Chapisha',
     verified:'Imethibitishwa & Inafanya Kazi',
     completed_on:'Imekamilika',
@@ -866,9 +873,10 @@ const LANGS = {
     share:'Partager',
     download_cert:'Télécharger le Certificat',
     change_event:'← Changer d\'Événement',
-    photo_label:"Votre Photo (pour vérifier l'accès au site)",
-    photo_take:"Prendre une Photo",
-    photo_retake:"Reprendre la Photo",
+    video_title:"Vidéo d'Induction Sécurité",
+    video_sub:"Veuillez regarder la vidéo en entier avant de continuer. Le bouton Suivant se déverrouille à la fin de la vidéo.",
+    video_error:"La vidéo n'a pas pu être chargée. Veuillez vérifier votre connexion et réessayer.",
+    video_retry:"Réessayer",
     print:'Imprimer',
     verified:'Vérifié et Actif',
     completed_on:'Complété le',
@@ -911,9 +919,10 @@ const LANGS = {
     share:'Partilhar',
     download_cert:'Baixar Certificado',
     change_event:'← Mudar Evento',
-    photo_label:"A Sua Foto (para verificação de acesso ao local)",
-    photo_take:"Tirar Foto",
-    photo_retake:"Tirar Novamente",
+    video_title:"Vídeo de Indução de Segurança",
+    video_sub:"Por favor, veja o vídeo completo antes de continuar. O botão Seguinte desbloqueia quando o vídeo terminar.",
+    video_error:"Não foi possível carregar o vídeo. Verifique a sua ligação e tente novamente.",
+    video_retry:"Tentar Novamente",
     print:'Imprimir',
     verified:'Verificado e Ativo',
     completed_on:'Concluído em',
@@ -956,9 +965,10 @@ const LANGS = {
     share:'Raba',
     download_cert:'Sauke Takardar Shaida',
     change_event:'← Canza Taron',
-    photo_label:"Hoton ka (don tabbatar da shiga wurin)",
-    photo_take:"Dauki Hoto",
-    photo_retake:"Sake Daukar Hoto",
+    video_title:"Bidiyon Gabatarwar Tsaro",
+    video_sub:"Da fatan za a kalli dukkan bidiyon kafin ci gaba. Maɓallin Na Gaba zai buɗe idan bidiyon ya ƙare.",
+    video_error:"Ba a iya loda bidiyon ba. Da fatan za a duba haɗinka a sake gwadawa.",
+    video_retry:"Sake Gwadawa",
     print:'Buga',
     verified:'An Tabbatar & Yana Aiki',
     completed_on:'An Kammala a',
@@ -1001,9 +1011,10 @@ const LANGS = {
     share:'Pin',
     download_cert:'Gba Ijẹrisi',
     change_event:'← Yi Iyipada Iṣẹlẹ',
-    photo_label:"Fọ́tò Rẹ (fún ìmúdájú wíwọlé sí ibi)",
-    photo_take:"Ya Fọ́tò",
-    photo_retake:"Tún Ya Fọ́tò",
+    video_title:"Fídíò Ìfilọ́lẹ̀ Ààbò",
+    video_sub:"Jọ̀wọ́ wo gbogbo fídíò náà ṣáájú kí o tó tẹ̀síwájú. Bọ́tìnì Tẹle yóò ṣí nígbà tí fídíò bá parí.",
+    video_error:"A kò lè gbé fídíò náà wọlé. Jọ̀wọ́ ṣàyẹ̀wò ìsopọ̀ rẹ kí o tún gbìyànjú.",
+    video_retry:"Tún Gbìyànjú",
     print:'Tẹ Jade',
     verified:'Ti jẹri & Ti n Ṣiṣẹ',
     completed_on:'Pari ni',
@@ -1092,6 +1103,7 @@ function getStepEl(n) {
 }
 
 function showStep(n) {
+  if (typeof stopVideoGate === 'function') stopVideoGate();   // leaving the video step pauses it
   document.querySelectorAll('.step-content').forEach(el => el.classList.remove('active'));
   const el = getStepEl(n);
   if (el) el.classList.add('active');
@@ -1181,17 +1193,6 @@ function buildGroupMemberForms(n) {
   container.innerHTML = Array.from({ length: n }, (_, i) => `
     <div class="member-row">
       <div class="member-num">Team Member ${i + 1}</div>
-      <div class="fg">
-        <label>${(typeof t === 'function' && t('photo_label')) || 'Photo (for site access verification)'} *</label>
-        <div class="photo-cap">
-          <div id="m${i}_photoPreviewWrap"><div class="photo-cap-placeholder">📷</div></div>
-          <div class="photo-cap-actions">
-            <label class="photo-cap-btn" for="m${i}_photoInput" id="m${i}_photoBtnLabel">${(typeof t === 'function' && t('photo_take')) || 'Take Photo'}</label>
-            <input type="file" id="m${i}_photoInput" accept="image/*" capture="user" onchange="onMemberPhotoSelected(event, ${i})"/>
-            <span class="photo-cap-status" id="m${i}_photoStatus"></span>
-          </div>
-        </div>
-      </div>
       <div class="member-grid">
         <div class="fg"><label>First Name *</label><input type="text" id="m${i}_firstName" placeholder="First name"/></div>
         <div class="fg"><label>Surname *</label><input type="text" id="m${i}_surname" placeholder="Surname"/></div>
@@ -1200,7 +1201,6 @@ function buildGroupMemberForms(n) {
         <div class="fg"><label>Trade *</label><input type="text" id="m${i}_trade" placeholder="Trade / occupation"/></div>
       </div>
     </div>`).join('');
-  window.__impiMemberPhotos = {}; // rebuilding the forms (group size changed) invalidates any photos already taken
 }
 
 function nextFromType() {
@@ -1215,7 +1215,6 @@ function nextFromType() {
       if (!document.getElementById('m' + i + '_idType')?.value) { showToast('Team Member ' + (i+1) + ' needs an ID Type', 'error'); return; }
       if (!document.getElementById('m' + i + '_idNumber')?.value.trim()) { showToast('Team Member ' + (i+1) + ' needs an ID Number', 'error'); return; }
       if (!document.getElementById('m' + i + '_trade')?.value.trim()) { showToast('Team Member ' + (i+1) + ' needs a Trade', 'error'); return; }
-      if (!window.__impiMemberPhotos[i]) { showToast('Team Member ' + (i+1) + ' needs a Photo', 'error'); return; }
     }
   }
   showStep(1);
@@ -1224,88 +1223,6 @@ function nextFromType() {
 // ═══════════════════════════════════════════════════════
 // STEP 1 — PERSONAL INFO
 // ═══════════════════════════════════════════════════════
-// ═══════════════════════════════════════════════════════
-// ATTENDEE PHOTO CAPTURE
-// ═══════════════════════════════════════════════════════
-// Resizes and compresses a captured photo entirely client-side before it
-// ever leaves the device — a raw phone-camera photo can be several MB;
-// this brings it down to roughly 30-80KB, fast to upload even on weak
-// site connections, and small enough that sending it as part of the same
-// /api/complete submission (rather than a separate upload step) stays
-// well within normal request-size limits.
-function compressImageFile(file, maxDim, quality) {
-  return new Promise((resolve, reject) => {
-    const url = URL.createObjectURL(file);
-    const img = new Image();
-    img.onload = () => {
-      try {
-        const scale = Math.min(1, maxDim / Math.max(img.naturalWidth, img.naturalHeight));
-        const w = Math.round(img.naturalWidth * scale);
-        const h = Math.round(img.naturalHeight * scale);
-        const c = document.createElement('canvas');
-        c.width = w; c.height = h;
-        c.getContext('2d').drawImage(img, 0, 0, w, h);
-        URL.revokeObjectURL(url);
-        resolve(c.toDataURL('image/jpeg', quality));
-      } catch (e) { URL.revokeObjectURL(url); reject(e); }
-    };
-    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Could not read the photo')); };
-    img.src = url;
-  });
-}
-
-window.__impiSelfPhoto = null;
-
-async function onSelfPhotoSelected(evt) {
-  const file = evt.target.files && evt.target.files[0];
-  if (!file) return;
-  const statusEl = document.getElementById('selfPhotoStatus');
-  const btnLabel = document.getElementById('selfPhotoBtnLabel');
-  statusEl.textContent = 'Processing…'; statusEl.className = 'photo-cap-status';
-  try {
-    const dataUrl = await compressImageFile(file, 480, 0.75);
-    window.__impiSelfPhoto = dataUrl;
-    document.getElementById('selfPhotoPreviewWrap').innerHTML = `<img class="photo-cap-preview" src="${dataUrl}" alt="Your photo">`;
-    statusEl.textContent = '✓ Photo captured'; statusEl.className = 'photo-cap-status ok';
-    // Detach from data-i18n before changing the text: this button is also
-    // touched by applyI18n() on every language switch, and once a photo is
-    // captured we never want that generic pass silently reverting it back
-    // to "Take Photo" wording.
-    btnLabel.removeAttribute('data-i18n');
-    btnLabel.textContent = t('photo_retake') || 'Retake Photo';
-  } catch (e) {
-    console.error('[photo]', e);
-    statusEl.textContent = 'Could not process that photo — please try again.'; statusEl.className = 'photo-cap-status';
-    window.__impiSelfPhoto = null;
-  } finally {
-    evt.target.value = ''; // allows selecting/retaking the same file again
-  }
-}
-
-window.__impiMemberPhotos = {};
-
-async function onMemberPhotoSelected(evt, i) {
-  const file = evt.target.files && evt.target.files[0];
-  if (!file) return;
-  const statusEl = document.getElementById('m' + i + '_photoStatus');
-  const btnLabel = document.getElementById('m' + i + '_photoBtnLabel');
-  statusEl.textContent = 'Processing…'; statusEl.className = 'photo-cap-status';
-  try {
-    const dataUrl = await compressImageFile(file, 480, 0.75);
-    window.__impiMemberPhotos[i] = dataUrl;
-    document.getElementById('m' + i + '_photoPreviewWrap').innerHTML = `<img class="photo-cap-preview" src="${dataUrl}" alt="Photo">`;
-    statusEl.textContent = '✓ Captured'; statusEl.className = 'photo-cap-status ok';
-    btnLabel.removeAttribute('data-i18n');
-    btnLabel.textContent = t('photo_retake') || 'Retake Photo';
-  } catch (e) {
-    console.error('[photo]', e);
-    statusEl.textContent = 'Could not process — try again.'; statusEl.className = 'photo-cap-status';
-    delete window.__impiMemberPhotos[i];
-  } finally {
-    evt.target.value = '';
-  }
-}
-
 function onIdTypeChange() {
   const idType = document.getElementById('idType').value;
   document.getElementById('idNumber').disabled = !idType;
@@ -1330,11 +1247,152 @@ function nextFromInfo() {
   }
   if (!document.getElementById('role').value) { showToast('Please select your Role', 'error'); return; }
   if (!document.getElementById('idType').value) { showToast('Please select your ID Type', 'error'); return; }
-  if (!window.__impiSelfPhoto) { showToast('Please take a photo for site access verification', 'error'); return; }
-  showStep(2);
+  goToVideoGate();   // shows the induction video if this event has one, otherwise goes straight to topic 1
 }
 
 // ═══════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════
+// INDUCTION VIDEO GATE (optional, per event)
+// ═══════════════════════════════════════════════════════
+// If the event has an induction video configured (Admin → Events → Induction
+// Video) it plays after the personal-details step and must be watched to the
+// end before the topics unlock. Events with no video skip straight to topics.
+//
+// Watched once per page session, so a group submission watches it once for
+// everyone. Deliberately NOT remembered across page loads: on a shared tablet
+// that would let the next person skip it.
+//
+// Blocks forward-seeking, speed changes and keyboard skipping; rewinding is
+// allowed. These controls run in the viewer's browser, so a determined person
+// could still bypass them — see the "video completed" record option if proof of
+// viewing ever matters legally.
+let videoWatched = false;        // watched to the end during this page session
+let videoGateActive = false;     // video step currently on screen
+let videoGateStarting = false;   // waiting for event details before deciding
+let eventReadyDone = false;
+let eventReadyResolve = null;
+const eventReady = new Promise(function(r) { eventReadyResolve = r; });
+function markEventReady() { eventReadyDone = true; if (eventReadyResolve) eventReadyResolve(); }
+
+const videoGate = { maxPlayed: 0, src: null, guard: null, lastCheck: 0, opts: null };
+
+// Picks the video for the language the person chose, falling back to English,
+// then to any other language that has one. Returns null if the event has none.
+function videoSourceFor(ev) {
+  let v = ev && ev.induction_video;
+  if (!v) return null;
+  if (typeof v === 'string') v = { en: v };
+  if (typeof v !== 'object') return null;
+  const ok = function(u) { return typeof u === 'string' && /^(https?:\/\/|\/)/i.test(u.trim()); };
+  const lang = (currentLang || 'EN').toLowerCase();
+  if (ok(v[lang])) return v[lang].trim();
+  if (ok(v.en)) return v.en.trim();
+  for (const k in v) { if (ok(v[k])) return v[k].trim(); }
+  return null;
+}
+
+async function goToVideoGate() {
+  if (videoWatched) { showStep(2); return; }        // already watched this session
+  if (videoGateStarting) return;
+  videoGateStarting = true;
+  try {
+    // Slow connection: make sure the event's details have arrived before deciding
+    // whether a video applies, so a fast tap can't skip past it.
+    if (!eventReadyDone) showToast('Loading event details…', 'success');
+    if (!eventReadyDone) await eventReady;
+    const src = videoSourceFor(eventData);
+    if (!src) { showStep(2); return; }               // no video configured for this event
+    showVideoStep(src);
+  } finally {
+    videoGateStarting = false;
+  }
+}
+
+function showVideoStep(src) {
+  // The video step sits outside the numbered steps, so activate it directly.
+  document.querySelectorAll('.step-content').forEach(function(el) { el.classList.remove('active'); });
+  document.getElementById('stepVideo').classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  startVideoGate({
+    videoEl: document.getElementById('inductionVideo'),
+    continueBtn: document.getElementById('videoContinueBtn'),
+    errorBox: document.getElementById('videoError'),
+    src: src,
+    onComplete: function() { videoWatched = true; showStep(2); }
+  });
+}
+
+function stopVideoGate() {
+  videoGateActive = false;
+  if (videoGate.guard) { clearInterval(videoGate.guard); videoGate.guard = null; }
+  const v = document.getElementById('inductionVideo');
+  if (v) { try { v.pause(); } catch (e) {} }
+}
+
+function retryVideo() { if (videoGate.opts) startVideoGate(videoGate.opts); }
+
+function startVideoGate(opts) {
+  const videoEl = opts.videoEl, continueBtn = opts.continueBtn, errorBox = opts.errorBox;
+  stopVideoGate();                                   // never leave two timers running
+  videoGateActive = true;
+  videoGate.opts = opts;
+  // Same video as before (Back then Next, or a retry after a dropped connection):
+  // keep the furthest point already watched so nothing has to be watched twice.
+  if (videoGate.src !== opts.src) { videoGate.maxPlayed = 0; videoGate.src = opts.src; }
+
+  continueBtn.disabled = true;
+  errorBox.style.display = 'none';
+  videoEl.src = opts.src;
+  videoEl.load();
+  videoEl.play().catch(function() { /* autoplay blocked: the viewer presses play */ });
+
+  videoEl.onloadedmetadata = function() {
+    if (videoGate.maxPlayed > 2) { try { videoEl.currentTime = Math.max(0, videoGate.maxPlayed - 1); } catch (e) {} }
+  };
+  videoEl.onplaying = function() { errorBox.style.display = 'none'; };
+  videoEl.onerror = function() { errorBox.style.display = 'block'; };
+  videoEl.onratechange = function() { if (videoEl.playbackRate !== 1) videoEl.playbackRate = 1; };
+  videoEl.onseeking = function() {
+    if (videoEl.currentTime > videoGate.maxPlayed + 0.5) videoEl.currentTime = videoGate.maxPlayed;
+  };
+
+  // Advances the "furthest watched" mark only by amounts that normal playback
+  // could explain (real time elapsed + 1s); anything further is a skip → snap back.
+  // Runs on every timeupdate AND on a 250ms timer, because Safari does not always
+  // fire "seeking" for every skip method and timeupdate alone can be tricked.
+  function check() {
+    const now = performance.now();
+    const elapsed = (now - videoGate.lastCheck) / 1000;
+    videoGate.lastCheck = now;
+    if (videoEl.playbackRate !== 1) videoEl.playbackRate = 1;
+    if (videoEl.seeking) return;                     // onseeking deals with in-flight seeks
+    const ahead = videoEl.currentTime - videoGate.maxPlayed;
+    if (ahead <= 0) return;                          // rewound or level: nothing to do
+    if (ahead <= elapsed + 1) videoGate.maxPlayed = videoEl.currentTime;
+    else videoEl.currentTime = videoGate.maxPlayed;
+  }
+  videoEl.ontimeupdate = check;
+  videoGate.lastCheck = performance.now();
+  videoGate.guard = setInterval(check, 250);
+
+  videoEl.onended = function() {
+    // Only unlock if the viewer genuinely reached the end — guards against a
+    // seek-to-end racing the snap-back and firing "ended" early.
+    if (!videoEl.duration || videoGate.maxPlayed >= videoEl.duration - 2) {
+      if (videoGate.guard) { clearInterval(videoGate.guard); videoGate.guard = null; }
+      continueBtn.disabled = false;
+    } else {
+      videoEl.currentTime = videoGate.maxPlayed;
+      videoEl.play().catch(function() {});
+    }
+  };
+
+  continueBtn.onclick = function() {
+    if (continueBtn.disabled) return;                // belt and braces
+    opts.onComplete();
+  };
+}
+
 // TOPIC IMAGE MAP — fallback stock images per topic order
 // ═══════════════════════════════════════════════════════
 const TOPIC_IMAGES = {
@@ -1470,7 +1528,6 @@ function buildPeopleList() {
     company:   document.getElementById('company').value.trim(),
     trade:     document.getElementById('trade').value.trim(),
     role:      document.getElementById('role').value,
-    photo:     window.__impiSelfPhoto || null,
     is_inductor: true
   };
   const people = [inductor];
@@ -1486,7 +1543,6 @@ function buildPeopleList() {
         company:   inductor.company,
         trade:     (document.getElementById('m' + i + '_trade')?.value || '').trim(),
         role:      inductor.role,
-        photo:     window.__impiMemberPhotos[i] || null,
         is_inductor: false
       });
     }
@@ -1661,8 +1717,7 @@ async function generateCertificates() {
             role:         person.role,
             cert_code:    certCode,
             event_id:     eventId,
-            completed_at: completedAt,
-            photo:        person.photo || null
+            completed_at: completedAt
           })
         });
         const data = await res.json();
@@ -2012,13 +2067,6 @@ function drawCertificateOnDoc(doc, person, ev, logoDataUrl, eventLogoDataUrl, st
     doc.text('Scan to verify', pageW - 55, startY + 90);
   }
 
-  // Attendee photo — already an in-memory data URL from capture time, so no
-  // network load needed here (unlike the admin re-download path, which has
-  // to fetch it from storage first). Sits in the space below the QR code.
-  if (person.photo) {
-    try { doc.addImage(person.photo, 'JPEG', pageW - 48, startY + 96, 33, 33); } catch (e) {}
-  }
-
   y += 14;
   const rows = [
     ['Name', ((person.full_name || '') + ' ' + (person.surname || '')).trim() || '\u2014'],
@@ -2328,6 +2376,7 @@ async function init() {
     showStep(0);
     applyI18n();
     renderedFromCache = true;
+    markEventReady();
   } else if (!eventId) {
     document.getElementById('banTitle').textContent = 'No event selected';
   }
@@ -2346,6 +2395,7 @@ async function init() {
   applyDesign(designSettings);
 
   if (eventRes) applyEventData(eventRes);
+  markEventReady();   // event details are now known (or the fetch failed) — the video gate can decide
 
   // Only (re)render the topic steps from the network response if the
   // person hasn't already started answering — swapping topic content out
@@ -2363,7 +2413,10 @@ async function init() {
     if (!renderedFromCache || changed) {
       renderTopicSteps();
       buildProgressBar();
-      showStep(0);
+      // Re-show whatever step the person is already on. (This used to jump back
+      // to step 0, which would pull someone out of the video, or out of the
+      // details form, the moment a slow connection finished loading.)
+      if (!videoGateActive) showStep(currentStep);
       applyI18n();
     }
   }
