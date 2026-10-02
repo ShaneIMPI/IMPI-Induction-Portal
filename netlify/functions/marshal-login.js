@@ -32,7 +32,7 @@ exports.handler = async (event) => {
   // scan with zero further network calls. cert_code is what the QR encodes
   // and what a manual entry is checked against.
   const compResult = await retry(() =>
-    supabase.from('completions').select('cert_code,full_name,surname,company,event_id').eq('event_id', event_id)
+    supabase.from('completions').select('cert_code,full_name,surname,company,event_id,photo_url').eq('event_id', event_id)
   );
   if (compResult.error) { console.error('[marshal-login]', compResult.error); return err(compResult.error.message); }
 
