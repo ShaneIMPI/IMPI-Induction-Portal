@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+<title>Marshal Scan — IMPI Safety</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0b0e; --surface: #13151a; --surface2: #1c1f28; --border: rgba(255,255,255,0.08);
+    --text: #f1f5f9; --muted: rgba(255,255,255,0.5); --red: #d42b2b; --yellow: #f5c800;
+    --green: #22c55e; --green-bg: rgba(34,197,94,0.12); --amber-bg: rgba(245,200,0,0.12);
+    --red-bg: rgba(212,43,43,0.12); --fh: 'Montserrat', sans-serif; --fb: 'Inter', sans-serif;
+  }
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--bg);color:var(--text);font-family:var(--fb);min-height:100vh;display:flex;flex-direction:column;
+    padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);}
+  .nav{display:flex;align-items:center;gap:12px;padding:16px 20px;border-bottom:1px solid var(--border);}
+  .site-logo{height:32px;width:auto;object-fit:contain;display:none;}
+  .nav-fallback{font-family:var(--fh);font-size:18px;font-weight:900;color:var(--red);letter-spacing:1px;}
+  .nav-label{font-family:var(--fh);font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-left:auto;}
+  .container{max-width:480px;margin:0 auto;padding:20px 18px 60px;width:100%;flex:1;}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:22px;}
+  h2{font-family:var(--fh);font-weight:800;font-size:1.3rem;margin-bottom:6px;}
+  .subheading{color:var(--muted);font-size:0.88rem;line-height:1.5;margin-bottom:18px;}
+  label{display:block;font-size:0.8rem;font-weight:600;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px;}
+  select,input[type=text]{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:9px;
+    color:var(--text);padding:12px 14px;font-size:1rem;font-family:var(--fb);}
+  select:focus,input:focus{outline:2px solid var(--red);outline-offset:1px;}
+  .btn{width:100%;padding:14px;border-radius:10px;border:none;font-family:var(--fh);font-weight:800;font-size:0.95rem;
+    cursor:pointer;letter-spacing:0.3px;transition:opacity .15s,transform .1s;}
+  .btn:active{transform:scale(0.98);}
+  .btn:disabled{opacity:0.4;cursor:not-allowed;}
+  .btn-primary{background:var(--red);color:#fff;}
+  .btn-accent{background:var(--yellow);color:#1a1200;}
+  .btn-outline{background:transparent;border:1px solid var(--border);color:var(--text);}
+  .hidden{display:none !important;}
+  .scan-panel{margin-top:14px;text-align:center;}
+  .scan-panel video{width:100%;max-width:420px;border-radius:12px;background:#000;}
+  .m-status{margin-top:14px;padding:16px;border-radius:12px;font-weight:700;text-align:center;font-size:1.05rem;font-family:var(--fh);}
+  .m-status.ok{background:var(--green-bg);border:1px solid var(--green);color:var(--green);}
+  .m-status.dup{background:var(--amber-bg);border:1px solid var(--yellow);color:var(--yellow);}
+  .m-status.bad{background:var(--red-bg);border:1px solid var(--red);color:#ff8a8a;}
+  .m-status .sub{font-weight:400;font-size:0.85rem;margin-top:5px;font-family:var(--fb);color:var(--text);opacity:0.85;}
+  .scan-result-photo{display:block;width:96px;height:96px;border-radius:50%;object-fit:cover;margin:0 auto 10px;border:3px solid currentColor;}
+  .m-bar{display:flex;gap:10px;margin:16px 0;flex-wrap:wrap;}
+  .m-pill{background:var(--surface2);border-radius:10px;padding:10px 12px;font-size:0.78rem;color:var(--muted);flex:1 1 100px;text-align:center;}
+  .m-pill strong{display:block;font-size:1.5rem;color:var(--text);font-family:var(--fh);}
+  .m-pill.warn strong{color:var(--yellow);}
+  #marshalPinInput{letter-spacing:6px;font-size:1.4rem;text-align:center;}
+  .m-offline-banner{background:var(--amber-bg);border:1px solid var(--yellow);color:var(--yellow);padding:10px 12px;border-radius:9px;font-size:0.82rem;margin-bottom:14px;text-align:center;}
+  .cert-meta{font-size:0.78rem;color:var(--muted);}
+  .err-msg{color:#ff8a8a;font-size:0.85rem;margin-top:10px;}
+  details summary{cursor:pointer;color:var(--muted);font-size:0.85rem;}
+  .foot-actions{margin-top:20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <img class="site-logo" id="navLogo" alt="IMPI Safety"/>
+  <span class="nav-fallback" id="navFallback">IMPI</span>
+  <span class="nav-label">Marshal Scan</span>
+</nav>
+
+<main class="container">
+
+  <!-- Step 1: event + PIN -->
+  <div class="card" id="stepGate">
+    <h2>Marshal Check-In</h2>
+    <p class="subheading">For marshals recording daily arrivals only — not the public certificate page.</p>
+
+    <div id="gateOfflineNotice" class="m-offline-banner hidden">No connection — resuming with the event and list already saved on this phone.</div>
+
+    <label>Event</label>
+    <select id="eventSelect"></select>
+
+    <div id="pinFields">
+      <label style="margin-top:14px;">Marshal PIN</label>
+      <input type="text" id="marshalPinInput" inputmode="numeric" placeholder="••••" autocomplete="off">
+
+      <label style="margin-top:14px;">Your name (optional)</label>
+      <input type="text" id="marshalNameInput" placeholder="e.g. Thabo" autocomplete="off">
+    </div>
+
+    <button class="btn btn-primary" id="gateSubmitBtn" style="margin-top:18px;">Start Scanning</button>
+    <p id="gateError" class="err-msg hidden"></p>
+  </div>
+
+  <!-- Step 2: scanning -->
+  <div class="card hidden" id="stepScan">
+    <div id="scanOfflineNotice" class="m-offline-banner hidden">No connection — scans are saved on this phone and will upload once you're back online. Keep this tab open.</div>
+
+    <div class="m-bar">
+      <div class="m-pill"><strong id="arrivedTodayCount">0</strong>arrived today</div>
+      <div class="m-pill" id="pendingPill"><strong id="pendingSyncCount">0</strong>waiting to sync</div>
+      <div class="m-pill"><strong id="rosterCount">0</strong>on the list</div>
+    </div>
+
+    <button type="button" class="btn btn-accent" id="scanBtn">Scan QR Code</button>
+    <div class="scan-panel hidden" id="scanPanel">
+      <video id="scanVideo" playsinline muted></video>
+      <p id="scanStatus" class="cert-meta"></p>
+      <button type="button" class="btn btn-outline" id="scanStopBtn" style="margin-top:10px;">Stop Camera</button>
+    </div>
+    <canvas id="scanCanvas" class="hidden"></canvas>
+
+    <div id="scanResult"></div>
+
+    <details style="margin-top:18px;">
+      <summary>Certificate code instead?</summary>
+      <div style="margin-top:10px;display:flex;gap:8px;">
+        <input type="text" id="manualCertInput" placeholder="e.g. SH089RIJ" style="flex:1;">
+        <button class="btn btn-outline" id="manualCheckBtn" style="width:auto;padding:12px 18px;">Check</button>
+      </div>
+    </details>
+
+    <div class="foot-actions">
+      <button type="button" class="btn btn-outline" id="refreshRosterBtn" style="width:auto;padding:10px 16px;">Refresh list</button>
+      <span id="rosterAge" class="cert-meta"></span>
+      <button type="button" class="btn btn-outline" id="switchEventBtn" style="width:auto;padding:10px 16px;">Switch event</button>
+    </div>
+  </div>
+
+</main>
+
+<script>
+// Lets this page (and the QR scanner it loads) survive a full reload with
+// zero connection — see marshal-sw.js for exactly what it does and doesn't
+// touch. Registration itself needs network the first time; after that the
+// page is available offline on this device from then on.
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/marshal-sw.js').catch((e) => console.warn('[marshal] service worker registration failed:', e));
+}
+
+// ── LOGO (same /api/design pattern used on verify.html) ──
+(async function loadDesign() {
+  try {
+    const res = await fetch('/api/design');
+    const d = await res.json();
+    if (d.impi_logo_url) {
+      document.querySelectorAll('.site-logo').forEach(el => { el.src = d.impi_logo_url; el.style.display = 'block'; });
+      const fb = document.getElementById('navFallback');
+      if (fb) fb.style.display = 'none';
+    }
+  } catch (e) { /* fallback text logo already showing */ }
+})();
+
+// ── jsQR CDN FALLBACK LOADER (same multi-CDN pattern as verify.html) ──
+const JSQR_CDNS = [
+  'https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js',
+  'https://unpkg.com/jsqr@1.4.0/dist/jsQR.js',
+  'https://cdnjs.cloudflare.com/ajax/libs/jsqr/1.4.0/jsQR.js'
+];
+async function loadJsQR() {
+  if (window.jsQR) return true;
+  for (const url of JSQR_CDNS) {
+    try {
+      await new Promise((resolve, reject) => {
+        const s = document.createElement('script');
+        s.src = url; s.onload = resolve; s.onerror = reject;
+        document.head.appendChild(s);
+      });
+      if (window.jsQR) return true;
+    } catch (e) {}
+  }
+  return false;
+}
+
+/**
+ * Daily arrival check-in — designed to work with NO connection at the gate.
+ *
+ * The roster (who is allowed) is downloaded ONCE, together with PIN
+ * verification, in a single call to /api/marshal-login while the phone has
+ * signal. From then on every scan is checked against that local copy — no
+ * network call is needed to accept or reject a scan. Accepted scans queue
+ * locally and upload in the background whenever the phone regains a
+ * connection.
+ *
+ * The PIN itself is never cached — only the fact that this phone already
+ * logged in successfully for this event. Reopening this page later (even
+ * offline) resumes straight into scanning from that cached session, rather
+ * than asking for the PIN again or starting blind.
+ */
+const LS_KEY = 'impi_marshal_state_v1';
+
+function loadState() {
+  try { return JSON.parse(localStorage.getItem(LS_KEY)) || {}; }
+  catch (e) { return {}; }
+}
+function saveState(s) {
+  try {
+    localStorage.setItem(LS_KEY, JSON.stringify(s));
+  } catch (e) {
+    // Storage full — most likely other tools sharing this same origin have
+    // used up the shared quota, not anything wrong here. Never let that stop
+    // scanning: drop the roster from what's persisted (keeps the queue,
+    // which matters far more) so this session keeps working even if the
+    // roster can't survive a reload.
+    console.warn('localStorage full, saving without the cached roster:', e);
+    try {
+      localStorage.setItem(LS_KEY, JSON.stringify(Object.assign({}, s, { roster: [] })));
+    } catch (e2) {
+      console.warn('Could not save any marshal state to localStorage:', e2);
+    }
+  }
+}
+
+let M = Object.assign({ eventId: null, eventName: null, marshalName: '', roster: [], rosterAt: null, queue: [] }, loadState());
+
+function todayLocal() {
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+}
+function arrivedTodaySet() {
+  const today = todayLocal();
+  return new Set(M.queue.filter(q => q.scan_date === today).map(q => q.cert_code));
+}
+function refreshCounters() {
+  document.getElementById('arrivedTodayCount').textContent = arrivedTodaySet().size;
+  document.getElementById('pendingSyncCount').textContent = M.queue.filter(q => !q.synced).length;
+  document.getElementById('rosterCount').textContent = M.roster.length;
+  document.getElementById('pendingPill').classList.toggle('warn', M.queue.some(q => !q.synced));
+  const ageEl = document.getElementById('rosterAge');
+  if (ageEl) ageEl.textContent = M.rosterAt ? `List loaded ${new Date(M.rosterAt).toLocaleString()}` : '';
+}
+function escapeHtml(v) {
+  return String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+// ---------- Step 1: events + gate ----------
+async function loadEventOptions() {
+  const sel = document.getElementById('eventSelect');
+  try {
+    const res = await fetch('/api/events');
+    const data = await res.json();
+    sel.innerHTML = '';
+    (Array.isArray(data) ? data : []).forEach(ev => {
+      const opt = document.createElement('option');
+      opt.value = ev.id; opt.textContent = ev.name;
+      sel.appendChild(opt);
+    });
+    if (M.eventId && [...sel.options].some(o => o.value === M.eventId)) sel.value = M.eventId;
+    document.getElementById('gateOfflineNotice').classList.add('hidden');
+    return true;
+  } catch (e) {
+    sel.innerHTML = '';
+    if (M.eventId) {
+      const opt = document.createElement('option');
+      opt.value = M.eventId; opt.textContent = M.eventName || '(last used event)';
+      sel.appendChild(opt);
+      document.getElementById('gateOfflineNotice').classList.remove('hidden');
+      return true;
+    }
+    document.getElementById('gateError').textContent = 'No connection, and no event has been loaded on this phone before. Connect to the internet once to set this phone up.';
+    document.getElementById('gateError').classList.remove('hidden');
+    return false;
+  }
+}
+
+function resumeCachedSession(eventId) {
+  // Already logged in for this exact event on this phone — skip the PIN
+  // entirely and go straight to scanning. This is what makes reopening the
+  // app offline, mid-shift, actually work.
+  if (M.eventId === eventId && M.roster.length) {
+    document.getElementById('pinFields').classList.add('hidden');
+    return true;
+  }
+  document.getElementById('pinFields').classList.remove('hidden');
+  return false;
+}
+document.getElementById('eventSelect').addEventListener('change', (e) => resumeCachedSession(e.target.value));
+
+document.getElementById('gateSubmitBtn').addEventListener('click', async () => {
+  const errEl = document.getElementById('gateError');
+  errEl.classList.add('hidden');
+  const eventId = document.getElementById('eventSelect').value;
+  if (!eventId) { errEl.textContent = 'Choose an event.'; errEl.classList.remove('hidden'); return; }
+
+  const nameInput = document.getElementById('marshalNameInput').value.trim();
+  if (nameInput) M.marshalName = nameInput;
+
+  // Already have a session for this exact event cached — resume without
+  // needing a PIN or a connection at all.
+  if (M.eventId === eventId && M.roster.length) {
+    saveState(M);
+    enterScanScreen(false);
+    return;
+  }
+
+  const pin = document.getElementById('marshalPinInput').value.trim();
+  if (!pin) { errEl.textContent = 'Enter the marshal PIN for this event.'; errEl.classList.remove('hidden'); return; }
+
+  const btn = document.getElementById('gateSubmitBtn');
+  btn.disabled = true; btn.textContent = 'Checking…';
+  try {
+    const res = await fetch('/api/marshal-login', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ event_id: eventId, pin, marshal_name: M.marshalName })
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      errEl.textContent = data.error || 'Could not log in.';
+      errEl.classList.remove('hidden');
+      return;
+    }
+    M.eventId = data.event_id; M.eventName = data.event_name;
+    M.roster = data.roster || []; M.rosterAt = new Date().toISOString();
+    if (M.queueEventId !== M.eventId) { M.queue = []; M.queueEventId = M.eventId; } // switching events: start a fresh queue
+    saveState(M);
+    enterScanScreen(false);
+  } catch (e) {
+    errEl.textContent = 'No connection. A PIN check needs a connection the first time you set up this phone for an event.';
+    errEl.classList.remove('hidden');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Start Scanning';
+  }
+});
+
+function enterScanScreen(usedCacheOnly) {
+  document.getElementById('scanOfflineNotice').classList.toggle('hidden', !usedCacheOnly);
+  document.getElementById('stepGate').classList.add('hidden');
+  document.getElementById('stepScan').classList.remove('hidden');
+  refreshCounters();
+}
+
+document.getElementById('switchEventBtn').addEventListener('click', () => {
+  document.getElementById('stepScan').classList.add('hidden');
+  document.getElementById('stepGate').classList.remove('hidden');
+  document.getElementById('marshalPinInput').value = '';
+  document.getElementById('pinFields').classList.remove('hidden');
+  loadEventOptions();
+});
+
+document.getElementById('refreshRosterBtn').addEventListener('click', async () => {
+  if (!M.eventId) return;
+  const btn = document.getElementById('refreshRosterBtn');
+  btn.disabled = true; btn.textContent = 'Refreshing…';
+  try {
+    // No PIN needed here — this device already logged in once for this
+    // event, and a mid-shift refresh isn't a new login.
+    const res = await fetch('/api/marshal-roster?eventId=' + encodeURIComponent(M.eventId));
+    if (!res.ok) throw new Error('offline');
+    const data = await res.json();
+    M.roster = data.roster || []; M.rosterAt = new Date().toISOString();
+    saveState(M);
+    document.getElementById('scanOfflineNotice').classList.add('hidden');
+    refreshCounters();
+  } catch (e) {
+    document.getElementById('scanOfflineNotice').classList.remove('hidden');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Refresh list';
+  }
+});
+
+// ---------- Step 2: scanning ----------
+function recordArrival(entry) {
+  const today = todayLocal();
+  const already = M.queue.some(q => q.cert_code === entry.cert_code && q.scan_date === today);
+  if (already) {
+    showResult('dup', entry.full_name, `${entry.company || ''} — already recorded as arrived today`, entry.photo_url);
+    return;
+  }
+  M.queue.push({
+    client_scan_id: (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random()),
+    event_id: M.eventId,
+    cert_code: entry.cert_code,
+    scan_date: today,
+    scanned_at: new Date().toISOString(),
+    marshal_name: M.marshalName || null,
+    synced: false
+  });
+  saveState(M);
+  showResult('ok', entry.full_name, `${entry.company || ''} — arrival recorded`, entry.photo_url);
+  refreshCounters();
+  trySync();
+}
+// The photo is what actually lets a marshal confirm, at the moment someone
+// walks up, that the person in front of them matches who completed the
+// induction — shown large, since that's the whole point of it being here.
+function showResult(kind, title, sub, photoUrl) {
+  const photoHtml = photoUrl
+    ? `<img class="scan-result-photo" src="${escapeHtml(photoUrl)}" alt="" onerror="this.style.display='none'">`
+    : '';
+  document.getElementById('scanResult').innerHTML =
+    `<div class="m-status ${kind}">${photoHtml}${escapeHtml(title)}<div class="sub">${escapeHtml(sub)}</div></div>`;
+}
+
+function extractCertCode(text) {
+  // QR format: IMPIVERT:<cert_code>:<full_name>:<event_id>
+  text = String(text || '').trim();
+  const parts = text.split(':');
+  if (parts.length >= 2 && parts[0] === 'IMPIVERT' && parts[1]) return { cert_code: parts[1].toUpperCase(), event_id: parts[3] || null };
+  return null;
+}
+
+function handleScannedText(text) {
+  const parsed = extractCertCode(text);
+  if (!parsed) { showResult('bad', 'Not a certificate QR code', "That code isn't from this system."); return; }
+  const entry = M.roster.find(r => r.cert_code === parsed.cert_code);
+  if (!entry) { showResult('bad', 'Not recognised', "This certificate isn't on the downloaded list. Refresh the list if you have a connection."); return; }
+  if (parsed.event_id && entry.event_id !== parsed.event_id) { showResult('bad', 'Wrong event', 'This certificate belongs to a different event.'); return; }
+  recordArrival(entry);
+}
+function handleManualCode(code) {
+  const entry = M.roster.find(r => r.cert_code === code.trim().toUpperCase());
+  if (!entry) { showResult('bad', 'Not found on the list', 'Double-check the code, or refresh the list if you have a connection.'); return; }
+  recordArrival(entry);
+}
+
+// ---------- Camera scanning ----------
+let stream = null, scanning = false;
+async function startScan() {
+  const ok = await loadJsQR();
+  if (!ok) { document.getElementById('scanStatus').textContent = 'Could not load the scanner.'; return; }
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    document.getElementById('scanStatus').textContent = "This browser can't open the camera.";
+    return;
+  }
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' } }, audio: false });
+  } catch (e) {
+    document.getElementById('scanStatus').textContent = 'Could not access the camera.';
+    return;
+  }
+  const video = document.getElementById('scanVideo');
+  const canvas = document.getElementById('scanCanvas');
+  const ctx = canvas.getContext('2d', { willReadFrequently: true });
+  video.srcObject = stream;
+  video.setAttribute('playsinline', 'true');
+  await video.play().catch(() => {});
+  document.getElementById('scanStatus').textContent = 'Point the camera at the QR code.';
+  scanning = true;
+
+  const tick = () => {
+    if (!scanning) return;
+    if (video.readyState >= 2 && video.videoWidth > 0) {
+      const scale = Math.min(1, 640 / video.videoWidth);
+      canvas.width = Math.round(video.videoWidth * scale);
+      canvas.height = Math.round(video.videoHeight * scale);
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const code = window.jsQR(img.data, img.width, img.height, { inversionAttempts: 'dontInvert' });
+      if (code && code.data) { stopScan(); handleScannedText(code.data); return; }
+    }
+    requestAnimationFrame(tick);
+  };
+  requestAnimationFrame(tick);
+}
+function stopScan() {
+  scanning = false;
+  if (stream) { stream.getTracks().forEach(tr => tr.stop()); stream = null; }
+  document.getElementById('scanVideo').srcObject = null;
+  document.getElementById('scanPanel').classList.add('hidden');
+}
+window.addEventListener('pagehide', stopScan);
+
+document.getElementById('scanBtn').addEventListener('click', async () => {
+  document.getElementById('scanResult').innerHTML = '';
+  document.getElementById('scanPanel').classList.remove('hidden');
+  await startScan();
+});
+document.getElementById('scanStopBtn').addEventListener('click', stopScan);
+document.getElementById('manualCheckBtn').addEventListener('click', () => {
+  const v = document.getElementById('manualCertInput').value.trim();
+  if (v) handleManualCode(v);
+});
+
+// ---------- Background sync ----------
+async function trySync() {
+  const pending = M.queue.filter(q => !q.synced);
+  if (!pending.length) return;
+  for (const item of pending) {
+    try {
+      const res = await fetch('/api/attendance-scan', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          event_id: item.event_id, cert_code: item.cert_code, scan_date: item.scan_date,
+          scanned_at: item.scanned_at, marshal_name: item.marshal_name, client_scan_id: item.client_scan_id
+        })
+      });
+      if (res.ok) item.synced = true;
+      else if (res.status < 500) item.synced = true; // a definite rejection (e.g. 404/409) isn't worth retrying forever
+    } catch (e) {
+      break; // still offline — stop for now, the periodic timer will retry
+    }
+  }
+  saveState(M);
+  refreshCounters();
+  document.getElementById('scanOfflineNotice').classList.toggle('hidden', !M.queue.some(q => !q.synced) || navigator.onLine);
+}
+window.addEventListener('online', trySync);
+setInterval(trySync, 20000);
+
+// ---------- Boot ----------
+(async () => {
+  await loadEventOptions();
+  const sel = document.getElementById('eventSelect');
+  if (sel.value) resumeCachedSession(sel.value);
+  refreshCounters();
+  if (navigator.onLine) trySync();
+})();
+</script>
+</body>
+</html>
