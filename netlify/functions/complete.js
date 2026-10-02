@@ -1,4 +1,33 @@
 const { db, ok, err, cors, retry } = require('./_shared');
+const { createClient } = require('@supabase/supabase-js');
+
+const MAX_PHOTO_BYTES = 2 * 1024 * 1024; // decoded size — generous headroom over the ~50-150KB a compressed selfie actually produces
+
+// Uploads one attendee's already-compressed photo (sent as a data URL) to
+// its own storage bucket. Never throws — a photo problem must never be the
+// reason someone doesn't get the certificate they just earned, so any
+// failure here is logged and simply results in no photo_url being set.
+async function uploadAttendeePhoto(photoDataUrl, eventId, certCode) {
+  try {
+    const match = /^data:(image\/(?:jpeg|jpg|png|webp));base64,(.+)$/.exec(photoDataUrl || '');
+    if (!match) { console.warn('[complete] photo skipped: not a recognised image data URL'); return null; }
+    const mime = match[1] === 'image/jpg' ? 'image/jpeg' : match[1];
+    const ext = mime === 'image/png' ? 'png' : mime === 'image/webp' ? 'webp' : 'jpg';
+    const buffer = Buffer.from(match[2], 'base64');
+    if (buffer.length > MAX_PHOTO_BYTES) { console.warn('[complete] photo skipped: too large after decoding', buffer.length); return null; }
+
+    const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
+    const path = `${eventId}/${certCode}.${ext}`;
+    const { error: uploadErr } = await supabase.storage.from('attendee-photos').upload(path, buffer, { contentType: mime, upsert: true });
+    if (uploadErr) { console.error('[complete] photo upload failed:', uploadErr.message); return null; }
+
+    const { data: { publicUrl } } = supabase.storage.from('attendee-photos').getPublicUrl(path);
+    return publicUrl;
+  } catch (e) {
+    console.error('[complete] photo upload threw:', e.message);
+    return null;
+  }
+}
 
 function makeCertCode(name, idNumber) {
   const p1 = (name || 'XX').replace(/[^A-Z]/gi, '').slice(0, 2).toUpperCase().padEnd(2, 'X');
@@ -39,11 +68,17 @@ exports.handler = async (event) => {
   const { data: existing } = await supabase.from('completions').select('cert_code').eq('cert_code', cert_code).maybeSingle();
   if (existing) return ok({ success: true, cert_code, duplicate: true });
 
+  // Optional — a photo captured and already compressed client-side during
+  // the induction flow. A failure here never blocks the completion itself;
+  // see uploadAttendeePhoto's own comment for why.
+  const photo_url = body.photo ? await uploadAttendeePhoto(body.photo, event_id, cert_code) : null;
+
   const record = {
     full_name, surname, id_number, id_type,
     email, phone, company, trade, role,
     event_id, cert_code,
-    completed_at
+    completed_at,
+    photo_url
   };
 
   const saveResult = await retry(() => supabase.from('completions').insert([record]));
@@ -57,19 +92,24 @@ exports.handler = async (event) => {
   // induction.html flow submits each person as a separate /api/complete
   // call instead, so this path is not on the hot path today).
   if (is_group && group_members.length > 0) {
-    const memberRecords = group_members.map(m => ({
-      full_name: m.full_name || m.fullName,
-      surname: m.surname,
-      id_number: m.id_number || m.idNumber,
-      id_type: m.id_type || m.idType || 'SA ID',
-      email: m.email || email,
-      phone: m.phone || phone,
-      company,
-      trade: m.trade || trade,
-      role: m.role || role,
-      event_id,
-      cert_code: m.cert_code || makeCertCode(m.full_name || m.fullName, m.id_number || m.idNumber),
-      completed_at
+    const memberRecords = await Promise.all(group_members.map(async (m) => {
+      const mCertCode = m.cert_code || makeCertCode(m.full_name || m.fullName, m.id_number || m.idNumber);
+      const mPhoto = m.photo ? await uploadAttendeePhoto(m.photo, event_id, mCertCode) : null;
+      return {
+        full_name: m.full_name || m.fullName,
+        surname: m.surname,
+        id_number: m.id_number || m.idNumber,
+        id_type: m.id_type || m.idType || 'SA ID',
+        email: m.email || email,
+        phone: m.phone || phone,
+        company,
+        trade: m.trade || trade,
+        role: m.role || role,
+        event_id,
+        cert_code: mCertCode,
+        completed_at,
+        photo_url: mPhoto
+      };
     }));
     for (const mr of memberRecords) {
       const { data: existingMember } = await supabase.from('completions').select('cert_code').eq('cert_code', mr.cert_code).maybeSingle();
