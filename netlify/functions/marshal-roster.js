@@ -13,7 +13,7 @@ exports.handler = async (event) => {
 
   const supabase = db();
   const result = await retry(() =>
-    supabase.from('completions').select('cert_code,full_name,surname,company,event_id').eq('event_id', event_id)
+    supabase.from('completions').select('cert_code,full_name,surname,company,event_id,photo_url').eq('event_id', event_id)
   );
   if (result.error) { console.error('[marshal-roster]', result.error); return err(result.error.message); }
   return ok({ roster: result.data || [] });
