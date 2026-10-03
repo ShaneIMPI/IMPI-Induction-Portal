@@ -364,6 +364,23 @@ input[type=color]{width:44px;height:36px;border:1px solid var(--border);border-r
               </div>
 
               <div class="section-card">
+                <div class="section-title">Induction Video</div>
+                <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.6">
+                  If set, attendees must watch this video to the end before the induction topics unlock (once per group). Paste the direct link to the .mp4 file. English is required; any other language left blank plays the English video. Leave everything blank for an event with no video.
+                </p>
+                <div class="form-grid">
+                  <div class="form-group"><label>English *</label><input type="url" id="evVideo_en" placeholder="https://…/induction-video-en.mp4"></div>
+                  <div class="form-group"><label>Afrikaans</label><input type="url" id="evVideo_af" placeholder="https://…/induction-video-af.mp4"></div>
+                  <div class="form-group"><label>isiZulu</label><input type="url" id="evVideo_zu" placeholder="https://…/induction-video-zu.mp4"></div>
+                  <div class="form-group"><label>Swahili</label><input type="url" id="evVideo_sw" placeholder="https://…/induction-video-sw.mp4"></div>
+                  <div class="form-group"><label>French</label><input type="url" id="evVideo_fr" placeholder="https://…/induction-video-fr.mp4"></div>
+                  <div class="form-group"><label>Portuguese</label><input type="url" id="evVideo_pt" placeholder="https://…/induction-video-pt.mp4"></div>
+                  <div class="form-group"><label>Hausa</label><input type="url" id="evVideo_ha" placeholder="https://…/induction-video-ha.mp4"></div>
+                  <div class="form-group"><label>Yoruba</label><input type="url" id="evVideo_yo" placeholder="https://…/induction-video-yo.mp4"></div>
+                </div>
+              </div>
+
+              <div class="section-card">
                 <div class="section-title">Event Branding</div>
                 <div class="form-grid" style="margin-bottom:20px">
                   <div class="form-group">
@@ -851,6 +868,9 @@ function fillEditor(ev){
   setFieldValue('evAmbulance',ev.amb_num);
   setFieldValue('evOrgContact',ev.ev_org_contact);
   setFieldValue('evMarshalPin',ev.marshal_pin);
+  let vids=ev.induction_video;
+  if(typeof vids==='string') vids={en:vids};
+  ['en','af','zu','sw','fr','pt','ha','yo'].forEach(l=>setFieldValue('evVideo_'+l,vids&&vids[l]));
   // Colors — flat DB columns
   setColorPair('evPrimary','evPrimaryHex',ev.color_primary||'#D42B2B');
   setColorPair('evAccent','evAccentHex',ev.color_accent||'#F5C800');
@@ -966,6 +986,20 @@ async function saveEvent(){
     color_accent:document.getElementById('evAccentHex').value||'#F5C800',
     color_text:document.getElementById('evTextHex').value||'#FFFFFF'
   };
+  // Induction video links. Only sent when there is something to save, or when the
+  // event already has the column (so a link can be cleared) — this keeps event saves
+  // working even if the database column hasn't been added yet.
+  const vids={};
+  for(const l of ['en','af','zu','sw','fr','pt','ha','yo']){
+    const u=(document.getElementById('evVideo_'+l).value||'').trim();
+    if(!u) continue;
+    if(!/^(https?:\/\/|\/)/i.test(u)){showToast('Video link for '+l.toUpperCase()+' must start with https:// (or / for a file hosted on this site)','error');return;}
+    vids[l]=u;
+  }
+  if(Object.keys(vids).length&&!vids.en){showToast('Please add the English video link first (other languages fall back to it)','error');return;}
+  const existingEv=allEventsFull.find(e=>e.id===currentEventId);
+  if(Object.keys(vids).length) payload.induction_video=vids;
+  else if(existingEv&&Object.prototype.hasOwnProperty.call(existingEv,'induction_video')) payload.induction_video=null;
   if(currentEventId) payload.id=currentEventId;
   try{
     const method=currentEventId?'PUT':'POST';
