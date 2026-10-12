@@ -43,6 +43,7 @@
   .m-status.dup{background:var(--amber-bg);border:1px solid var(--yellow);color:var(--yellow);}
   .m-status.bad{background:var(--red-bg);border:1px solid var(--red);color:#ff8a8a;}
   .m-status .sub{font-weight:400;font-size:0.85rem;margin-top:5px;font-family:var(--fb);color:var(--text);opacity:0.85;}
+  .scan-result-photo{display:block;width:96px;height:96px;border-radius:50%;object-fit:cover;margin:0 auto 10px;border:3px solid currentColor;}
   .m-bar{display:flex;gap:10px;margin:16px 0;flex-wrap:wrap;}
   .m-pill{background:var(--surface2);border-radius:10px;padding:10px 12px;font-size:0.78rem;color:var(--muted);flex:1 1 100px;text-align:center;}
   .m-pill strong{display:block;font-size:1.5rem;color:var(--text);font-family:var(--fh);}
@@ -358,7 +359,7 @@ function recordArrival(entry) {
   const today = todayLocal();
   const already = M.queue.some(q => q.cert_code === entry.cert_code && q.scan_date === today);
   if (already) {
-    showResult('dup', entry.full_name, `${entry.company || ''} — already recorded as arrived today`);
+    showResult('dup', entry.full_name, `${entry.company || ''} — already recorded as arrived today`, entry.photo_url);
     return;
   }
   M.queue.push({
@@ -371,13 +372,19 @@ function recordArrival(entry) {
     synced: false
   });
   saveState(M);
-  showResult('ok', entry.full_name, `${entry.company || ''} — arrival recorded`);
+  showResult('ok', entry.full_name, `${entry.company || ''} — arrival recorded`, entry.photo_url);
   refreshCounters();
   trySync();
 }
-function showResult(kind, title, sub) {
+// The photo is what actually lets a marshal confirm, at the moment someone
+// walks up, that the person in front of them matches who completed the
+// induction — shown large, since that's the whole point of it being here.
+function showResult(kind, title, sub, photoUrl) {
+  const photoHtml = photoUrl
+    ? `<img class="scan-result-photo" src="${escapeHtml(photoUrl)}" alt="" onerror="this.style.display='none'">`
+    : '';
   document.getElementById('scanResult').innerHTML =
-    `<div class="m-status ${kind}">${escapeHtml(title)}<div class="sub">${escapeHtml(sub)}</div></div>`;
+    `<div class="m-status ${kind}">${photoHtml}${escapeHtml(title)}<div class="sub">${escapeHtml(sub)}</div></div>`;
 }
 
 function extractCertCode(text) {
