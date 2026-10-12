@@ -1,0 +1,44 @@
+</style>
+</head>
+<body>
+<div id="app">
+ <header>
+  <div class="brand"><b id="brandName">IMPI RMS</b><span>FloorPlan Studio</span></div>
+  <div class="hs"></div>
+  <span id="saveChip" hidden></span>
+  <button class="btn" id="bPanel">Panel</button>
+  <button class="btn pri" id="bExport">Export</button>
+ </header>
+ <nav id="tools" aria-label="Drawing tools"></nav>
+ <div id="main">
+  <div id="stage">
+   <canvas id="cv"></canvas>
+   <div id="hint"></div>
+   <button class="btn pri" id="doneBtn">Finish line</button>
+   <div id="layBar"><b id="layName"></b><button class="btn sm" data-lb="back">Back to whole plan</button><button class="btn sm pri" data-lb="png">Download PNG</button><button class="btn sm pri" data-lb="pdf">Download PDF</button></div>
+   <div id="evBar"><b>Emergency evacuation plan</b><button class="btn sm pri" data-ev="evgen">Generate evacuation routes</button><button class="btn sm" data-ev="evclr">Clear routes</button><button class="btn sm" data-ev="evdraw" title="Draw your own route, or add one the generator missed">Draw a route</button><button class="btn sm" data-ev="evlock" title="Lock all routes so Generate does not replace them">Lock / unlock routes</button><button class="btn sm" data-ev="crowdev">Crowd &amp; capacity</button><label class="evopt"><input type="checkbox" id="evAll"> use every exit</label><label class="evopt"><input type="checkbox" id="evEntr"> entrances count as exits</label><label class="evopt" title="Use the lines of the imported client plan (walls, stands, aisles) as obstacles and run routes along its aisles"><input type="checkbox" id="evPlan"> follow imported plan</label><select id="evDen" aria-label="Route density" class="evopt"><option value="few">Few routes</option><option value="normal">Normal</option><option value="many">Many routes</option></select><button class="btn sm" data-ev="evac">Back to plan</button></div>
+   <div id="status"></div>
+   <div id="selbar"></div>
+   <div id="welcome">
+    <div class="card">
+     <h2>Start a new plan</h2>
+     <p class="note">Layer an aerial image and the client's drawing, calibrate each to a known distance, then redraw everything to scale.</p>
+     <button class="btn pri" data-w="map">1. Pick the site on a satellite map<small>Search the address, frame the area; it arrives to true scale, no calibration</small></button>
+     <button class="btn" data-w="sat">Upload an aerial image instead<small>Drone shot, Google Earth screenshot or PDF; tap two points a known distance apart</small></button>
+     <button class="btn" data-w="plan">2. Import client plan (PDF or image)<small>Overlaid transparently so you can trace it</small></button>
+     <button class="btn" data-w="dxf">Import an AutoCAD drawing (DXF)<small>Opens to scale, as an underlay and/or editable lines</small></button>
+     <button class="btn" data-w="blank">Start blank<small>Draw on the grid at 1 : 1 metres</small></button>
+     <button class="btn" data-w="open">Open a saved project (.json)</button>
+    </div>
+   </div>
+  </div>
+  <aside id="panel"><div id="tabs"></div><div id="pbody"></div></aside>
+ </div>
+</div>
+<div id="modal"></div>
+<div id="mapov" role="dialog" aria-label="Satellite map"></div>
+<div id="toast"></div>
+<input type="file" id="fileIn" hidden>
+
+<script>window.__FPS_USER=null;window.__FPS_CFG=null;</script>
+<script>

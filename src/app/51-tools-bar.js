@@ -1,0 +1,27 @@
+/* ---------- tools bar ---------- */
+var IC={select:'M5 3l12 7-5 1.5L10 17z',pan:'M12 3v18M3 12h18M12 3l-3 3M12 3l3 3M12 21l-3-3M12 21l3-3M3 12l3-3M3 12l3 3M21 12l-3-3M21 12l-3 3',dim:'M3 17L17 3l4 4L7 21zM7 13l2 2M10 10l2 2M13 7l2 2',area:'M4 6h16v12H4zM4 9h2M4 15h2M18 9h2M18 15h2',line:'M3 18l6-8 5 5 7-9',trace:'M12 3v5M12 16v5M3 12h5M16 12h5M10 12a2 2 0 104 0a2 2 0 10-4 0',evac:'M3 12h12M10 6l6 6-6 6M3 4v16M20 8v8',text:'M5 6h14M12 6v13M9 19h6',fit:'M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5',undo:'M9 14L4 9l5-5M4 9h10a6 6 0 010 12h-4',redo:'M15 14l5-5-5-5M20 9H10a6 6 0 000 12h4',marq:'M4 4h4M12 4h4M20 4v4M20 12v4M20 20h-4M12 20H8M4 20v-4M4 12V8',poly:'M5 18l2-11 8-3 5 9-4 6z',lib:'M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z'};
+function svg(n){return '<svg viewBox="0 0 24 24"><path d="'+IC[n]+'"/></svg>'}
+function buildTools(){
+ var T=[['select','Select'],['marq','Box select'],['pan','Pan'],['dim','Measure'],['area','Zone'],['poly','Shape'],['line','Line / fence'],['text','Note']],h='';
+ T.forEach(function(t){h+='<button class="tool" data-tool="'+t[0]+'" aria-label="'+t[1]+'">'+svg(t[0])+t[1]+'</button>'});
+ h+='<div class="sep"></div><button class="tool" data-act="perim" aria-label="Perimeter: click along an existing fence" title="Click along an existing fence line, leave gaps where there is no fence">'+svg('perim')+'Perimeter</button><button class="tool" data-act="gap" aria-label="Gap in the fence" title="Press, then tap where the fence starts again, to leave a measured gap">'+svg('gap')+'Gap</button><button class="tool" data-act="pencil" aria-label="Pencil: exact tracing" title="Exact tracing over an imported plan, with a magnifier">'+svg('pencil')+'Pencil</button><button class="tool" data-act="ortho" aria-label="Ortho" title="Keep lines straight along the plan">'+svg('ortho')+'Ortho</button><button class="tool" data-act="venue" aria-label="Venue layer" title="Permanent venue features">'+svg('venue')+'Venue</button><div class="sep"></div><button class="tool" data-act="lib" aria-label="Library">'+svg('lib')+'Library</button><button class="tool" data-act="trace" aria-label="Snap to plan lines" title="When tracing over an imported plan, snap to its lines and corners">'+svg('trace')+'Snap lines</button><button class="tool" data-act="evac" aria-label="Evacuation plan">'+svg('evac')+'Evacuation</button><div class="sep"></div>';
+ h+='<select id="snapSel" aria-label="Snap grid"><option value="0.01">Snap 1 cm</option><option value="0.05">Snap 5 cm</option><option value="0.1">Snap 0.1 m</option><option value="0.25">Snap 0.25 m</option><option value="0.5">Snap 0.5 m</option><option value="1" selected>Snap 1 m</option><option value="1.5">Snap 1.5 m</option><option value="2">Snap 2 m</option><option value="3">Snap 3 m</option><option value="5">Snap 5 m</option><option value="0">Snap off</option><option value="custom">Custom…</option></select>';
+  h+='<select id="viewSel" aria-label="View"></select>';
+ h+='<select id="lineSel" aria-label="Line style">'+LINES.filter(function(l){return l.k!=='evac'}).map(function(l){return '<option value="'+l.k+'">'+l.n+'</option>'}).join('')+'</select>';
+ h+='<div class="sep"></div><button class="tool" data-act="undo\" aria-label="Undo">'+svg('undo')+'Undo</button><button class="tool" data-act="redo" aria-label="Redo">'+svg('redo')+'Redo</button><button class="tool" data-act="fit" aria-label="Fit view">'+svg('fit')+'Fit</button>';
+ $('#tools').innerHTML=h;
+ $('#tools').onclick=function(e){var b=e.target.closest('.tool');if(!b)return;
+  if(b.dataset.tool){if(b.dataset.tool==='line'){S.lineStyle=S.lineStyle||'fence'}S.pencil=false;S.perim=false;S.gapNext=false;setTool(b.dataset.tool)}
+  else if(b.dataset.act==='pencil')togglePencil();else if(b.dataset.act==='perim')togglePerim();else if(b.dataset.act==='gap')toggleGap();else if(b.dataset.act==='ortho')toggleOrtho();else if(b.dataset.act==='venue')venueModal();
+  else if(b.dataset.act==='undo')undo();else if(b.dataset.act==='redo')redo();else if(b.dataset.act==='fit')fitAll();
+  else if(b.dataset.act==='lib'){S.tab='lib';openPanel()}else if(b.dataset.act==='trace'){S.traceSnap=S.traceSnap===false;syncTrace();toast(S.traceSnap===false?'Snap to plan lines is off':'Snap to plan lines is on: tracing locks onto the imported plan\'s lines and corners',3500)}else if(b.dataset.act==='evac')setEvac(!S.meta.evac)
+ };
+ renderViewSel();syncEvac();syncTrace();syncPrec();$('#layBar').onclick=function(e){var t=e.target.closest('button');if(!t)return;var k=t.dataset.lb;if(k==='back')setView(null);else exportSheet(k)};
+ $('#evBar').onclick=function(e){var t=e.target.closest('button');if(t)act(t.dataset.ev)};
+ $('#viewSel').onchange=function(){var v=this.value;if(v==='__new'){this.value=S.meta.only||'';newLayout();return}setView(v)};
+ $('#lineSel').onchange=function(){S.lineStyle=this.value;if(S.tmp&&S.tmp.t==='line')S.tmp.style=this.value;draw()};
+ $('#snapSel').onchange=function(){var sel=this,v=sel.value;
+  if(v==='custom'){ask('Custom snap distance',[{l:'Snap grid in metres (for example 0.05). 0 = off',v:S.grid||0.5,type:'number',step:'any'}],function(r){var g=parseFloat(r[0]);if(!(g>=0)){sel.value=String(S.grid);return}var val=String(g);if(![].some.call(sel.options,function(op){return op.value===val})){var op=document.createElement('option');op.value=val;op.textContent='Snap '+g+' m';sel.insertBefore(op,sel.querySelector('[value=custom]'))}sel.value=val;S.grid=g},'Set');sel.value=String(S.grid);return}
+  S.grid=parseFloat(v)};
+}
+

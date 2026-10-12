@@ -1,0 +1,7 @@
+{
+  "name": "floorplan-studio-tests",
+  "private": true,
+  "type": "module",
+  "scripts": { "test": "node run.mjs", "smoke": "node smoke-live.mjs" },
+  "devDependencies": { "playwright": "^1.56.0" }
+}

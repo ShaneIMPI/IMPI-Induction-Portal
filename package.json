@@ -1,8 +1,14 @@
 {
-  "name": "impi-induction-portal",
-  "version": "2.0.0",
+  "name": "floorplan-studio-cloud",
+  "version": "1.0.0",
   "private": true,
+  "type": "module",
   "dependencies": {
-    "@supabase/supabase-js": "^2.49.4"
+    "@neondatabase/serverless": "^1.0.0",
+    "bcryptjs": "^2.4.3",
+    "jose": "^5.9.6"
+  },
+  "scripts": {
+    "test": "npm --prefix tests install && npm --prefix tests test"
   }
 }

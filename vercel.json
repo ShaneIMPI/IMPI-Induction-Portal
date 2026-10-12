@@ -1,0 +1,4 @@
+{
+  "functions": { "api/*.js": { "maxDuration": 15, "includeFiles": "private/**" } },
+  "rewrites": [ { "source": "/app", "destination": "/api/app" } ]
+}
