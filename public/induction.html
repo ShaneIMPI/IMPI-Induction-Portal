@@ -1278,17 +1278,24 @@ const videoGate = { maxPlayed: 0, src: null, guard: null, lastCheck: 0, opts: nu
 
 // Picks the video for the language the person chose, falling back to English,
 // then to any other language that has one. Returns null if the event has none.
+// ONE general induction video shown to EVERY event. To change the video later:
+// upload the new file to Supabase Storage (bucket "event-files"), then change the
+// file name below. Set it to '' (empty) to switch the video off for all events.
+// An event can still use its own video (Admin > Event > Induction Video), which
+// overrides this general one for that event only.
+const GENERAL_INDUCTION_VIDEO = 'https://rizcweifbwcnvxgakzfi.supabase.co/storage/v1/object/public/event-files/IMPI-Induction-Video-HQ-clean.mp4';
+
 function videoSourceFor(ev) {
   let v = ev && ev.induction_video;
-  if (!v) return null;
+  if (!v) return GENERAL_INDUCTION_VIDEO || null;
   if (typeof v === 'string') v = { en: v };
-  if (typeof v !== 'object') return null;
+  if (typeof v !== 'object') return GENERAL_INDUCTION_VIDEO || null;
   const ok = function(u) { return typeof u === 'string' && /^(https?:\/\/|\/)/i.test(u.trim()); };
   const lang = (currentLang || 'EN').toLowerCase();
   if (ok(v[lang])) return v[lang].trim();
   if (ok(v.en)) return v.en.trim();
   for (const k in v) { if (ok(v[k])) return v[k].trim(); }
-  return null;
+  return GENERAL_INDUCTION_VIDEO || null;
 }
 
 async function goToVideoGate() {
@@ -1301,7 +1308,7 @@ async function goToVideoGate() {
     if (!eventReadyDone) showToast('Loading event details…', 'success');
     if (!eventReadyDone) await eventReady;
     const src = videoSourceFor(eventData);
-    if (!src) { showStep(2); return; }               // no video configured for this event
+    if (!src) { showStep(2); return; }               // video switched off
     showVideoStep(src);
   } finally {
     videoGateStarting = false;
