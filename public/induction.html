@@ -645,6 +645,7 @@ body{background:var(--bg);font-family:var(--fb);min-height:100vh;color:var(--tex
         <button class="btn btn-ghost" onclick="shareCert()" data-i18n="share">📤 Share</button>
         <button class="btn btn-primary" onclick="downloadCertificate()" data-i18n="download_cert">📥 Download Certificate</button>
         <button class="btn btn-ghost" onclick="window.print()" data-i18n="print">🖨️ Print</button>
+        <button class="btn btn-ghost" onclick="downloadPocketCard()" data-i18n="pocket_card">📇 Download Pocket Card</button>
       </div>
     </div>
 
@@ -653,6 +654,7 @@ body{background:var(--bg);font-family:var(--fb);min-height:100vh;color:var(--tex
       <div class="multi-cert-list" id="certGroupList"></div>
       <div class="cert-actions" style="margin-top:24px;">
         <button class="btn btn-primary" onclick="downloadAllCertificates()">📥 Download All Certificates</button>
+        <button class="btn btn-ghost" onclick="downloadAllPocketCards()" data-i18n="pocket_card_all">📇 Download All Pocket Cards</button>
         <button class="btn btn-ghost" onclick="window.print()">🖨️ <span data-i18n="print">Print All</span></button>
       </div>
     </div>
@@ -706,6 +708,8 @@ const LANGS = {
     share:'Share',
     download_cert:'Download Certificate',
     change_event:'← Change Event',
+    pocket_card:'📇 Download Pocket Card',
+    pocket_card_all:'📇 Download All Pocket Cards',
     photo_label:'Photo of yourself (face clearly visible)',
     photo_take:'Take photo',
     photo_retake:'Retake photo',
@@ -759,6 +763,8 @@ const LANGS = {
     share:'Deel',
     download_cert:'Laai Sertifikaat af',
     change_event:'← Verander Gebeurtenis',
+    pocket_card:'📇 Laai Sakkaart af',
+    pocket_card_all:'📇 Laai Alle Sakkaarte af',
     photo_label:'Foto van jouself (gesig duidelik sigbaar)',
     photo_take:'Neem foto',
     photo_retake:'Neem weer foto',
@@ -811,6 +817,8 @@ const LANGS = {
     share:'Yabelana',
     download_cert:'Layisha Isitifiketi',
     change_event:'← Shintsha Umcimbi',
+    pocket_card:'📇 Layisha Ikhadi Lephakethe',
+    pocket_card_all:'📇 Layisha Wonke Amakhadi Ephakethe',
     photo_label:'Isithombe sakho (ubuso bubonakala kahle)',
     photo_take:'Thatha isithombe',
     photo_retake:'Thatha isithombe futhi',
@@ -863,6 +871,8 @@ const LANGS = {
     share:'Shiriki',
     download_cert:'Pakua Cheti',
     change_event:'← Badilisha Tukio',
+    pocket_card:'📇 Pakua Kadi ya Mfukoni',
+    pocket_card_all:'📇 Pakua Kadi Zote za Mfukoni',
     photo_label:'Picha yako (uso uonekane wazi)',
     photo_take:'Piga picha',
     photo_retake:'Piga picha tena',
@@ -915,6 +925,8 @@ const LANGS = {
     share:'Partager',
     download_cert:'Télécharger le Certificat',
     change_event:'← Changer d\'Événement',
+    pocket_card:'📇 Télécharger la carte de poche',
+    pocket_card_all:'📇 Télécharger toutes les cartes de poche',
     photo_label:'Votre photo (visage bien visible)',
     photo_take:'Prendre la photo',
     photo_retake:'Reprendre la photo',
@@ -967,6 +979,8 @@ const LANGS = {
     share:'Partilhar',
     download_cert:'Baixar Certificado',
     change_event:'← Mudar Evento',
+    pocket_card:'📇 Baixar cartão de bolso',
+    pocket_card_all:'📇 Baixar todos os cartões de bolso',
     photo_label:'A sua foto (rosto bem visível)',
     photo_take:'Tirar foto',
     photo_retake:'Tirar nova foto',
@@ -1019,6 +1033,8 @@ const LANGS = {
     share:'Raba',
     download_cert:'Sauke Takardar Shaida',
     change_event:'← Canza Taron',
+    pocket_card:'📇 Sauke Katin Aljihu',
+    pocket_card_all:'📇 Sauke Dukkan Katunan Aljihu',
     photo_label:'Hotonka (fuskarka a bayyane)',
     photo_take:'Dauki hoto',
     photo_retake:'Sake daukar hoto',
@@ -1071,6 +1087,8 @@ const LANGS = {
     share:'Pin',
     download_cert:'Gba Ijẹrisi',
     change_event:'← Yi Iyipada Iṣẹlẹ',
+    pocket_card:'📇 Gba Káàdì Àpò',
+    pocket_card_all:'📇 Gba Gbogbo Káàdì Àpò',
     photo_label:'Fọ́tò rẹ (kí ojú rẹ hàn kedere)',
     photo_take:'Ya fọ́tò',
     photo_retake:'Tún ya fọ́tò',
@@ -2263,6 +2281,178 @@ function drawCertificateOnDoc(doc, person, ev, logoDataUrl, eventLogoDataUrl, st
   doc.text('Verify at: impi-inductions.netlify.app/verify?code=' + (person.cert_code || ''), 15, y);
 
   return y + 15;
+}
+
+// ── Vest pocket card ──────────────────────────────────────────────────
+// Credit-card size (85.6 x 54 mm). Front and back are drawn side by side so the
+// printed strip can be cut out, folded down the middle, and laminated or slipped
+// into a vest-pocket card holder: front on the outside, back on the inside.
+const PC_W = 85.6, PC_H = 54;
+
+function pcFit(doc, text, maxW, startSize, minSize) {
+  let size = startSize;
+  doc.setFontSize(size);
+  while (size > minSize && doc.getTextWidth(text) > maxW) { size -= 0.5; doc.setFontSize(size); }
+  return size;
+}
+
+function drawPocketCard(doc, person, ev, logoDataUrl, eventLogoDataUrl, x, y) {
+  const themeHex = (ev && ev.color_primary) || '#D42B2B';
+  const rgb = hexToRgb(themeHex), tr = rgb[0], tg = rgb[1], tb = rgb[2];
+  const dark = [35, 31, 32], grey = [120, 120, 120];
+  const code = person.cert_code || '';
+  const name = (((person.full_name || '') + ' ' + (person.surname || '')).trim() || '-').toUpperCase();
+
+  // ===== FRONT =====
+  doc.setFillColor(255, 255, 255);
+  doc.rect(x, y, PC_W, PC_H, 'F');
+  doc.setFillColor(tr, tg, tb);
+  doc.rect(x, y, PC_W, 10, 'F');
+  if (logoDataUrl) { try { doc.addImage(logoDataUrl, 'PNG', x + 2, y + 1, 8, 8); } catch (e) {} }
+  if (eventLogoDataUrl) { try { doc.addImage(eventLogoDataUrl, 'PNG', x + PC_W - 10, y + 1, 8, 8); } catch (e) {} }
+  doc.setTextColor(255, 255, 255);
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(8);
+  doc.text('SAFETY INDUCTION - VERIFIED', x + 12, y + 5.8);
+
+  // photo
+  if (person.photo) {
+    try { doc.addImage(person.photo, 'JPEG', x + 3, y + 13, 24, 24); } catch (e) {}
+  } else {
+    doc.setFillColor(235, 235, 235); doc.rect(x + 3, y + 13, 24, 24, 'F');
+  }
+  doc.setDrawColor(190, 190, 190); doc.setLineWidth(0.2); doc.rect(x + 3, y + 13, 24, 24);
+
+  // identity text (right of photo)
+  const tx = x + 30, tw = PC_W - 33;
+  doc.setTextColor(dark[0], dark[1], dark[2]);
+  doc.setFont('helvetica', 'bold');
+  pcFit(doc, name, tw, 10, 6.5);
+  doc.text(name, tx, y + 16.5);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(grey[0], grey[1], grey[2]);
+  pcFit(doc, person.company || '-', tw, 7, 5);
+  doc.text(person.company || '-', tx, y + 21.5);
+  const rt = [person.role, person.trade].filter(Boolean).join(' / ') || '-';
+  pcFit(doc, rt, tw, 7, 5);
+  doc.text(rt, tx, y + 26);
+  doc.setTextColor(dark[0], dark[1], dark[2]);
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(6.5);
+  const evLines = doc.splitTextToSize((ev && ev.name) || '-', 31).slice(0, 2);
+  doc.text(evLines, tx, y + 31);
+
+  // code + date
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(5.5); doc.setTextColor(grey[0], grey[1], grey[2]);
+  doc.text('CERTIFICATE CODE', tx, y + 40.5);
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(12); doc.setTextColor(tr, tg, tb);
+  doc.text(code || '-', tx, y + 46);
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(5.5); doc.setTextColor(grey[0], grey[1], grey[2]);
+  const dt = person.completed_at ? new Date(person.completed_at).toLocaleDateString('en-ZA', { day: '2-digit', month: 'short', year: 'numeric' }) : '';
+  doc.text('Completed ' + dt, x + 3, y + 41.5);
+  doc.text('Venue: ' + ((ev && ev.venue) || '-'), x + 3, y + 45, { maxWidth: 25 });
+
+  // QR
+  const qrData = 'IMPIVERT:' + code + ':' + (person.full_name || '') + ':' + ((ev && ev.id) || '');
+  drawQrOnDoc(doc, qrData, x + PC_W - 23, y + 30, 20);
+  doc.setFontSize(5); doc.setTextColor(grey[0], grey[1], grey[2]);
+  doc.text('Scan to verify', x + PC_W - 13, y + 52.2, { align: 'center' });
+
+  // ===== BACK =====
+  const bx = x + PC_W;
+  doc.setFillColor(255, 255, 255);
+  doc.rect(bx, y, PC_W, PC_H, 'F');
+  doc.setFillColor(tr, tg, tb);
+  doc.rect(bx, y, PC_W, 10, 'F');
+  doc.setTextColor(255, 255, 255);
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(8);
+  doc.text('CARRY THIS CARD ON SITE', bx + 4, y + 5.8);
+
+  doc.setTextColor(dark[0], dark[1], dark[2]);
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(6.5);
+  doc.text('This card confirms the holder completed the safety induction for:', bx + 4, y + 14.5);
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(7.5);
+  const evt = doc.splitTextToSize((ev && ev.name) || '-', PC_W - 8).slice(0, 2);
+  doc.text(evt, bx + 4, y + 19);
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(6);
+  const yy = y + 19 + evt.length * 3.4 + 1.2;
+  const body = doc.splitTextToSize('Show this card to a marshal or safety officer when asked. Scan the QR code on the front, or visit impi-inductions.netlify.app/verify, to confirm it. Valid for the event named above only.', PC_W - 8);
+  doc.text(body, bx + 4, yy);
+
+  // Event safety contact - taken from the event's Safety Manager name / number
+  // (Admin > Events > Safety Contacts). Falls back to IMPI's main number.
+  const smName = ((ev && ev.safety_mgr) || '').trim();
+  const smNum = ((ev && ev.safety_num) || '').trim();
+  doc.setFillColor(245, 245, 245);
+  doc.rect(bx + 3, y + 32.5, PC_W - 6, 11.5, 'F');
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(5.5); doc.setTextColor(grey[0], grey[1], grey[2]);
+  doc.text(smName || smNum ? 'EVENT SAFETY MANAGER' : 'SAFETY CONTACT (IMPI)', bx + 5, y + 35.5);
+  doc.setFont('helvetica', 'bold'); doc.setTextColor(tr, tg, tb);
+  const contactLine = (smName || smNum) ? [smName, smNum].filter(Boolean).join('  -  ') : 'Tel 012 543 0640';
+  pcFit(doc, contactLine, PC_W - 10, 9, 6);
+  doc.text(contactLine, bx + 5, y + 41);
+
+  doc.setDrawColor(220, 220, 220); doc.setLineWidth(0.2);
+  doc.line(bx + 4, y + 45.5, bx + PC_W - 4, y + 45.5);
+  doc.setTextColor(dark[0], dark[1], dark[2]);
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(5.8);
+  doc.text('IMPI Protection Agency (t/a Amandla Protection Services)', bx + 4, y + 48.8);
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(5.8);
+  doc.text('Tel 012 543 0640  |  info@impi-secure.co.za  |  www.impi-secure.co.za', bx + 4, y + 51.8);
+
+  // cut / fold guides
+  doc.setDrawColor(150, 150, 150); doc.setLineWidth(0.2);
+  doc.setLineDashPattern([1.5, 1.5], 0);
+  doc.rect(x, y, PC_W * 2, PC_H);
+  doc.line(x + PC_W, y, x + PC_W, y + PC_H);
+  doc.setLineDashPattern([], 0);
+}
+
+function pocketCardPage(doc, people, ev, logo, evLogo) {
+  const perPage = 4, left = (210 - PC_W * 2) / 2;
+  people.forEach(function(p, i) {
+    const pos = i % perPage;
+    if (i > 0 && pos === 0) doc.addPage();
+    if (pos === 0) {
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(10); doc.setTextColor(35, 31, 32);
+      doc.text('Vest Pocket Cards', left, 12);
+      doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.setTextColor(120, 120, 120);
+      doc.text('Print at 100% (Actual size, not "Fit to page"). Cut along the dashed outline, fold down the middle', left, 17);
+      doc.text('so the photo is on the outside, then laminate it or slip it into a card holder for your vest pocket.', left, 21);
+    }
+    drawPocketCard(doc, p, ev, logo, evLogo, left, 28 + pos * (PC_H + 8));
+  });
+}
+
+async function downloadPocketCard() {
+  const person = (certResults && certResults[0]) || null;
+  if (!person || !person.cert_code) { showToast('No certificate found', 'error'); return; }
+  showToast('Preparing pocket card...', 'success');
+  try {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+    const logo = await getLogoPngDataUrl();
+    const evLogo = await getEventLogoPngDataUrl(eventData);
+    pocketCardPage(doc, [person], eventData, logo, evLogo);
+    doc.save('IMPI-Pocket-Card-' + person.cert_code + '.pdf');
+  } catch (e) {
+    showToast('Could not generate pocket card: ' + e.message, 'error');
+  }
+}
+
+async function downloadAllPocketCards() {
+  const people = (certResults || []).filter(function(p) { return p && p.cert_code && !p.isDuplicateBlocked; });
+  if (!people.length) { showToast('No certificates found', 'error'); return; }
+  showToast('Preparing pocket cards...', 'success');
+  try {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+    const logo = await getLogoPngDataUrl();
+    const evLogo = await getEventLogoPngDataUrl(eventData);
+    pocketCardPage(doc, people, eventData, logo, evLogo);
+    const safeName = ((eventData && eventData.name) || 'Group').replace(/[^a-z0-9]+/gi, '-');
+    doc.save('IMPI-Pocket-Cards-' + safeName + '.pdf');
+  } catch (e) {
+    showToast('Could not generate pocket cards: ' + e.message, 'error');
+  }
 }
 
 async function downloadCertificate() {
