@@ -2288,6 +2288,34 @@ function drawCertificateOnDoc(doc, person, ev, logoDataUrl, eventLogoDataUrl, st
 // printed strip can be cut out, folded down the middle, and laminated or slipped
 // into a vest-pocket card holder: front on the outside, back on the inside.
 const PC_W = 85.6, PC_H = 54;
+// Print scale: the layout is designed at 85.6 x 54 mm and printed 7.5% larger
+// (92.0 x 58.0 mm per side), so that after laminating (about 3 mm of plastic
+// edge each side) it still slides into a vest pocket.
+const PC_S = 1.075;
+
+// Wraps a jsPDF doc so the design-size drawing code below prints at PC_S.
+function pcScaleDoc(doc, s) {
+  const m = {
+    rect: function(x, y, w, h, st) { return doc.rect(x * s, y * s, w * s, h * s, st); },
+    line: function(a, b, c, d) { return doc.line(a * s, b * s, c * s, d * s); },
+    addImage: function(img, fmt, x, y, w, h) { return doc.addImage(img, fmt, x * s, y * s, w * s, h * s); },
+    text: function(t, x, y, o) {
+      let oo = o;
+      if (o && o.maxWidth) { oo = Object.assign({}, o, { maxWidth: o.maxWidth * s }); }
+      return doc.text(t, x * s, y * s, oo);
+    },
+    setFontSize: function(f) { doc.setFontSize(f * s); return m; },
+    setLineWidth: function(w) { doc.setLineWidth(w * s); return m; },
+    setLineDashPattern: function(a, p) { doc.setLineDashPattern(a.map(function(v) { return v * s; }), p); return m; },
+    getTextWidth: function(t) { return doc.getTextWidth(t) / s; },
+    splitTextToSize: function(t, w) { return doc.splitTextToSize(t, w * s); },
+    setFillColor: function() { doc.setFillColor.apply(doc, arguments); return m; },
+    setDrawColor: function() { doc.setDrawColor.apply(doc, arguments); return m; },
+    setTextColor: function() { doc.setTextColor.apply(doc, arguments); return m; },
+    setFont: function() { doc.setFont.apply(doc, arguments); return m; }
+  };
+  return m;
+}
 
 function pcFit(doc, text, maxW, startSize, minSize) {
   let size = startSize;
@@ -2296,7 +2324,8 @@ function pcFit(doc, text, maxW, startSize, minSize) {
   return size;
 }
 
-function drawPocketCard(doc, person, ev, logoDataUrl, eventLogoDataUrl, x, y) {
+function drawPocketCard(doc0, person, ev, logoDataUrl, eventLogoDataUrl, x0, y0) {
+  const doc = pcScaleDoc(doc0, PC_S), x = x0 / PC_S, y = y0 / PC_S;
   const themeHex = (ev && ev.color_primary) || '#D42B2B';
   const rgb = hexToRgb(themeHex), tr = rgb[0], tg = rgb[1], tb = rgb[2];
   const dark = [35, 31, 32], grey = [120, 120, 120];
@@ -2407,7 +2436,7 @@ function drawPocketCard(doc, person, ev, logoDataUrl, eventLogoDataUrl, x, y) {
 }
 
 function pocketCardPage(doc, people, ev, logo, evLogo) {
-  const perPage = 4, left = (210 - PC_W * 2) / 2;
+  const perPage = 4, left = (210 - PC_W * PC_S * 2) / 2;
   people.forEach(function(p, i) {
     const pos = i % perPage;
     if (i > 0 && pos === 0) doc.addPage();
@@ -2415,10 +2444,10 @@ function pocketCardPage(doc, people, ev, logo, evLogo) {
       doc.setFont('helvetica', 'bold'); doc.setFontSize(10); doc.setTextColor(35, 31, 32);
       doc.text('Vest Pocket Cards', left, 12);
       doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.setTextColor(120, 120, 120);
-      doc.text('Print at 100% (Actual size, not "Fit to page"). Cut along the dashed outline, fold down the middle', left, 17);
-      doc.text('so the photo is on the outside, then laminate it or slip it into a card holder for your vest pocket.', left, 21);
+      doc.text('Print at 100% (Actual size, not "Fit to page"). Cut along the dashed outline (92 x 58 mm per side), fold down the middle', left, 17);
+      doc.text('so the photo is on the outside, then laminate it (the plastic edge adds about 3 mm) for your vest pocket.', left, 21);
     }
-    drawPocketCard(doc, p, ev, logo, evLogo, left, 28 + pos * (PC_H + 8));
+    drawPocketCard(doc, p, ev, logo, evLogo, left, 28 + pos * (PC_H * PC_S + 8));
   });
 }
 
